@@ -16,7 +16,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: <Override>[
+      overrides: [
         fastingSnapshotStoreProvider.overrideWith((_) => snapshotStore),
         fastingRestoredSnapshotProvider.overrideWith((_) => restoredSnapshot),
       ],

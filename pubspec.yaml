@@ -2,7 +2,7 @@ name: mobile_app_factory
 publish_to: none
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.7.0
 
 workspace:
   - packages/app_core

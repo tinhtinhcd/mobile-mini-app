@@ -8,6 +8,5 @@ analyzer:
 linter:
   rules:
     - avoid_dynamic_calls
-    - avoid_unused_parameters
     - avoid_print
     - prefer_final_locals

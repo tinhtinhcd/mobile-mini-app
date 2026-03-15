@@ -16,7 +16,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: <Override>[
+      overrides: [
         pomodoroSnapshotStoreProvider.overrideWith((_) => snapshotStore),
         pomodoroRestoredSnapshotProvider.overrideWith((_) => restoredSnapshot),
       ],

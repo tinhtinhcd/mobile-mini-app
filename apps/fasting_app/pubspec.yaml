@@ -1,11 +1,11 @@
 name: fasting_app
-description: Minimal scaffold for a future fasting timer app.
+description: Fasting timer app built on shared timer and storage packages.
 version: 0.1.0
 publish_to: none
 
 environment:
-  sdk: ^3.6.0
-  flutter: '>=3.27.0'
+  sdk: ^3.7.0
+  flutter: '>=3.29.0'
 
 resolution: workspace
 

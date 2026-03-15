@@ -37,25 +37,30 @@ Examples:
 
 The repository uses a **monorepo structure**.
 
+Active workspace modules that are compile-ready today:
+
 ```
 mobile_app_factory/
 
   packages/
     app_core/
-    ui_kit/
-    monetization/
     storage/
-    notifications/
-    export/
     timer_engine/
-    form_engine/
-    tool_engine/
+    ui_kit/
 
   apps/
     pomodoro_app/
     fasting_app/
-    resume_builder_app/
 ```
+
+Placeholder directories also exist for future work, but they are **not** in the active workspace and are **not compile-ready yet**:
+
+* `packages/monetization`
+* `packages/notifications`
+* `packages/export`
+* `packages/form_engine`
+* `packages/tool_engine`
+* `apps/resume_builder_app`
 
 ## packages/
 
@@ -114,118 +119,50 @@ All apps must use components from **ui_kit**.
 
 ---
 
-## monetization
-
-Shared monetization framework.
-
-Includes:
-
-* ads integration
-* subscription service
-* entitlement logic
-* paywall screen
-* usage limit guards
-
----
-
 ## storage
 
-Local‑first persistence layer.
+Active local-first persistence layer for the current timer apps.
 
 Includes:
 
-* database wrapper
-* shared preferences wrapper
-* repository pattern
+* `TimerSnapshotStore` abstraction
+* `SharedPreferencesTimerSnapshotStore` implementation
+* timer snapshot serialization boundary shared by multiple apps
 
-No app should access storage directly.
-
----
-
-## notifications
-
-Local reminder system.
-
-Includes:
-
-* permission management
-* scheduling notifications
-* update / cancel reminders
-
-Used for:
-
-* fasting reminders
-* timer alerts
-* daily reminders
-
----
-
-## export
-
-Utilities for exporting user data.
-
-Includes:
-
-* PDF export
-* CSV export
-* sharing
-* file save helpers
+Apps wire storage through providers, but persistence implementation stays in `storage`.
 
 ---
 
 ## timer_engine
 
-Reusable logic for timer‑based apps.
+Active reusable logic for timer-based apps.
 
 Used by:
 
 * Pomodoro
 * fasting tracker
-* workout timers
+* future timer-based apps
 
 Includes:
 
 * timer controller
 * session model
-* history
+* snapshot model
+* timer state
 * statistics
 
 ---
 
-## form_engine
+## Planned Placeholder Modules
 
-Reusable engine for form‑based apps.
+These directories exist only as placeholders right now and are not wired into the workspace yet:
 
-Used by:
-
-* resume builder
-* receipt organizer
-* invoice tools
-
-Includes:
-
-* form schema
-* validation
-* autosave draft
-* export integration
-
----
-
-## tool_engine
-
-Reusable engine for simple utilities.
-
-Used by:
-
-* converters
-* generators
-* text tools
-
-Includes:
-
-* input/output pattern
-* history storage
-* favorites
+* `monetization`
+* `notifications`
+* `export`
+* `form_engine`
+* `tool_engine`
+* `resume_builder_app`
 
 ---
 
@@ -298,7 +235,7 @@ Architecture goals:
 
 ## Phase 1
 
-Foundation
+Foundation implemented
 
 * Setup monorepo
 * Create `app_core`
@@ -310,34 +247,34 @@ Foundation
 
 ## Phase 2
 
-Infrastructure
+Infrastructure partially implemented
 
-* Add `storage`
-* Add `notifications`
-* Add `monetization`
-* Add `export`
+* `storage` implemented
+* `notifications` planned
+* `monetization` planned
+* `export` planned
 
 ---
 
 ## Phase 3
 
-Feature Engines
+Feature engines partially implemented
 
-* `timer_engine`
-* `form_engine`
-* `tool_engine`
+* `timer_engine` implemented
+* `form_engine` planned
+* `tool_engine` planned
 
 ---
 
 ## Phase 4
 
-Production Apps
+Production apps partially implemented
 
 Build first apps:
 
-* Pomodoro App
-* Fasting Tracker
-* Resume Builder
+* Pomodoro App implemented
+* Fasting Tracker implemented
+* Resume Builder planned
 
 ---
 
@@ -373,16 +310,18 @@ flutter run
 
 ---
 
-# 🎯 First Milestone
+# 🎯 Current Workspace Scope
 
-The first goal of the project is:
-
-Make **pomodoro_app** run using shared packages:
+The active workspace currently validates these modules together:
 
 * `app_core`
+* `storage`
+* `timer_engine`
 * `ui_kit`
+* `apps/pomodoro_app`
+* `apps/fasting_app`
 
-Once this works, the architecture is validated.
+The placeholder modules remain outside the workspace until they have real compile-ready code.
 
 ---
 
@@ -399,12 +338,4 @@ The project succeeds if:
 
 # 🔜 Next Step
 
-Start with **Phase 1 only**:
-
-1. Scaffold monorepo
-2. Create `app_core`
-3. Create `ui_kit`
-4. Create `apps/pomodoro_app`
-5. Implement shared theme and base scaffold
-
-After Phase 1 succeeds, continue building the platform.
+Keep the current workspace coherent, then add new modules only when they have real compile-ready code and a clear place in the existing package boundaries.

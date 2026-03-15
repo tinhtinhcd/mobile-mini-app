@@ -61,7 +61,7 @@ class AppTheme {
           color: AppColors.textSecondary,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: AppColors.card,
         elevation: 0,
         margin: EdgeInsets.zero,
@@ -123,4 +123,3 @@ class AppTheme {
     );
   }
 }
-

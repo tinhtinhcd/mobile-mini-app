@@ -1,0 +1,24 @@
+name: pomodoro_app
+description: Phase 1 demo app for the Mobile App Factory monorepo.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.27.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.3.1
+  app_core: ^0.1.0
+  ui_kit: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true

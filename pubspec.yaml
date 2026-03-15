@@ -1,0 +1,27 @@
+name: mobile_app_factory
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+
+workspace:
+  - packages/app_core
+  - packages/ui_kit
+  - apps/pomodoro_app
+
+dev_dependencies:
+  melos: ^7.4.0
+
+melos:
+  scripts:
+    analyze:
+      exec: flutter analyze
+      packageFilters:
+        flutter: true
+    format:
+      exec: dart format .
+    test:
+      exec: flutter test
+      packageFilters:
+        flutter: true
+        dirExists: test

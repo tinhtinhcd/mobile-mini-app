@@ -1,0 +1,23 @@
+name: ui_kit
+description: Shared UI components for Mobile App Factory apps.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.6.0
+  flutter: '>=3.27.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  app_core: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+

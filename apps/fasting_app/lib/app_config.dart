@@ -9,7 +9,7 @@ AppDefinition buildFastingAppDefinition() {
     title: 'Fasting App',
     accentColor: const Color(0xFF1D8A6B),
     router: createAppRouter(
-      builder: (BuildContext context, _) {
+      builder: (BuildContext _, __) {
         return const _FastingPlaceholderScreen();
       },
     ),

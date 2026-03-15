@@ -8,7 +8,7 @@ AppDefinition buildPomodoroAppDefinition() {
     title: 'Pomodoro App',
     accentColor: const Color(0xFFE4572E),
     router: createAppRouter(
-      builder: (BuildContext context, _) {
+      builder: (BuildContext _, __) {
         return const PomodoroScreen();
       },
     ),

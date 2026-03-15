@@ -21,7 +21,7 @@ abstract class TimerController extends Notifier<TimerState> {
   void start() {
     _timer?.cancel();
     state = state.copyWith(isRunning: true);
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
+    _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
   }
 
   void pause() {
@@ -65,6 +65,10 @@ abstract class TimerController extends Notifier<TimerState> {
     state = state.copyWith(
       remaining: Duration(seconds: state.remaining.inSeconds - 1),
     );
+  }
+
+  void _onTick(Timer _) {
+    _tick();
   }
 
   void _completeSession() {

@@ -12,6 +12,7 @@ class PomodoroScreen extends ConsumerWidget {
     final state = ref.watch(pomodoroControllerProvider);
     final controller = ref.read(pomodoroControllerProvider.notifier);
     final theme = Theme.of(context);
+    final currentMode = pomodoroModeFromSession(state.activeSession);
 
     return FactoryScaffold(
       title: 'Focus Flow',
@@ -39,7 +40,7 @@ class PomodoroScreen extends ConsumerWidget {
                   children: PomodoroMode.values.map((PomodoroMode mode) {
                     return _ModeChip(
                       mode: mode,
-                      selected: state.mode == mode,
+                      selected: currentMode == mode,
                       onTap: () => controller.selectMode(mode),
                     );
                   }).toList(),
@@ -55,7 +56,7 @@ class PomodoroScreen extends ConsumerWidget {
                   child: Column(
                     children: <Widget>[
                       Text(
-                        state.mode.label.toUpperCase(),
+                        state.activeSession.label.toUpperCase(),
                         style: theme.textTheme.bodySmall?.copyWith(
                           letterSpacing: 1.2,
                           fontWeight: FontWeight.w700,
@@ -121,7 +122,7 @@ class PomodoroScreen extends ConsumerWidget {
                     Expanded(
                       child: StatTile(
                         label: 'Focus sessions',
-                        value: '${state.completedFocusSessions}',
+                        value: '${state.stats.completedTrackedSessions}',
                         detail: 'Completed',
                       ),
                     ),
@@ -129,7 +130,7 @@ class PomodoroScreen extends ConsumerWidget {
                     Expanded(
                       child: StatTile(
                         label: 'Minutes deep work',
-                        value: '${state.focusMinutesToday}',
+                        value: '${state.stats.trackedMinutes}',
                         detail: 'Tracked locally',
                       ),
                     ),
@@ -138,8 +139,8 @@ class PomodoroScreen extends ConsumerWidget {
                 const SizedBox(height: AppSpacing.md),
                 StatTile(
                   label: 'Current rhythm',
-                  value: _buildRhythmLabel(state),
-                  detail: state.mode == PomodoroMode.focus
+                  value: _buildRhythmLabel(currentMode),
+                  detail: currentMode == PomodoroMode.focus
                       ? 'Stay on task until the bell.'
                       : 'Use the break to reset before the next focus block.',
                 ),
@@ -163,8 +164,8 @@ class PomodoroScreen extends ConsumerWidget {
     );
   }
 
-  String _buildRhythmLabel(PomodoroState state) {
-    return switch (state.mode) {
+  String _buildRhythmLabel(PomodoroMode mode) {
+    return switch (mode) {
       PomodoroMode.focus => '25 / 5 cadence',
       PomodoroMode.shortBreak => 'Quick recharge',
       PomodoroMode.longBreak => 'Extended reset',

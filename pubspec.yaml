@@ -7,17 +7,18 @@ environment:
 workspace:
   - packages/app_core
   - packages/ui_kit
+  - packages/timer_engine
   - apps/pomodoro_app
+  - apps/fasting_app
 
 dev_dependencies:
   melos: ^7.4.0
+  flutter_lints: ^6.0.0
 
 melos:
   scripts:
     analyze:
       exec: flutter analyze
-      packageFilters:
-        flutter: true
     format:
       exec: dart format .
     test:

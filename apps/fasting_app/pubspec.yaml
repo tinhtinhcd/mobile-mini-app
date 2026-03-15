@@ -1,5 +1,5 @@
-name: pomodoro_app
-description: Phase 1 demo app for the Mobile App Factory monorepo.
+name: fasting_app
+description: Minimal scaffold for a future fasting timer app.
 version: 0.1.0
 publish_to: none
 
@@ -12,7 +12,6 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  flutter_riverpod: ^3.3.1
   app_core: ^0.1.0
   timer_engine: ^0.1.0
   ui_kit: ^0.1.0
@@ -23,3 +22,4 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+

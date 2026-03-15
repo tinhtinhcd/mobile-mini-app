@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:riverpod/riverpod.dart';
+import 'package:timer_engine/src/timer_snapshot.dart';
 import 'package:timer_engine/src/timer_session.dart';
 import 'package:timer_engine/src/timer_state.dart';
 import 'package:timer_engine/src/timer_stats.dart';
@@ -10,23 +11,40 @@ abstract class TimerController extends Notifier<TimerState> {
 
   TimerSession get initialSession;
 
+  TimerSnapshot? get restoredSnapshot => null;
+
+  Future<void> persistSnapshot(TimerSnapshot snapshot) async {}
+
+  TimerSession restoreSession(String sessionId);
+
   TimerSession resolveNextSession(TimerState completedState);
 
   @override
   TimerState build() {
     ref.onDispose(() => _timer?.cancel());
-    return TimerState.initial(session: initialSession);
+
+    final TimerSnapshot? snapshot = restoredSnapshot;
+    if (snapshot == null) {
+      return TimerState.initial(session: initialSession);
+    }
+
+    final TimerState restoredState = TimerState.restored(
+      session: restoreSession(snapshot.sessionId),
+      snapshot: snapshot,
+    );
+    unawaited(persistSnapshot(restoredState.toSnapshot()));
+    return restoredState;
   }
 
   void start() {
     _timer?.cancel();
-    state = state.copyWith(isRunning: true);
+    _setState(state.copyWith(isRunning: true));
     _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
   }
 
   void pause() {
     _timer?.cancel();
-    state = state.copyWith(isRunning: false);
+    _setState(state.copyWith(isRunning: false));
   }
 
   void toggleTimer() {
@@ -40,10 +58,10 @@ abstract class TimerController extends Notifier<TimerState> {
 
   void reset() {
     _timer?.cancel();
-    state = state.copyWith(
+    _setState(state.copyWith(
       isRunning: false,
       remaining: state.activeSession.duration,
-    );
+    ));
   }
 
   void selectSession(TimerSession session) {
@@ -62,9 +80,9 @@ abstract class TimerController extends Notifier<TimerState> {
       return;
     }
 
-    state = state.copyWith(
+    _setState(state.copyWith(
       remaining: Duration(seconds: state.remaining.inSeconds - 1),
-    );
+    ));
   }
 
   void _onTick(Timer _) {
@@ -81,17 +99,19 @@ abstract class TimerController extends Notifier<TimerState> {
       stats: updatedStats,
     );
     final nextSession = resolveNextSession(completedState);
-
-    state = completedState;
-    _moveToSession(nextSession);
+    _setState(completedState.copyWith(
+      activeSession: nextSession,
+      remaining: nextSession.duration,
+      isRunning: false,
+    ));
   }
 
   void _moveToSession(TimerSession session) {
-    state = state.copyWith(
+    _setState(state.copyWith(
       activeSession: session,
       remaining: session.duration,
       isRunning: false,
-    );
+    ));
   }
 
   TimerStats _updatedStats(TimerSession session, TimerStats stats) {
@@ -103,5 +123,10 @@ abstract class TimerController extends Notifier<TimerState> {
       completedTrackedSessions: stats.completedTrackedSessions + 1,
       trackedMinutes: stats.trackedMinutes + session.duration.inMinutes,
     );
+  }
+
+  void _setState(TimerState nextState) {
+    state = nextState;
+    unawaited(persistSnapshot(nextState.toSnapshot()));
   }
 }

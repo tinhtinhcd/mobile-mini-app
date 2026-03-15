@@ -57,12 +57,15 @@ extension FastingPlanSession on FastingPlan {
 }
 
 FastingPlan fastingPlanFromSession(TimerSession session) {
+  return fastingPlanFromSessionId(session.id);
+}
+
+FastingPlan fastingPlanFromSessionId(String sessionId) {
   for (final FastingPlan plan in FastingPlan.values) {
-    if (plan.id == session.id) {
+    if (plan.id == sessionId) {
       return plan;
     }
   }
 
   return FastingPlan.lean16;
 }
-

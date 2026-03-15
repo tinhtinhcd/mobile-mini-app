@@ -7,6 +7,7 @@ environment:
 workspace:
   - packages/app_core
   - packages/ui_kit
+  - packages/storage
   - packages/timer_engine
   - apps/pomodoro_app
   - apps/fasting_app

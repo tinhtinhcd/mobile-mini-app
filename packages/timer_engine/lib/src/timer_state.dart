@@ -1,4 +1,5 @@
 import 'package:timer_engine/src/timer_session.dart';
+import 'package:timer_engine/src/timer_snapshot.dart';
 import 'package:timer_engine/src/timer_stats.dart';
 
 class TimerState {
@@ -17,6 +18,30 @@ class TimerState {
       remaining: session.duration,
       isRunning: false,
       stats: const TimerStats(),
+    );
+  }
+
+  factory TimerState.restored({
+    required TimerSession session,
+    required TimerSnapshot snapshot,
+  }) {
+    final int boundedRemainingSeconds;
+    if (snapshot.remainingSeconds < 0) {
+      boundedRemainingSeconds = 0;
+    } else if (snapshot.remainingSeconds > session.duration.inSeconds) {
+      boundedRemainingSeconds = session.duration.inSeconds;
+    } else {
+      boundedRemainingSeconds = snapshot.remainingSeconds;
+    }
+
+    return TimerState(
+      activeSession: session,
+      remaining: Duration(seconds: boundedRemainingSeconds),
+      isRunning: false,
+      stats: TimerStats(
+        completedTrackedSessions: snapshot.completedTrackedSessions,
+        trackedMinutes: snapshot.trackedMinutes,
+      ),
     );
   }
 
@@ -47,5 +72,14 @@ class TimerState {
       stats: stats ?? this.stats,
     );
   }
-}
 
+  TimerSnapshot toSnapshot() {
+    return TimerSnapshot(
+      sessionId: activeSession.id,
+      remainingSeconds: remaining.inSeconds,
+      wasRunning: isRunning,
+      completedTrackedSessions: stats.completedTrackedSessions,
+      trackedMinutes: stats.trackedMinutes,
+    );
+  }
+}

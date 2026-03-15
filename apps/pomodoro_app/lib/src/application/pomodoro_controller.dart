@@ -1,8 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
 final pomodoroControllerProvider =
     NotifierProvider<PomodoroController, TimerState>(PomodoroController.new);
+final pomodoroSnapshotStoreProvider = Provider<TimerSnapshotStore>((_) {
+  throw UnimplementedError('pomodoroSnapshotStoreProvider must be overridden.');
+});
+final pomodoroRestoredSnapshotProvider = Provider<TimerSnapshot?>((_) => null);
 
 enum PomodoroMode {
   focus('Focus'),
@@ -43,7 +48,11 @@ extension PomodoroModeSession on PomodoroMode {
 }
 
 PomodoroMode pomodoroModeFromSession(TimerSession session) {
-  switch (session.id) {
+  return pomodoroModeFromSessionId(session.id);
+}
+
+PomodoroMode pomodoroModeFromSessionId(String sessionId) {
+  switch (sessionId) {
     case 'focus':
       return PomodoroMode.focus;
     case 'shortBreak':
@@ -57,6 +66,21 @@ PomodoroMode pomodoroModeFromSession(TimerSession session) {
 class PomodoroController extends TimerController {
   @override
   TimerSession get initialSession => PomodoroMode.focus.session;
+
+  @override
+  TimerSnapshot? get restoredSnapshot => ref.read(
+        pomodoroRestoredSnapshotProvider,
+      );
+
+  @override
+  Future<void> persistSnapshot(TimerSnapshot snapshot) {
+    return ref.read(pomodoroSnapshotStoreProvider).writeSnapshot(snapshot);
+  }
+
+  @override
+  TimerSession restoreSession(String sessionId) {
+    return pomodoroModeFromSessionId(sessionId).session;
+  }
 
   void selectMode(PomodoroMode mode) {
     selectSession(mode.session);

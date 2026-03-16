@@ -25,6 +25,7 @@ class StoreMonetizationService extends MonetizationService {
   SharedPreferences? _preferences;
   EntitlementState _entitlementState = const EntitlementState.free();
   bool _isInitialized = false;
+  Future<void>? _storeSyncFuture;
 
   @override
   EntitlementState get entitlementState => _entitlementState;
@@ -54,6 +55,7 @@ class StoreMonetizationService extends MonetizationService {
         ownedProductIds: cachedProducts.toSet(),
         source: EntitlementSource.cachedPurchase,
       );
+      notifyListeners();
     }
 
     _purchaseSubscription = _inAppPurchase.purchaseStream.listen(
@@ -67,18 +69,8 @@ class StoreMonetizationService extends MonetizationService {
       },
     );
 
-    final bool storeAvailable = await _inAppPurchase.isAvailable();
-    _entitlementState = _entitlementState.copyWith(
-      storeAvailable: storeAvailable,
-    );
-
-    if (storeAvailable) {
-      await refreshProducts();
-    } else {
-      notifyListeners();
-    }
-
     _isInitialized = true;
+    _scheduleStoreSync();
   }
 
   @override
@@ -105,15 +97,40 @@ class StoreMonetizationService extends MonetizationService {
         ),
       );
 
-    final String? responseMessage = response.error?.message ??
+    final String? responseMessage =
+        response.error?.message ??
         (response.notFoundIDs.isEmpty
             ? null
             : 'Missing store products: ${response.notFoundIDs.join(', ')}');
 
-    _entitlementState = _entitlementState.copyWith(
-      message: responseMessage,
-    );
+    _entitlementState = _entitlementState.copyWith(message: responseMessage);
     notifyListeners();
+  }
+
+  void _scheduleStoreSync() {
+    final Future<void>? existingSync = _storeSyncFuture;
+    if (existingSync != null) {
+      return;
+    }
+
+    _storeSyncFuture = _syncStoreState().whenComplete(() {
+      _storeSyncFuture = null;
+    });
+  }
+
+  Future<void> _syncStoreState() async {
+    final bool storeAvailable = await _inAppPurchase.isAvailable();
+    _entitlementState = _entitlementState.copyWith(
+      storeAvailable: storeAvailable,
+      clearMessage: true,
+    );
+
+    if (!storeAvailable) {
+      notifyListeners();
+      return;
+    }
+
+    await refreshProducts();
   }
 
   @override

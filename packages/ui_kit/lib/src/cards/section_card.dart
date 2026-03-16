@@ -19,24 +19,23 @@ class SectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: 0.025),
+          theme.colorScheme.surfaceContainerLowest,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.9),
+        ),
+      ),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[
-              theme.colorScheme.surface,
-              Color.alphaBlend(
-                theme.colorScheme.primary.withValues(alpha: 0.04),
-                theme.colorScheme.surface,
-              ),
-            ],
-          ),
+          borderRadius: BorderRadius.circular(AppRadius.medium),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -70,12 +69,12 @@ class SectionCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(999),
                     color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.38,
+                      alpha: 0.55,
                     ),
                   ),
                   child: const SizedBox(height: 1, width: double.infinity),
                 ),
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.md),
               ],
               child,
             ],

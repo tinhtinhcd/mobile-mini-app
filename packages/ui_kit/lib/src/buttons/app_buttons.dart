@@ -15,12 +15,21 @@ class AppPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle primaryStyle = FilledButton.styleFrom(
+      minimumSize: const Size.fromHeight(56),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    );
     final Widget button;
 
     if (icon == null) {
-      button = FilledButton(onPressed: onPressed, child: Text(label));
+      button = FilledButton(
+        style: primaryStyle,
+        onPressed: onPressed,
+        child: Text(label),
+      );
     } else {
       button = FilledButton.icon(
+        style: primaryStyle,
         onPressed: onPressed,
         icon: icon!,
         label: Text(label),
@@ -51,12 +60,21 @@ class AppSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ButtonStyle secondaryStyle = OutlinedButton.styleFrom(
+      minimumSize: const Size.fromHeight(48),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+    );
     final Widget button;
 
     if (icon == null) {
-      button = OutlinedButton(onPressed: onPressed, child: Text(label));
+      button = OutlinedButton(
+        style: secondaryStyle,
+        onPressed: onPressed,
+        child: Text(label),
+      );
     } else {
       button = OutlinedButton.icon(
+        style: secondaryStyle,
         onPressed: onPressed,
         icon: icon!,
         label: Text(label),

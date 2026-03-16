@@ -1,0 +1,23 @@
+name: habit_timer_app
+description: Scaffolded placeholder app for the Mobile App Factory monorepo.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+  flutter: '>=3.29.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  app_core:
+    path: ../../packages/app_core
+  ui_kit:
+    path: ../../packages/ui_kit
+
+dependency_overrides:
+  app_core:
+    path: ../../packages/app_core
+
+flutter:
+  uses-material-design: true

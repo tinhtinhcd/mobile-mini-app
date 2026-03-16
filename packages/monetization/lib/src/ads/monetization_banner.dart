@@ -13,11 +13,13 @@ class MonetizationBanner extends StatefulWidget {
     required this.adService,
     required this.entitlementState,
     required this.adUnitId,
+    this.startupAppId,
   });
 
   final AdService adService;
   final EntitlementState entitlementState;
   final String adUnitId;
+  final String? startupAppId;
 
   @override
   State<MonetizationBanner> createState() => _MonetizationBannerState();
@@ -29,10 +31,19 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   bool _loadScheduled = false;
   Timer? _deferredLoadTimer;
 
+  StartupTiming? get _startupTiming {
+    final String? appId = widget.startupAppId;
+    if (appId == null || appId.isEmpty) {
+      return null;
+    }
+    return StartupTiming.forApp(appId);
+  }
+
   @override
   void initState() {
     super.initState();
     if (kDebugMode) {
+      _startupTiming?.mark('ads_init_skipped_debug');
       return;
     }
     _scheduleLoadAdIfNeeded();
@@ -64,6 +75,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
     }
 
     _loadScheduled = true;
+    _startupTiming?.mark('ads_init_deferred');
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadScheduled = false;
       if (!mounted) {
@@ -87,7 +99,9 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
     }
 
     try {
+      _startupTiming?.mark('ads_init_start');
       await widget.adService.initialize();
+      _startupTiming?.mark('ads_init_done');
 
       final BannerAd ad = widget.adService.createBannerAd(
         adUnitId: widget.adUnitId,
@@ -106,6 +120,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
           },
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
             ad.dispose();
+            _startupTiming?.mark('ads_load_failed');
             if (!mounted) {
               return;
             }
@@ -120,6 +135,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
       ad.load();
       _bannerAd = ad;
     } catch (_) {
+      _startupTiming?.mark('ads_init_failed');
       _disposeBanner();
     }
   }

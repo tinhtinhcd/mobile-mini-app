@@ -148,6 +148,7 @@ void main() {
         expect(find.text('16:00:00'), findsOneWidget);
         expect(find.text('Start fast'), findsOneWidget);
 
+        await tester.ensureVisible(find.text('18:6'));
         await tester.tap(find.text('18:6'));
         await tester.pumpAndSettle();
         expect(find.text('Upgrade Fasting Flow'), findsOneWidget);

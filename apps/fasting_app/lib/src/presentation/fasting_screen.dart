@@ -47,6 +47,40 @@ class FastingScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
           SectionCard(
+            title: 'Current fast',
+            subtitle:
+                'The shared engine handles the countdown. This app only defines fasting rules.',
+            child: Column(
+              children: <Widget>[
+                TimerDisplayCard(
+                  label: selectedPlan.label,
+                  timeText: _formatDuration(state.remaining),
+                  progress: _clampProgress(state.progress),
+                  statusText:
+                      state.isRunning
+                          ? 'Fast in progress'
+                          : state.remaining == state.activeSession.duration
+                          ? 'Ready to begin'
+                          : 'Paused',
+                  footnote: selectedPlan.description,
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: AppSecondaryButton(
+                        label: 'Reset fast',
+                        icon: const Icon(Icons.refresh_rounded),
+                        onPressed: controller.reset,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          SectionCard(
             title: 'Plans',
             subtitle: 'Choose the fasting rhythm you want to follow today.',
             trailing: _PlanBadge(label: selectedPlan.label),
@@ -100,46 +134,12 @@ class FastingScreen extends ConsumerWidget {
                         ),
                   ),
                 ],
-                const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.md),
                 SettingsTile(
                   title: 'Eating window',
                   subtitle: selectedPlan.description,
                   leading: const Icon(Icons.restaurant_rounded),
                   trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          SectionCard(
-            title: 'Current fast',
-            subtitle:
-                'The shared engine handles the countdown. This app only defines fasting rules.',
-            child: Column(
-              children: <Widget>[
-                TimerDisplayCard(
-                  label: selectedPlan.label,
-                  timeText: _formatDuration(state.remaining),
-                  progress: _clampProgress(state.progress),
-                  statusText:
-                      state.isRunning
-                          ? 'Fast in progress'
-                          : state.remaining == state.activeSession.duration
-                          ? 'Ready to begin'
-                          : 'Paused',
-                  footnote: selectedPlan.description,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: AppSecondaryButton(
-                        label: 'Reset fast',
-                        icon: const Icon(Icons.refresh_rounded),
-                        onPressed: controller.reset,
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -203,6 +203,7 @@ class FastingScreen extends ConsumerWidget {
           ],
           const SizedBox(height: AppSpacing.md),
           MonetizationBanner(
+            startupAppId: 'fasting_app',
             adService: adService,
             entitlementState: monetization.entitlementState,
             adUnitId: fastingBannerAdUnitId,

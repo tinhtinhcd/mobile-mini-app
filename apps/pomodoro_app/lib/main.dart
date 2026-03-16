@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:app_core/app_core.dart';
 import 'package:analytics/analytics.dart';
+import 'package:app_core/app_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,8 +15,12 @@ import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
 void main() {
+  final StartupTiming startupTiming = StartupTiming.forApp('pomodoro_app');
+  startupTiming.mark('app_start');
   WidgetsFlutterBinding.ensureInitialized();
+  startupTiming.mark('run_app');
   runApp(createPomodoroApp());
+  startupTiming.mark('run_app_done');
 }
 
 Widget createPomodoroApp({
@@ -74,7 +78,9 @@ class _PomodoroBootstrap extends StatefulWidget {
 
 class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
   TimerSnapshot? _restoredSnapshot;
-  bool _bootstrapReady = false;
+  late final StartupTiming _startupTiming = StartupTiming.forApp(
+    'pomodoro_app',
+  );
   late final PomodoroMonetizationAnalyticsBinding _analyticsBinding =
       PomodoroMonetizationAnalyticsBinding(
         service: widget.monetizationService,
@@ -86,7 +92,9 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
     super.initState();
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_bootstrapAsync());
+      _startupTiming.mark('first_frame');
+      unawaited(_runTierB());
+      unawaited(_runTierC());
     });
   }
 
@@ -96,48 +104,73 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
     super.dispose();
   }
 
-  Future<void> _bootstrapAsync() async {
-    try {
-      await widget.analyticsService.initialize();
-    } catch (_) {}
+  Future<void> _runTierB() async {
+    _startupTiming.mark('bootstrap_start');
+    unawaited(_initializeAnalytics());
+    unawaited(_initializeNotifications());
 
     try {
+      _startupTiming.mark('snapshot_restore_start');
       final TimerSnapshot? snapshot = await widget.snapshotStore.readSnapshot();
-      if (mounted) {
-        setState(() {
-          _restoredSnapshot = snapshot;
-          _bootstrapReady = true;
-        });
+      _startupTiming.mark(
+        snapshot == null
+            ? 'snapshot_restore_done:none'
+            : 'snapshot_restore_done',
+      );
+      if (!mounted) {
+        return;
       }
+      setState(() {
+        _restoredSnapshot = snapshot;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _bootstrapReady = true;
-        });
+      _startupTiming.mark('snapshot_restore_failed');
+      if (!mounted) {
+        return;
       }
+      setState(() {});
+    } finally {
+      _startupTiming.mark('bootstrap_finish');
     }
+  }
 
+  Future<void> _runTierC() async {
     if (kDebugMode) {
+      _startupTiming.mark('monetization_init_skipped_debug');
+      _startupTiming.mark('ads_init_deferred');
       return;
     }
 
-    try {
-      await widget.monetizationService.initialize();
-    } catch (_) {}
+    await Future<void>.delayed(const Duration(seconds: 2));
+    _startupTiming.mark('monetization_init_start');
 
     try {
-      await widget.adService.initialize();
+      await widget.monetizationService.initialize();
+      _startupTiming.mark('monetization_init_done');
+    } catch (_) {}
+
+    _startupTiming.mark('ads_init_deferred');
+  }
+
+  Future<void> _initializeAnalytics() async {
+    try {
+      _startupTiming.mark('analytics_init_start');
+      await widget.analyticsService.initialize();
+      _startupTiming.mark('analytics_init_done');
+    } catch (_) {}
+  }
+
+  Future<void> _initializeNotifications() async {
+    try {
+      _startupTiming.mark('notifications_init_start');
+      await widget.notificationService.initialize();
+      _startupTiming.mark('notifications_init_done');
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
-      key: ValueKey<String>(
-        _bootstrapReady
-            ? 'ready:${_restoredSnapshot?.sessionId ?? 'none'}'
-            : 'booting',
-      ),
       overrides: [
         pomodoroAnalyticsServiceProvider.overrideWith((_) {
           return widget.analyticsService;
@@ -154,8 +187,60 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
           return _restoredSnapshot;
         }),
       ],
-      child: const PomodoroAppEntry(),
+      child: _PomodoroRestoreSync(
+        restoredSnapshot: _restoredSnapshot,
+        child: const PomodoroAppEntry(),
+      ),
     );
+  }
+}
+
+class _PomodoroRestoreSync extends ConsumerStatefulWidget {
+  const _PomodoroRestoreSync({
+    required this.restoredSnapshot,
+    required this.child,
+  });
+
+  final TimerSnapshot? restoredSnapshot;
+  final Widget child;
+
+  @override
+  ConsumerState<_PomodoroRestoreSync> createState() =>
+      _PomodoroRestoreSyncState();
+}
+
+class _PomodoroRestoreSyncState extends ConsumerState<_PomodoroRestoreSync> {
+  @override
+  void initState() {
+    super.initState();
+    _invalidateIfNeeded(previousSnapshot: null);
+  }
+
+  @override
+  void didUpdateWidget(covariant _PomodoroRestoreSync oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _invalidateIfNeeded(previousSnapshot: oldWidget.restoredSnapshot);
+  }
+
+  void _invalidateIfNeeded({required TimerSnapshot? previousSnapshot}) {
+    final TimerSnapshot? snapshot = widget.restoredSnapshot;
+    if (snapshot == null || previousSnapshot != null) {
+      return;
+    }
+
+    Future<void>.microtask(() {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(pomodoroControllerProvider.notifier)
+          .restoreSnapshotState(snapshot);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
 

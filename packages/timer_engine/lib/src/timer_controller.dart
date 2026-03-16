@@ -73,10 +73,9 @@ abstract class TimerController extends Notifier<TimerState> {
 
   void reset() {
     _timer?.cancel();
-    _setState(state.copyWith(
-      isRunning: false,
-      remaining: state.activeSession.duration,
-    ));
+    _setState(
+      state.copyWith(isRunning: false, remaining: state.activeSession.duration),
+    );
     unawaited(onTimerReset(state));
   }
 
@@ -92,15 +91,26 @@ abstract class TimerController extends Notifier<TimerState> {
     unawaited(onSessionChanged(state));
   }
 
+  void restoreSnapshotState(TimerSnapshot snapshot) {
+    _timer?.cancel();
+    final TimerState restoredState = TimerState.restored(
+      session: restoreSession(snapshot.sessionId),
+      snapshot: snapshot,
+    );
+    _setState(restoredState);
+  }
+
   void _tick() {
     if (state.remaining.inSeconds <= 1) {
       _completeSession();
       return;
     }
 
-    _setState(state.copyWith(
-      remaining: Duration(seconds: state.remaining.inSeconds - 1),
-    ));
+    _setState(
+      state.copyWith(
+        remaining: Duration(seconds: state.remaining.inSeconds - 1),
+      ),
+    );
   }
 
   void _onTick(Timer _) {
@@ -117,20 +127,24 @@ abstract class TimerController extends Notifier<TimerState> {
       stats: updatedStats,
     );
     final nextSession = resolveNextSession(completedState);
-    _setState(completedState.copyWith(
-      activeSession: nextSession,
-      remaining: nextSession.duration,
-      isRunning: false,
-    ));
+    _setState(
+      completedState.copyWith(
+        activeSession: nextSession,
+        remaining: nextSession.duration,
+        isRunning: false,
+      ),
+    );
     unawaited(onSessionCompleted(completedState, nextSession));
   }
 
   void _moveToSession(TimerSession session) {
-    _setState(state.copyWith(
-      activeSession: session,
-      remaining: session.duration,
-      isRunning: false,
-    ));
+    _setState(
+      state.copyWith(
+        activeSession: session,
+        remaining: session.duration,
+        isRunning: false,
+      ),
+    );
   }
 
   TimerStats _updatedStats(TimerSession session, TimerStats stats) {

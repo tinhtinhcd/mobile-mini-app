@@ -182,6 +182,7 @@ class PomodoroScreen extends ConsumerWidget {
           ],
           const SizedBox(height: AppSpacing.md),
           MonetizationBanner(
+            startupAppId: 'pomodoro_app',
             adService: adService,
             entitlementState: monetization.entitlementState,
             adUnitId: pomodoroBannerAdUnitId,

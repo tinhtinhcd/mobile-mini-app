@@ -1,19 +1,15 @@
 # Habit Timer
 
 Idea:
-A minimal timer for building habits with simple streak support.
+A minimal Habit Timer app scaffolded from the shared monorepo template.
 
 Primary keyword:
 habit timer
 
-Future features:
-- timer cycles
-- habit streak tracking
-- reminder notifications
-
-Potential monetization:
-- premium streak insights
-- ad-free mode
-
 Status:
-Placeholder only.
+Scaffolded placeholder.
+
+Next implementation suggestion:
+- define the core user flow
+- decide what shared packages are needed beyond app_core and ui_kit
+- replace the placeholder screen with the first real feature surface

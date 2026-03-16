@@ -15,8 +15,12 @@ import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
 void main() {
+  final StartupTiming startupTiming = StartupTiming.forApp('fasting_app');
+  startupTiming.mark('app_start');
   WidgetsFlutterBinding.ensureInitialized();
+  startupTiming.mark('run_app');
   runApp(createFastingApp());
+  startupTiming.mark('run_app_done');
 }
 
 Widget createFastingApp({
@@ -74,7 +78,7 @@ class _FastingBootstrap extends StatefulWidget {
 
 class _FastingBootstrapState extends State<_FastingBootstrap> {
   TimerSnapshot? _restoredSnapshot;
-  bool _bootstrapReady = false;
+  late final StartupTiming _startupTiming = StartupTiming.forApp('fasting_app');
   late final FastingMonetizationAnalyticsBinding _analyticsBinding =
       FastingMonetizationAnalyticsBinding(
         service: widget.monetizationService,
@@ -86,7 +90,9 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
     super.initState();
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      unawaited(_bootstrapAsync());
+      _startupTiming.mark('first_frame');
+      unawaited(_runTierB());
+      unawaited(_runTierC());
     });
   }
 
@@ -96,48 +102,73 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
     super.dispose();
   }
 
-  Future<void> _bootstrapAsync() async {
-    try {
-      await widget.analyticsService.initialize();
-    } catch (_) {}
+  Future<void> _runTierB() async {
+    _startupTiming.mark('bootstrap_start');
+    unawaited(_initializeAnalytics());
+    unawaited(_initializeNotifications());
 
     try {
+      _startupTiming.mark('snapshot_restore_start');
       final TimerSnapshot? snapshot = await widget.snapshotStore.readSnapshot();
-      if (mounted) {
-        setState(() {
-          _restoredSnapshot = snapshot;
-          _bootstrapReady = true;
-        });
+      _startupTiming.mark(
+        snapshot == null
+            ? 'snapshot_restore_done:none'
+            : 'snapshot_restore_done',
+      );
+      if (!mounted) {
+        return;
       }
+      setState(() {
+        _restoredSnapshot = snapshot;
+      });
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _bootstrapReady = true;
-        });
+      _startupTiming.mark('snapshot_restore_failed');
+      if (!mounted) {
+        return;
       }
+      setState(() {});
+    } finally {
+      _startupTiming.mark('bootstrap_finish');
     }
+  }
 
+  Future<void> _runTierC() async {
     if (kDebugMode) {
+      _startupTiming.mark('monetization_init_skipped_debug');
+      _startupTiming.mark('ads_init_deferred');
       return;
     }
 
-    try {
-      await widget.monetizationService.initialize();
-    } catch (_) {}
+    await Future<void>.delayed(const Duration(seconds: 2));
+    _startupTiming.mark('monetization_init_start');
 
     try {
-      await widget.adService.initialize();
+      await widget.monetizationService.initialize();
+      _startupTiming.mark('monetization_init_done');
+    } catch (_) {}
+
+    _startupTiming.mark('ads_init_deferred');
+  }
+
+  Future<void> _initializeAnalytics() async {
+    try {
+      _startupTiming.mark('analytics_init_start');
+      await widget.analyticsService.initialize();
+      _startupTiming.mark('analytics_init_done');
+    } catch (_) {}
+  }
+
+  Future<void> _initializeNotifications() async {
+    try {
+      _startupTiming.mark('notifications_init_start');
+      await widget.notificationService.initialize();
+      _startupTiming.mark('notifications_init_done');
     } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
-      key: ValueKey<String>(
-        _bootstrapReady
-            ? 'ready:${_restoredSnapshot?.sessionId ?? 'none'}'
-            : 'booting',
-      ),
       overrides: [
         fastingAnalyticsServiceProvider.overrideWith((_) {
           return widget.analyticsService;
@@ -154,8 +185,60 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
           return _restoredSnapshot;
         }),
       ],
-      child: const FastingAppEntry(),
+      child: _FastingRestoreSync(
+        restoredSnapshot: _restoredSnapshot,
+        child: const FastingAppEntry(),
+      ),
     );
+  }
+}
+
+class _FastingRestoreSync extends ConsumerStatefulWidget {
+  const _FastingRestoreSync({
+    required this.restoredSnapshot,
+    required this.child,
+  });
+
+  final TimerSnapshot? restoredSnapshot;
+  final Widget child;
+
+  @override
+  ConsumerState<_FastingRestoreSync> createState() =>
+      _FastingRestoreSyncState();
+}
+
+class _FastingRestoreSyncState extends ConsumerState<_FastingRestoreSync> {
+  @override
+  void initState() {
+    super.initState();
+    _invalidateIfNeeded(previousSnapshot: null);
+  }
+
+  @override
+  void didUpdateWidget(covariant _FastingRestoreSync oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _invalidateIfNeeded(previousSnapshot: oldWidget.restoredSnapshot);
+  }
+
+  void _invalidateIfNeeded({required TimerSnapshot? previousSnapshot}) {
+    final TimerSnapshot? snapshot = widget.restoredSnapshot;
+    if (snapshot == null || previousSnapshot != null) {
+      return;
+    }
+
+    Future<void>.microtask(() {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(fastingControllerProvider.notifier)
+          .restoreSnapshotState(snapshot);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
 

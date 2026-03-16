@@ -23,7 +23,7 @@ class FactoryScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color primary = theme.colorScheme.primary;
-    final Color surface = theme.colorScheme.surface;
+    final Color surface = theme.colorScheme.surfaceContainerLowest;
     final Widget content = _ScaffoldContent(
       title: title,
       subtitle: subtitle,
@@ -64,7 +64,8 @@ class FactoryScaffold extends StatelessWidget {
                   viewportConstraints.maxWidth > 720
                       ? 720
                       : viewportConstraints.maxWidth;
-              final Widget centeredContent = Center(
+              final Widget alignedContent = Align(
+                alignment: Alignment.topCenter,
                 child: SizedBox(width: contentWidth, child: content),
               );
 
@@ -72,23 +73,23 @@ class FactoryScaffold extends StatelessWidget {
                 return SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.xl,
-                    AppSpacing.xxl,
-                    AppSpacing.xl,
+                    AppSpacing.md,
+                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.xl,
                   ),
-                  child: centeredContent,
+                  child: alignedContent,
                 );
               }
 
               return Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.xl,
-                  AppSpacing.xxl,
-                  AppSpacing.xl,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                  AppSpacing.md,
                   AppSpacing.xl,
                 ),
-                child: centeredContent,
+                child: alignedContent,
               );
             },
           ),
@@ -127,73 +128,71 @@ class _ScaffoldContent extends StatelessWidget {
       children: <Widget>[
         DecoratedBox(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: <Color>[
-                Color.alphaBlend(primary.withValues(alpha: 0.09), surface),
-                Color.alphaBlend(primary.withValues(alpha: 0.03), surface),
-              ],
+            color: Color.alphaBlend(primary.withValues(alpha: 0.035), surface),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.9),
             ),
-            borderRadius: BorderRadius.circular(AppRadius.large),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      DecoratedBox(
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(
-                            alpha: 0.82,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Expanded(
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.88,
+                            ),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: theme.colorScheme.outlineVariant,
+                            ),
                           ),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: theme.colorScheme.outlineVariant,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                            vertical: AppSpacing.xs,
-                          ),
-                          child: Text(
-                            'UTILITY APP',
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              letterSpacing: 0.9,
-                              fontWeight: FontWeight.w800,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: AppSpacing.xs,
+                            ),
+                            child: Text(
+                              'UTILITY APP',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                letterSpacing: 0.8,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(title, style: theme.textTheme.headlineLarge),
-                      if (subtitle != null) ...<Widget>[
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(subtitle!, style: theme.textTheme.bodyMedium),
-                      ],
+                    ),
+                    if (headerTrailing != null) ...<Widget>[
+                      const SizedBox(width: AppSpacing.md),
+                      Flexible(child: headerTrailing!),
                     ],
-                  ),
+                  ],
                 ),
-                if (headerTrailing != null) ...<Widget>[
-                  const SizedBox(width: AppSpacing.md),
-                  headerTrailing!,
+                const SizedBox(height: AppSpacing.md),
+                Text(title, style: theme.textTheme.headlineMedium),
+                if (subtitle != null) ...<Widget>[
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(subtitle!, style: theme.textTheme.bodyMedium),
                 ],
               ],
             ),
           ),
         ),
-        const SizedBox(height: AppSpacing.xxl),
-        SizedBox(width: double.infinity, child: body),
         if (action != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.lg),
           action!,
         ],
+        const SizedBox(height: AppSpacing.xl),
+        SizedBox(width: double.infinity, child: body),
       ],
     );
   }

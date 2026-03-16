@@ -15,10 +15,12 @@ class FastingScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final TimerState state = ref.watch(fastingControllerProvider);
-    final FastingController controller =
-        ref.read(fastingControllerProvider.notifier);
-    final StoreMonetizationService monetization =
-        ref.watch(fastingMonetizationServiceProvider);
+    final FastingController controller = ref.read(
+      fastingControllerProvider.notifier,
+    );
+    final StoreMonetizationService monetization = ref.watch(
+      fastingMonetizationServiceProvider,
+    );
     final AdService adService = ref.read(fastingAdServiceProvider);
     final ThemeData theme = Theme.of(context);
     final FastingPlan selectedPlan = controller.selectedPlan;
@@ -29,11 +31,12 @@ class FastingScreen extends ConsumerWidget {
           'Track your current fast with shared timer infrastructure and app-specific fasting presets.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
-        onPressed: () => openFastingPaywall(
-          context: context,
-          ref: ref,
-          entryPoint: fastingHeaderButtonEntryPoint,
-        ),
+        onPressed:
+            () => openFastingPaywall(
+              context: context,
+              ref: ref,
+              entryPoint: fastingHeaderButtonEntryPoint,
+            ),
       ),
       action: AppPrimaryButton(
         label: _primaryLabel(state),
@@ -52,32 +55,35 @@ class FastingScreen extends ConsumerWidget {
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
-                  children: FastingPlan.values.asMap().entries.map((
-                    MapEntry<int, FastingPlan> entry,
-                  ) {
-                    final UsageLimitResult access = fastingPlanPolicy.evaluate(
-                      entitlement: monetization.entitlementState,
-                      usageCount: entry.key + 1,
-                    );
+                  children:
+                      FastingPlan.values.asMap().entries.map((
+                        MapEntry<int, FastingPlan> entry,
+                      ) {
+                        final UsageLimitResult access = fastingPlanPolicy
+                            .evaluate(
+                              entitlement: monetization.entitlementState,
+                              usageCount: entry.key + 1,
+                            );
 
-                    return SelectionPill(
-                      label: entry.value.label,
-                      selected: entry.value == selectedPlan && access.allowed,
-                      locked: !access.allowed,
-                      onTap: () {
-                        if (access.allowed) {
-                          controller.selectPlan(entry.value);
-                          return;
-                        }
+                        return SelectionPill(
+                          label: entry.value.label,
+                          selected:
+                              entry.value == selectedPlan && access.allowed,
+                          locked: !access.allowed,
+                          onTap: () {
+                            if (access.allowed) {
+                              controller.selectPlan(entry.value);
+                              return;
+                            }
 
-                        openFastingPaywall(
-                          context: context,
-                          ref: ref,
-                          entryPoint: fastingLockedPlanEntryPoint,
+                            openFastingPaywall(
+                              context: context,
+                              ref: ref,
+                              entryPoint: fastingLockedPlanEntryPoint,
+                            );
+                          },
                         );
-                      },
-                    );
-                  }).toList(),
+                      }).toList(),
                 ),
                 if (!monetization.isPremium) ...<Widget>[
                   const SizedBox(height: AppSpacing.md),
@@ -85,11 +91,12 @@ class FastingScreen extends ConsumerWidget {
                     title: 'Premium unlocks extended fasting plans',
                     subtitle: fastingPlanPolicy.upgradeMessage,
                     actionLabel: 'See premium',
-                    onPressed: () => openFastingPaywall(
-                      context: context,
-                      ref: ref,
-                      entryPoint: fastingHeaderButtonEntryPoint,
-                    ),
+                    onPressed:
+                        () => openFastingPaywall(
+                          context: context,
+                          ref: ref,
+                          entryPoint: fastingHeaderButtonEntryPoint,
+                        ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
@@ -104,16 +111,18 @@ class FastingScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.xl),
           SectionCard(
             title: 'Current fast',
-            subtitle: 'The shared engine handles the countdown. This app only defines fasting rules.',
+            subtitle:
+                'The shared engine handles the countdown. This app only defines fasting rules.',
             child: Column(
               children: <Widget>[
                 TimerDisplayCard(
                   label: selectedPlan.label,
                   timeText: _formatDuration(state.remaining),
                   progress: _clampProgress(state.progress),
-                  statusText: state.isRunning
-                      ? 'Fast in progress'
-                      : state.remaining == state.activeSession.duration
+                  statusText:
+                      state.isRunning
+                          ? 'Fast in progress'
+                          : state.remaining == state.activeSession.duration
                           ? 'Ready to begin'
                           : 'Paused',
                   footnote: selectedPlan.description,
@@ -127,15 +136,11 @@ class FastingScreen extends ConsumerWidget {
               ],
             ),
           ),
-          MonetizationBanner(
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: fastingBannerAdUnitId,
-          ),
           const SizedBox(height: AppSpacing.xl),
           SectionCard(
             title: 'Progress',
-            subtitle: 'A small proof that both timer apps share the same stats engine.',
+            subtitle:
+                'A small proof that both timer apps share the same stats engine.',
             child: Column(
               children: <Widget>[
                 Row(
@@ -169,11 +174,13 @@ class FastingScreen extends ConsumerWidget {
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(message, style: theme.textTheme.bodySmall),
           ],
+          MonetizationBanner(
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: fastingBannerAdUnitId,
+          ),
         ],
       ),
     );
@@ -192,10 +199,14 @@ class FastingScreen extends ConsumerWidget {
   String _formatDuration(Duration duration) {
     final int totalHours = duration.inHours;
     final String hours = totalHours.toString().padLeft(2, '0');
-    final String minutes =
-        duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final String seconds =
-        duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final String minutes = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final String seconds = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     return '$hours:$minutes:$seconds';
   }
 
@@ -226,10 +237,7 @@ class FastingScreen extends ConsumerWidget {
 }
 
 class _PremiumButton extends StatelessWidget {
-  const _PremiumButton({
-    required this.isPremium,
-    required this.onPressed,
-  });
+  const _PremiumButton({required this.isPremium, required this.onPressed});
 
   final bool isPremium;
   final VoidCallback onPressed;

@@ -161,16 +161,16 @@ class PomodoroScreen extends ConsumerWidget {
                           ),
                     ),
           ),
-          MonetizationBanner(
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: pomodoroBannerAdUnitId,
-          ),
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
             Text(message, style: theme.textTheme.bodySmall),
           ],
+          MonetizationBanner(
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: pomodoroBannerAdUnitId,
+          ),
         ],
       ),
     );

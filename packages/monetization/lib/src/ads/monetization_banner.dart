@@ -33,7 +33,8 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   @override
   void didUpdateWidget(MonetizationBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.entitlementState.isPremium && !oldWidget.entitlementState.isPremium) {
+    if (widget.entitlementState.isPremium &&
+        !oldWidget.entitlementState.isPremium) {
       _disposeBanner();
       return;
     }
@@ -101,6 +102,8 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
     if (widget.entitlementState.isPremium || !_isLoaded || _bannerAd == null) {
       return const SizedBox.shrink();
     }
@@ -108,10 +111,33 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.xl),
       child: Center(
-        child: SizedBox(
-          width: _bannerAd!.size.width.toDouble(),
-          height: _bannerAd!.size.height.toDouble(),
-          child: AdWidget(ad: _bannerAd!),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surface,
+            borderRadius: BorderRadius.circular(AppRadius.medium),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'Sponsored',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    letterSpacing: 0.7,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                SizedBox(
+                  width: _bannerAd!.size.width.toDouble(),
+                  height: _bannerAd!.size.height.toDouble(),
+                  child: AdWidget(ad: _bannerAd!),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

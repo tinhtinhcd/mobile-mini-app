@@ -2,7 +2,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:monetization/src/ads/ad_service.dart';
 
 class GoogleMobileAdsService implements AdService {
+  GoogleMobileAdsService({this.interstitialsEnabled = false});
+
   bool _isInitialized = false;
+
+  @override
+  final bool interstitialsEnabled;
 
   @override
   Future<void> initialize() async {
@@ -33,6 +38,10 @@ class GoogleMobileAdsService implements AdService {
     required String adUnitId,
     FullScreenContentCallback<InterstitialAd>? fullScreenContentCallback,
   }) async {
+    if (!interstitialsEnabled || adUnitId.isEmpty) {
+      return;
+    }
+
     await initialize();
 
     await InterstitialAd.load(

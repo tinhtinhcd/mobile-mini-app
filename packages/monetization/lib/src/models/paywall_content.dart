@@ -7,6 +7,8 @@ class PaywallContent {
     required this.yearlyProductId,
     this.monthlyFallbackPrice = r'$0.99 / month',
     this.yearlyFallbackPrice = r'$9.99 / year',
+    this.freeTierNote =
+        'Core app flows stay free. Premium removes the light banner ads and unlocks advanced tools when you want more.',
     this.closeLabel = 'Maybe later',
     this.restoreLabel = 'Restore purchases',
   });
@@ -18,6 +20,7 @@ class PaywallContent {
   final String yearlyProductId;
   final String monthlyFallbackPrice;
   final String yearlyFallbackPrice;
+  final String freeTierNote;
   final String closeLabel;
   final String restoreLabel;
 }

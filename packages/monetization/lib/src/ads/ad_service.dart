@@ -1,6 +1,8 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 abstract class AdService {
+  bool get interstitialsEnabled;
+
   Future<void> initialize();
 
   BannerAd createBannerAd({

@@ -13,20 +13,22 @@ const UsageLimitPolicy fastingPlanPolicy = UsageLimitPolicy(
   title: 'Extended fasting plans',
   freeLimit: 2,
   upgradeMessage:
-      'Premium unlocks longer fasting plans, removes ads, and keeps your advanced progress tools open.',
+      'Core fasting plans stay free. Premium adds longer plans, removes light ads, and unlocks deeper progress tools.',
 );
 
 const PaywallContent fastingPaywallContent = PaywallContent(
   title: 'Upgrade Fasting Flow',
   subtitle:
-      'Go premium to remove ads and unlock the full fasting plan library.',
+      'Go premium for an ad-free experience and the full set of advanced fasting tools.',
   benefits: <String>[
-    'Ad-free fasting sessions',
-    'Access to extended 18:6 and 20:4 plans',
-    'Unlimited premium fasting tools',
+    'Remove the light banner ads',
+    'Unlock extended 18:6 and 20:4 fasting plans',
+    'Access deeper premium progress tools',
   ],
   monthlyProductId: fastingMonthlyProductId,
   yearlyProductId: fastingYearlyProductId,
+  freeTierNote:
+      'Starting, pausing, resuming, resetting, and core fasting plans stay free. Premium is for advanced plans and ad-free use.',
 );
 
 final fastingMonetizationServiceProvider =
@@ -45,8 +47,5 @@ Future<void> showFastingPaywall(BuildContext context, WidgetRef ref) {
     service: ref.read(fastingMonetizationServiceProvider),
     content: fastingPaywallContent,
   );
-  return showPaywallSheet(
-    context: context,
-    controller: controller,
-  );
+  return showPaywallSheet(context: context, controller: controller);
 }

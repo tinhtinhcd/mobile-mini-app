@@ -28,9 +28,7 @@ Future<void> showPaywallSheet({
 }
 
 class _PaywallSheet extends StatelessWidget {
-  const _PaywallSheet({
-    required this.controller,
-  });
+  const _PaywallSheet({required this.controller});
 
   final PaywallController controller;
 
@@ -75,11 +73,16 @@ class _PaywallSheet extends StatelessWidget {
                     controller.content.subtitle,
                     style: theme.textTheme.bodyMedium,
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    controller.content.freeTierNote,
+                    style: theme.textTheme.bodySmall,
+                  ),
                   const SizedBox(height: AppSpacing.xl),
                   PremiumCalloutCard(
                     title: 'Premium keeps the experience focused',
                     subtitle:
-                        'Remove ads, unlock limits, and keep the timer tools feeling lightweight.',
+                        'Remove light banner ads and unlock advanced features without changing the calm core flow.',
                     badgeLabel: 'Upgrade',
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -115,33 +118,37 @@ class _PaywallSheet extends StatelessWidget {
                   const SizedBox(height: AppSpacing.lg),
                   SectionCard(
                     title: 'Choose a plan',
-                    subtitle: controller.isPremium
-                        ? 'Premium is already active.'
-                        : 'Subscriptions remove ads and lift free-tier limits.',
+                    subtitle:
+                        controller.isPremium
+                            ? 'Premium is already active.'
+                            : 'Subscriptions remove ads and unlock the advanced tools. Free use stays available.',
                     child: Column(
                       children: <Widget>[
                         AppPrimaryButton(
                           label:
                               'Monthly  ${monthlyProduct?.priceLabel ?? controller.content.monthlyFallbackPrice}',
-                          onPressed: controller.isBusy || controller.isPremium
-                              ? null
-                              : controller.purchaseMonthly,
+                          onPressed:
+                              controller.isBusy || controller.isPremium
+                                  ? null
+                                  : controller.purchaseMonthly,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         AppSecondaryButton(
                           label:
                               'Yearly  ${yearlyProduct?.priceLabel ?? controller.content.yearlyFallbackPrice}',
-                          onPressed: controller.isBusy || controller.isPremium
-                              ? null
-                              : controller.purchaseYearly,
+                          onPressed:
+                              controller.isBusy || controller.isPremium
+                                  ? null
+                                  : controller.purchaseYearly,
                         ),
                         const SizedBox(height: AppSpacing.md),
                         AppSecondaryButton(
                           label: controller.content.restoreLabel,
                           icon: const Icon(Icons.restore_rounded),
-                          onPressed: controller.isBusy
-                              ? null
-                              : controller.restorePurchases,
+                          onPressed:
+                              controller.isBusy
+                                  ? null
+                                  : controller.restorePurchases,
                         ),
                         if (controller.message case final String message
                             when message.isNotEmpty) ...<Widget>[

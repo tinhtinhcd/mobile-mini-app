@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_core/app_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:monetization/src/ads/ad_service.dart';
@@ -31,12 +32,18 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   @override
   void initState() {
     super.initState();
+    if (kDebugMode) {
+      return;
+    }
     _scheduleLoadAdIfNeeded();
   }
 
   @override
   void didUpdateWidget(MonetizationBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (kDebugMode) {
+      return;
+    }
     if (widget.entitlementState.isPremium &&
         !oldWidget.entitlementState.isPremium) {
       _disposeBanner();
@@ -133,6 +140,10 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+
+    if (kDebugMode) {
+      return const SizedBox.shrink();
+    }
 
     if (widget.entitlementState.isPremium || !_isLoaded || _bannerAd == null) {
       return const SizedBox.shrink();

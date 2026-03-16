@@ -14,10 +14,6 @@ import 'package:notifications/notifications.dart';
 import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
-const Color _fastingAccentColor = Color(0xFF1D8A6B);
-const String _fastingAppTitle = 'Fasting Tracker';
-const String _fastingLaunchSubtitle = 'Preparing your fasting timer.';
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(createFastingApp());
@@ -79,7 +75,6 @@ class _FastingBootstrap extends StatefulWidget {
 class _FastingBootstrapState extends State<_FastingBootstrap> {
   TimerSnapshot? _restoredSnapshot;
   bool _bootstrapReady = false;
-  bool _appMounted = false;
   late final FastingMonetizationAnalyticsBinding _analyticsBinding =
       FastingMonetizationAnalyticsBinding(
         service: widget.monetizationService,
@@ -91,11 +86,6 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
     super.initState();
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _appMounted = true;
-        });
-      }
       unawaited(_bootstrapAsync());
     });
   }
@@ -142,18 +132,6 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_appMounted) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(_fastingAccentColor),
-        darkTheme: AppTheme.dark(_fastingAccentColor),
-        home: const FactoryLaunchScreen(
-          title: _fastingAppTitle,
-          subtitle: _fastingLaunchSubtitle,
-        ),
-      );
-    }
-
     return ProviderScope(
       key: ValueKey<String>(
         _bootstrapReady

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -24,6 +26,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
   bool _loadScheduled = false;
+  Timer? _deferredLoadTimer;
 
   @override
   void initState() {
@@ -59,7 +62,13 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
       if (!mounted) {
         return;
       }
-      _loadAdIfNeeded();
+      _deferredLoadTimer?.cancel();
+      _deferredLoadTimer = Timer(const Duration(milliseconds: 1200), () {
+        if (!mounted) {
+          return;
+        }
+        unawaited(_loadAdIfNeeded());
+      });
     });
   }
 
@@ -116,6 +125,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
 
   @override
   void dispose() {
+    _deferredLoadTimer?.cancel();
     _disposeBanner();
     super.dispose();
   }

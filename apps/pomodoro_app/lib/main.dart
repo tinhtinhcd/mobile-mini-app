@@ -14,10 +14,6 @@ import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
-const Color _pomodoroAccentColor = Color(0xFFE4572E);
-const String _pomodoroAppTitle = 'Pomodoro App';
-const String _pomodoroLaunchSubtitle = 'Preparing your focus timer.';
-
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(createPomodoroApp());
@@ -79,7 +75,6 @@ class _PomodoroBootstrap extends StatefulWidget {
 class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
   TimerSnapshot? _restoredSnapshot;
   bool _bootstrapReady = false;
-  bool _appMounted = false;
   late final PomodoroMonetizationAnalyticsBinding _analyticsBinding =
       PomodoroMonetizationAnalyticsBinding(
         service: widget.monetizationService,
@@ -91,11 +86,6 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
     super.initState();
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        setState(() {
-          _appMounted = true;
-        });
-      }
       unawaited(_bootstrapAsync());
     });
   }
@@ -142,18 +132,6 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_appMounted) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.light(_pomodoroAccentColor),
-        darkTheme: AppTheme.dark(_pomodoroAccentColor),
-        home: const FactoryLaunchScreen(
-          title: _pomodoroAppTitle,
-          subtitle: _pomodoroLaunchSubtitle,
-        ),
-      );
-    }
-
     return ProviderScope(
       key: ValueKey<String>(
         _bootstrapReady

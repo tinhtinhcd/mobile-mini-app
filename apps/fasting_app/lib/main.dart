@@ -37,6 +37,11 @@ Future<void> main() async {
       );
   await monetizationService.initialize();
 
+  FastingMonetizationAnalyticsBinding(
+    service: monetizationService,
+    analytics: analyticsService,
+  ).attach();
+
   final GoogleMobileAdsService adService = GoogleMobileAdsService();
   await adService.initialize();
 

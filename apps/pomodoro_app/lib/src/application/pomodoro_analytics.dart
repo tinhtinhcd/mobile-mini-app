@@ -1,6 +1,7 @@
 import 'package:analytics/analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
 
@@ -92,6 +93,106 @@ AnalyticsEvent pomodoroPaywallOpenedEvent(String entryPoint) {
   );
 }
 
+AnalyticsEvent pomodoroPurchaseStartedEvent(String productId) {
+  return AnalyticsEvent(
+    name: AnalyticsEventNames.purchaseStarted,
+    parameters: <String, Object?>{
+      'app_id': pomodoroAppId,
+      'product_id': productId,
+    },
+  );
+}
+
+AnalyticsEvent pomodoroPurchaseRestoredEvent() {
+  return const AnalyticsEvent(
+    name: AnalyticsEventNames.purchaseRestored,
+    parameters: <String, Object?>{
+      'app_id': pomodoroAppId,
+    },
+  );
+}
+
+AnalyticsEvent pomodoroEntitlementChangedEvent(EntitlementState state) {
+  return AnalyticsEvent(
+    name: AnalyticsEventNames.entitlementChanged,
+    parameters: <String, Object?>{
+      'app_id': pomodoroAppId,
+      'is_premium': state.isPremium,
+      'source': state.source.name,
+      'owned_product_count': state.ownedProductIds.length,
+    },
+  );
+}
+
+class PomodoroPaywallController extends PaywallController {
+  PomodoroPaywallController({
+    required super.service,
+    required super.content,
+    required this.analytics,
+  });
+
+  final AnalyticsService analytics;
+
+  @override
+  Future<void> purchaseMonthly() async {
+    try {
+      await analytics.logEvent(
+        pomodoroPurchaseStartedEvent(content.monthlyProductId),
+      );
+    } catch (_) {}
+    await super.purchaseMonthly();
+  }
+
+  @override
+  Future<void> purchaseYearly() async {
+    try {
+      await analytics.logEvent(
+        pomodoroPurchaseStartedEvent(content.yearlyProductId),
+      );
+    } catch (_) {}
+    await super.purchaseYearly();
+  }
+
+  @override
+  Future<void> restorePurchases() async {
+    try {
+      await analytics.logEvent(pomodoroPurchaseRestoredEvent());
+    } catch (_) {}
+    await super.restorePurchases();
+  }
+}
+
+class PomodoroMonetizationAnalyticsBinding {
+  PomodoroMonetizationAnalyticsBinding({
+    required this.service,
+    required this.analytics,
+  }) : _previousState = service.entitlementState;
+
+  final StoreMonetizationService service;
+  final AnalyticsService analytics;
+
+  EntitlementState _previousState;
+
+  void attach() {
+    service.addListener(_onMonetizationChanged);
+  }
+
+  void _onMonetizationChanged() {
+    final EntitlementState nextState = service.entitlementState;
+    final bool changed =
+        nextState.isPremium != _previousState.isPremium ||
+        nextState.source != _previousState.source ||
+        nextState.ownedProductIds.length != _previousState.ownedProductIds.length;
+
+    if (!changed) {
+      return;
+    }
+
+    _previousState = nextState;
+    analytics.logEvent(pomodoroEntitlementChangedEvent(nextState));
+  }
+}
+
 Future<void> openPomodoroPaywall({
   required BuildContext context,
   required WidgetRef ref,
@@ -105,5 +206,13 @@ Future<void> openPomodoroPaywall({
     return;
   }
 
-  await showPomodoroPaywall(context, ref);
+  final PomodoroPaywallController controller = PomodoroPaywallController(
+    service: ref.read(pomodoroMonetizationServiceProvider),
+    content: pomodoroPaywallContent,
+    analytics: analytics,
+  );
+  await showPaywallSheet(
+    context: context,
+    controller: controller,
+  );
 }

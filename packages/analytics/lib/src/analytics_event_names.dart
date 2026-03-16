@@ -6,4 +6,7 @@ class AnalyticsEventNames {
   static const String sessionChanged = 'session_changed';
   static const String notificationScheduled = 'notification_scheduled';
   static const String paywallOpened = 'paywall_opened';
+  static const String purchaseStarted = 'purchase_started';
+  static const String purchaseRestored = 'purchase_restored';
+  static const String entitlementChanged = 'entitlement_changed';
 }

@@ -1,5 +1,7 @@
 import 'package:app_core/app_core.dart';
+import 'package:analytics/analytics.dart';
 import 'package:fasting_app/app_config.dart';
+import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,10 @@ import 'package:storage/storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final DebugLoggerAnalyticsService analyticsService =
+      DebugLoggerAnalyticsService();
+  await analyticsService.initialize();
 
   final NotificationService notificationService = NotificationService(
     defaultChannel: const NotificationChannel(
@@ -43,6 +49,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        fastingAnalyticsServiceProvider.overrideWith((_) => analyticsService),
         fastingMonetizationServiceProvider.overrideWith(
           (_) => monetizationService,
         ),

@@ -1,5 +1,9 @@
+import 'dart:async';
+
+import 'package:analytics/analytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notifications/notifications.dart';
+import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
@@ -80,6 +84,9 @@ class PomodoroController extends TimerController {
         pomodoroRestoredSnapshotProvider,
       );
 
+  AnalyticsService get _analytics =>
+      ref.read(pomodoroAnalyticsServiceProvider);
+
   NotificationService get _notificationService =>
       ref.read(pomodoroNotificationServiceProvider);
 
@@ -95,10 +102,23 @@ class PomodoroController extends TimerController {
 
   void selectMode(PomodoroMode mode) {
     selectSession(mode.session);
+    unawaited(_logEventSafely(
+      pomodoroSessionChangedEvent(
+        session: mode.session,
+        changeSource: 'mode_selected',
+      ),
+    ));
   }
 
   void skipToNextMode() {
+    final TimerSession nextSession = resolveNextSession(state);
     skipToNextSession();
+    unawaited(_logEventSafely(
+      pomodoroSessionChangedEvent(
+        session: nextSession,
+        changeSource: 'skip_to_next_mode',
+      ),
+    ));
   }
 
   @override
@@ -118,26 +138,32 @@ class PomodoroController extends TimerController {
   }
 
   @override
-  Future<void> onTimerStarted(TimerState state) {
+  Future<void> onTimerStarted(TimerState state) async {
+    await _logEventSafely(pomodoroTimerStartedEvent(state));
     final (String title, String body) = _notificationContentForSession(
       pomodoroModeFromSession(state.activeSession),
     );
-    return _notificationService.scheduleNotification(
+    await _notificationService.scheduleNotification(
       id: pomodoroCompletionNotificationId,
       title: title,
       body: body,
       scheduledAt: DateTime.now().add(state.remaining),
     );
+    await _logEventSafely(
+      pomodoroNotificationScheduledEvent(state.activeSession),
+    );
   }
 
   @override
-  Future<void> onTimerPaused(TimerState state) {
-    return _cancelScheduledNotification();
+  Future<void> onTimerPaused(TimerState state) async {
+    await _logEventSafely(pomodoroTimerPausedEvent(state));
+    await _cancelScheduledNotification();
   }
 
   @override
-  Future<void> onTimerReset(TimerState state) {
-    return _cancelScheduledNotification();
+  Future<void> onTimerReset(TimerState state) async {
+    await _logEventSafely(pomodoroTimerResetEvent(state));
+    await _cancelScheduledNotification();
   }
 
   @override
@@ -149,8 +175,9 @@ class PomodoroController extends TimerController {
   Future<void> onSessionCompleted(
     TimerState completedState,
     TimerSession nextSession,
-  ) {
-    return _cancelScheduledNotification();
+  ) async {
+    await _logEventSafely(pomodoroSessionCompletedEvent(completedState));
+    await _cancelScheduledNotification();
   }
 
   Future<void> _cancelScheduledNotification() {
@@ -167,5 +194,11 @@ class PomodoroController extends TimerController {
       case PomodoroMode.longBreak:
         return ('Break Complete', 'Time to focus again.');
     }
+  }
+
+  Future<void> _logEventSafely(AnalyticsEvent event) async {
+    try {
+      await _analytics.logEvent(event);
+    } catch (_) {}
   }
 }

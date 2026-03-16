@@ -1,3 +1,7 @@
+import 'dart:async';
+
+import 'package:analytics/analytics.dart';
+import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notifications/notifications.dart';
@@ -27,6 +31,9 @@ class FastingController extends TimerController {
         fastingRestoredSnapshotProvider,
       );
 
+  AnalyticsService get _analytics =>
+      ref.read(fastingAnalyticsServiceProvider);
+
   NotificationService get _notificationService =>
       ref.read(fastingNotificationServiceProvider);
 
@@ -44,6 +51,7 @@ class FastingController extends TimerController {
 
   void selectPlan(FastingPlan plan) {
     selectSession(plan.session);
+    unawaited(_logEventSafely(fastingSessionChangedEvent(plan.session)));
   }
 
   @override
@@ -52,24 +60,30 @@ class FastingController extends TimerController {
   }
 
   @override
-  Future<void> onTimerStarted(TimerState state) {
+  Future<void> onTimerStarted(TimerState state) async {
+    await _logEventSafely(fastingTimerStartedEvent(state));
     final FastingPlan plan = fastingPlanFromSession(state.activeSession);
-    return _notificationService.scheduleNotification(
+    await _notificationService.scheduleNotification(
       id: fastingCompletionNotificationId,
       title: 'Fast Complete',
       body: _notificationBodyForPlan(plan),
       scheduledAt: DateTime.now().add(state.remaining),
     );
+    await _logEventSafely(
+      fastingNotificationScheduledEvent(state.activeSession),
+    );
   }
 
   @override
-  Future<void> onTimerPaused(TimerState state) {
-    return _cancelScheduledNotification();
+  Future<void> onTimerPaused(TimerState state) async {
+    await _logEventSafely(fastingTimerPausedEvent(state));
+    await _cancelScheduledNotification();
   }
 
   @override
-  Future<void> onTimerReset(TimerState state) {
-    return _cancelScheduledNotification();
+  Future<void> onTimerReset(TimerState state) async {
+    await _logEventSafely(fastingTimerResetEvent(state));
+    await _cancelScheduledNotification();
   }
 
   @override
@@ -81,8 +95,9 @@ class FastingController extends TimerController {
   Future<void> onSessionCompleted(
     TimerState completedState,
     TimerSession nextSession,
-  ) {
-    return _cancelScheduledNotification();
+  ) async {
+    await _logEventSafely(fastingSessionCompletedEvent(completedState));
+    await _cancelScheduledNotification();
   }
 
   Future<void> _cancelScheduledNotification() {
@@ -102,5 +117,11 @@ class FastingController extends TimerController {
       case FastingPlan.deep20:
         return 'Your 20:4 fasting window has finished.';
     }
+  }
+
+  Future<void> _logEventSafely(AnalyticsEvent event) async {
+    try {
+      await _analytics.logEvent(event);
+    } catch (_) {}
   }
 }

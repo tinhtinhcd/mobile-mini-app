@@ -1,4 +1,5 @@
 import 'package:app_core/app_core.dart';
+import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
@@ -28,7 +29,11 @@ class FastingScreen extends ConsumerWidget {
           'Track your current fast with shared timer infrastructure and app-specific fasting presets.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
-        onPressed: () => showFastingPaywall(context, ref),
+        onPressed: () => openFastingPaywall(
+          context: context,
+          ref: ref,
+          entryPoint: fastingHeaderButtonEntryPoint,
+        ),
       ),
       action: AppPrimaryButton(
         label: _primaryLabel(state),
@@ -65,7 +70,11 @@ class FastingScreen extends ConsumerWidget {
                           return;
                         }
 
-                        showFastingPaywall(context, ref);
+                        openFastingPaywall(
+                          context: context,
+                          ref: ref,
+                          entryPoint: fastingLockedPlanEntryPoint,
+                        );
                       },
                     );
                   }).toList(),

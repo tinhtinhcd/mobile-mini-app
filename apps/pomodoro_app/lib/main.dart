@@ -1,15 +1,21 @@
 import 'package:app_core/app_core.dart';
+import 'package:analytics/analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:monetization/monetization.dart';
 import 'package:notifications/notifications.dart';
 import 'package:pomodoro_app/app_config.dart';
+import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:storage/storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final DebugLoggerAnalyticsService analyticsService =
+      DebugLoggerAnalyticsService();
+  await analyticsService.initialize();
 
   final NotificationService notificationService = NotificationService(
     defaultChannel: const NotificationChannel(
@@ -43,6 +49,7 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        pomodoroAnalyticsServiceProvider.overrideWith((_) => analyticsService),
         pomodoroMonetizationServiceProvider.overrideWith(
           (_) => monetizationService,
         ),

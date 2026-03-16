@@ -43,6 +43,7 @@ Active workspace modules that are compile-ready today:
 mobile_app_factory/
 
   packages/
+    analytics/
     app_core/
     monetization/
     notifications/
@@ -83,6 +84,18 @@ This keeps each app small and easy to maintain.
 ---
 
 # 📦 Package Responsibilities
+
+## analytics
+
+Active shared analytics layer for utility apps.
+
+Includes:
+
+* reusable analytics abstraction
+* shared timer-family event names
+* debug logger implementation for early product instrumentation
+
+---
 
 ## app_core
 
@@ -183,7 +196,6 @@ Includes:
 
 These directories exist only as placeholders right now and are not wired into the workspace yet:
 
-* `monetization`
 * `export`
 * `form_engine`
 * `tool_engine`
@@ -277,6 +289,7 @@ Infrastructure partially implemented
 * `storage` implemented
 * `notifications` implemented
 * `monetization` implemented
+* `analytics` implemented
 * `export` planned
 
 ---
@@ -340,6 +353,7 @@ flutter run
 The active workspace currently validates these modules together:
 
 * `app_core`
+* `analytics`
 * `monetization`
 * `notifications`
 * `storage`

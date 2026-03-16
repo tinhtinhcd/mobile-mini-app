@@ -2,6 +2,7 @@ import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:monetization/monetization.dart';
+import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
@@ -33,7 +34,11 @@ class PomodoroScreen extends ConsumerWidget {
           'A Phase 1 demo built on shared packages, with one clear action and reusable cards.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
-        onPressed: () => showPomodoroPaywall(context, ref),
+        onPressed: () => openPomodoroPaywall(
+          context: context,
+          ref: ref,
+          entryPoint: pomodoroHeaderButtonEntryPoint,
+        ),
       ),
       action: AppPrimaryButton(
         label: state.isRunning ? 'Pause session' : 'Start session',
@@ -187,7 +192,11 @@ class PomodoroScreen extends ConsumerWidget {
                       AppSecondaryButton(
                         label: 'Unlock premium',
                         icon: const Icon(Icons.workspace_premium_rounded),
-                        onPressed: () => showPomodoroPaywall(context, ref),
+                        onPressed: () => openPomodoroPaywall(
+                          context: context,
+                          ref: ref,
+                          entryPoint: pomodoroSessionNotesGateEntryPoint,
+                        ),
                       ),
                     ],
                   ),

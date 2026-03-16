@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_core/app_core.dart';
 import 'package:analytics/analytics.dart';
 import 'package:flutter/material.dart';
@@ -24,8 +26,6 @@ Future<void> main() async {
       description: 'Session completion alerts for Pomodoro cycles.',
     ),
   );
-  await notificationService.initialize();
-  await notificationService.requestPermission();
 
   final StoreMonetizationService monetizationService =
       StoreMonetizationService(
@@ -43,7 +43,6 @@ Future<void> main() async {
   ).attach();
 
   final GoogleMobileAdsService adService = GoogleMobileAdsService();
-  await adService.initialize();
 
   final SharedPreferencesTimerSnapshotStore snapshotStore =
       await SharedPreferencesTimerSnapshotStore.create(
@@ -68,6 +67,10 @@ Future<void> main() async {
       child: const PomodoroAppEntry(),
     ),
   );
+
+  unawaited(notificationService.requestPermission());
+  unawaited(monetizationService.initialize());
+  unawaited(adService.initialize());
 }
 
 class PomodoroAppEntry extends StatelessWidget {

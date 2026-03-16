@@ -3,10 +3,21 @@ import 'package:fasting_app/app_config.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notifications/notifications.dart';
 import 'package:storage/storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final NotificationService notificationService = NotificationService(
+    defaultChannel: const NotificationChannel(
+      id: 'fasting_timers',
+      name: 'Fasting Timers',
+      description: 'Completion alerts for fasting sessions.',
+    ),
+  );
+  await notificationService.initialize();
+  await notificationService.requestPermission();
 
   final SharedPreferencesTimerSnapshotStore snapshotStore =
       await SharedPreferencesTimerSnapshotStore.create(
@@ -17,6 +28,9 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        fastingNotificationServiceProvider.overrideWith(
+          (_) => notificationService,
+        ),
         fastingSnapshotStoreProvider.overrideWith((_) => snapshotStore),
         fastingRestoredSnapshotProvider.overrideWith((_) => restoredSnapshot),
       ],

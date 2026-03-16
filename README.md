@@ -44,6 +44,7 @@ mobile_app_factory/
 
   packages/
     app_core/
+    notifications/
     storage/
     timer_engine/
     ui_kit/
@@ -56,7 +57,6 @@ mobile_app_factory/
 Placeholder directories also exist for future work, but they are **not** in the active workspace and are **not compile-ready yet**:
 
 * `packages/monetization`
-* `packages/notifications`
 * `packages/export`
 * `packages/form_engine`
 * `packages/tool_engine`
@@ -116,6 +116,19 @@ Includes:
 * layout primitives
 
 All apps must use components from **ui_kit**.
+
+---
+
+## notifications
+
+Active local notification layer for timer-family apps.
+
+Includes:
+
+* permission requests
+* scheduling notifications for timer completion
+* canceling or updating scheduled local notifications
+* immediate local notifications
 
 ---
 
@@ -250,7 +263,7 @@ Foundation implemented
 Infrastructure partially implemented
 
 * `storage` implemented
-* `notifications` planned
+* `notifications` implemented
 * `monetization` planned
 * `export` planned
 
@@ -315,6 +328,7 @@ flutter run
 The active workspace currently validates these modules together:
 
 * `app_core`
+* `notifications`
 * `storage`
 * `timer_engine`
 * `ui_kit`

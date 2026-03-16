@@ -19,6 +19,19 @@ abstract class TimerController extends Notifier<TimerState> {
 
   TimerSession resolveNextSession(TimerState completedState);
 
+  Future<void> onTimerStarted(TimerState state) async {}
+
+  Future<void> onTimerPaused(TimerState state) async {}
+
+  Future<void> onTimerReset(TimerState state) async {}
+
+  Future<void> onSessionChanged(TimerState state) async {}
+
+  Future<void> onSessionCompleted(
+    TimerState completedState,
+    TimerSession nextSession,
+  ) async {}
+
   @override
   TimerState build() {
     ref.onDispose(() => _timer?.cancel());
@@ -40,11 +53,13 @@ abstract class TimerController extends Notifier<TimerState> {
     _timer?.cancel();
     _setState(state.copyWith(isRunning: true));
     _timer = Timer.periodic(const Duration(seconds: 1), _onTick);
+    unawaited(onTimerStarted(state));
   }
 
   void pause() {
     _timer?.cancel();
     _setState(state.copyWith(isRunning: false));
+    unawaited(onTimerPaused(state));
   }
 
   void toggleTimer() {
@@ -62,16 +77,19 @@ abstract class TimerController extends Notifier<TimerState> {
       isRunning: false,
       remaining: state.activeSession.duration,
     ));
+    unawaited(onTimerReset(state));
   }
 
   void selectSession(TimerSession session) {
     _timer?.cancel();
     _moveToSession(session);
+    unawaited(onSessionChanged(state));
   }
 
   void skipToNextSession() {
     _timer?.cancel();
     _moveToSession(resolveNextSession(state));
+    unawaited(onSessionChanged(state));
   }
 
   void _tick() {
@@ -104,6 +122,7 @@ abstract class TimerController extends Notifier<TimerState> {
       remaining: nextSession.duration,
       isRunning: false,
     ));
+    unawaited(onSessionCompleted(completedState, nextSession));
   }
 
   void _moveToSession(TimerSession session) {

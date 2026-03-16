@@ -1,12 +1,23 @@
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:notifications/notifications.dart';
 import 'package:pomodoro_app/app_config.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
 import 'package:storage/storage.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  final NotificationService notificationService = NotificationService(
+    defaultChannel: const NotificationChannel(
+      id: 'pomodoro_timers',
+      name: 'Pomodoro Timers',
+      description: 'Session completion alerts for Pomodoro cycles.',
+    ),
+  );
+  await notificationService.initialize();
+  await notificationService.requestPermission();
 
   final SharedPreferencesTimerSnapshotStore snapshotStore =
       await SharedPreferencesTimerSnapshotStore.create(
@@ -17,6 +28,9 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        pomodoroNotificationServiceProvider.overrideWith(
+          (_) => notificationService,
+        ),
         pomodoroSnapshotStoreProvider.overrideWith((_) => snapshotStore),
         pomodoroRestoredSnapshotProvider.overrideWith((_) => restoredSnapshot),
       ],

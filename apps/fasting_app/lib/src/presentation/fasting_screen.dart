@@ -49,6 +49,7 @@ class FastingScreen extends ConsumerWidget {
           SectionCard(
             title: 'Plans',
             subtitle: 'Choose the fasting rhythm you want to follow today.',
+            trailing: _PlanBadge(label: selectedPlan.label),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -100,10 +101,11 @@ class FastingScreen extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
-                StatTile(
-                  label: 'Eating window',
-                  value: selectedPlan.eatingWindowLabel,
-                  detail: selectedPlan.description,
+                SettingsTile(
+                  title: 'Eating window',
+                  subtitle: selectedPlan.description,
+                  leading: const Icon(Icons.restaurant_rounded),
+                  trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
                 ),
               ],
             ),
@@ -182,10 +184,11 @@ class FastingScreen extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: AppSpacing.md),
-                StatTile(
-                  label: 'Current plan',
-                  value: selectedPlan.label,
-                  detail: selectedPlan.description,
+                SettingsTile(
+                  title: 'Current plan',
+                  subtitle: selectedPlan.description,
+                  leading: const Icon(Icons.schedule_rounded),
+                  trailing: _PlanBadge(label: selectedPlan.label),
                 ),
               ],
             ),
@@ -256,6 +259,40 @@ class FastingScreen extends ConsumerWidget {
   String _trackedHoursLabel(int trackedMinutes) {
     final double trackedHours = trackedMinutes / 60;
     return '${trackedHours.toStringAsFixed(1)}h';
+  }
+}
+
+class _PlanBadge extends StatelessWidget {
+  const _PlanBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: 0.12),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
   }
 }
 

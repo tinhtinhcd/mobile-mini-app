@@ -87,6 +87,14 @@ class PomodoroScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
+                Text(
+                  'Quick actions',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    letterSpacing: 0.8,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
                 _ResponsiveButtonRow(
                   leading: AppSecondaryButton(
                     label: 'Reset',
@@ -127,13 +135,16 @@ class PomodoroScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                StatTile(
-                  label: 'Current rhythm',
-                  value: _buildRhythmLabel(currentMode),
-                  detail:
+                SettingsTile(
+                  title: 'Current rhythm',
+                  subtitle:
                       currentMode == PomodoroMode.focus
                           ? 'Stay on task until the bell.'
                           : 'Use the break to reset before the next focus block.',
+                  leading: Icon(_modeIcon(currentMode)),
+                  trailing: _ModeStatusBadge(
+                    label: _buildRhythmLabel(currentMode),
+                  ),
                 ),
               ],
             ),

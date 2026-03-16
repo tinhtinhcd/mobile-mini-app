@@ -106,9 +106,7 @@ AnalyticsEvent pomodoroPurchaseStartedEvent(String productId) {
 AnalyticsEvent pomodoroPurchaseRestoredEvent() {
   return const AnalyticsEvent(
     name: AnalyticsEventNames.purchaseRestored,
-    parameters: <String, Object?>{
-      'app_id': pomodoroAppId,
-    },
+    parameters: <String, Object?>{'app_id': pomodoroAppId},
   );
 }
 
@@ -177,12 +175,17 @@ class PomodoroMonetizationAnalyticsBinding {
     service.addListener(_onMonetizationChanged);
   }
 
+  void detach() {
+    service.removeListener(_onMonetizationChanged);
+  }
+
   void _onMonetizationChanged() {
     final EntitlementState nextState = service.entitlementState;
     final bool changed =
         nextState.isPremium != _previousState.isPremium ||
         nextState.source != _previousState.source ||
-        nextState.ownedProductIds.length != _previousState.ownedProductIds.length;
+        nextState.ownedProductIds.length !=
+            _previousState.ownedProductIds.length;
 
     if (!changed) {
       return;
@@ -211,8 +214,5 @@ Future<void> openPomodoroPaywall({
     content: pomodoroPaywallContent,
     analytics: analytics,
   );
-  await showPaywallSheet(
-    context: context,
-    controller: controller,
-  );
+  await showPaywallSheet(context: context, controller: controller);
 }

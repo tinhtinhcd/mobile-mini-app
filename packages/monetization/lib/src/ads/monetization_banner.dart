@@ -23,11 +23,12 @@ class MonetizationBanner extends StatefulWidget {
 class _MonetizationBannerState extends State<MonetizationBanner> {
   BannerAd? _bannerAd;
   bool _isLoaded = false;
+  bool _loadScheduled = false;
 
   @override
   void initState() {
     super.initState();
-    _loadAdIfNeeded();
+    _scheduleLoadAdIfNeeded();
   }
 
   @override
@@ -43,8 +44,23 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
         (oldWidget.entitlementState.isPremium ||
             oldWidget.adUnitId != widget.adUnitId)) {
       _disposeBanner();
-      _loadAdIfNeeded();
+      _scheduleLoadAdIfNeeded();
     }
+  }
+
+  void _scheduleLoadAdIfNeeded() {
+    if (_loadScheduled) {
+      return;
+    }
+
+    _loadScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadScheduled = false;
+      if (!mounted) {
+        return;
+      }
+      _loadAdIfNeeded();
+    });
   }
 
   Future<void> _loadAdIfNeeded() async {
@@ -54,38 +70,42 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
       return;
     }
 
-    await widget.adService.initialize();
+    try {
+      await widget.adService.initialize();
 
-    final BannerAd ad = widget.adService.createBannerAd(
-      adUnitId: widget.adUnitId,
-      size: AdSize.banner,
-      listener: BannerAdListener(
-        onAdLoaded: (Ad ad) {
-          if (!mounted) {
+      final BannerAd ad = widget.adService.createBannerAd(
+        adUnitId: widget.adUnitId,
+        size: AdSize.banner,
+        listener: BannerAdListener(
+          onAdLoaded: (Ad ad) {
+            if (!mounted) {
+              ad.dispose();
+              return;
+            }
+
+            setState(() {
+              _bannerAd = ad as BannerAd;
+              _isLoaded = true;
+            });
+          },
+          onAdFailedToLoad: (Ad ad, LoadAdError error) {
             ad.dispose();
-            return;
-          }
+            if (!mounted) {
+              return;
+            }
+            setState(() {
+              _bannerAd = null;
+              _isLoaded = false;
+            });
+          },
+        ),
+      );
 
-          setState(() {
-            _bannerAd = ad as BannerAd;
-            _isLoaded = true;
-          });
-        },
-        onAdFailedToLoad: (Ad ad, LoadAdError error) {
-          ad.dispose();
-          if (!mounted) {
-            return;
-          }
-          setState(() {
-            _bannerAd = null;
-            _isLoaded = false;
-          });
-        },
-      ),
-    );
-
-    ad.load();
-    _bannerAd = ad;
+      ad.load();
+      _bannerAd = ad;
+    } catch (_) {
+      _disposeBanner();
+    }
   }
 
   void _disposeBanner() {

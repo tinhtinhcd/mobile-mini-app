@@ -14,6 +14,7 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _plugin;
 
   bool _isInitialized = false;
+  bool? _permissionGranted;
 
   Future<void> initialize() async {
     if (_isInitialized) {
@@ -37,6 +38,11 @@ class NotificationService {
   }
 
   Future<bool> requestPermission() async {
+    final bool? cachedPermission = _permissionGranted;
+    if (cachedPermission != null) {
+      return cachedPermission;
+    }
+
     await initialize();
 
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -56,7 +62,8 @@ class NotificationService {
         ) ??
         true;
 
-    return androidGranted && iosGranted;
+    _permissionGranted = androidGranted && iosGranted;
+    return _permissionGranted!;
   }
 
   Future<void> scheduleNotification({
@@ -68,6 +75,9 @@ class NotificationService {
     NotificationChannel? channel,
   }) async {
     await initialize();
+    if (!await requestPermission()) {
+      return;
+    }
     await _plugin.cancel(id: id);
 
     await _plugin.zonedSchedule(
@@ -112,6 +122,9 @@ class NotificationService {
     NotificationChannel? channel,
   }) async {
     await initialize();
+    if (!await requestPermission()) {
+      return;
+    }
 
     await _plugin.show(
       id: id,

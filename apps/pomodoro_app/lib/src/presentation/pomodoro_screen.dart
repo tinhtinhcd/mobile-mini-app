@@ -251,12 +251,14 @@ class _PremiumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.tonalIcon(
-      onPressed: onPressed,
-      icon: Icon(
-        isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+    return IntrinsicWidth(
+      child: FilledButton.tonalIcon(
+        onPressed: onPressed,
+        icon: Icon(
+          isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+        ),
+        label: Text(isPremium ? 'Premium' : 'Upgrade'),
       ),
-      label: Text(isPremium ? 'Premium' : 'Upgrade'),
     );
   }
 }

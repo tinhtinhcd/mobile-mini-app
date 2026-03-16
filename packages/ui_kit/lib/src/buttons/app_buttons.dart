@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 class AppPrimaryButton extends StatelessWidget {
   const AppPrimaryButton({
@@ -17,10 +18,7 @@ class AppPrimaryButton extends StatelessWidget {
     final Widget button;
 
     if (icon == null) {
-      button = FilledButton(
-        onPressed: onPressed,
-        child: Text(label),
-      );
+      button = FilledButton(onPressed: onPressed, child: Text(label));
     } else {
       button = FilledButton.icon(
         onPressed: onPressed,
@@ -31,7 +29,10 @@ class AppPrimaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      child: button,
+      child: button.animate().fadeIn(
+        duration: 160.ms,
+        curve: Curves.easeOutCubic,
+      ),
     );
   }
 }
@@ -53,10 +54,7 @@ class AppSecondaryButton extends StatelessWidget {
     final Widget button;
 
     if (icon == null) {
-      button = OutlinedButton(
-        onPressed: onPressed,
-        child: Text(label),
-      );
+      button = OutlinedButton(onPressed: onPressed, child: Text(label));
     } else {
       button = OutlinedButton.icon(
         onPressed: onPressed,
@@ -67,7 +65,10 @@ class AppSecondaryButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      child: button,
+      child: button.animate().fadeIn(
+        duration: 160.ms,
+        curve: Curves.easeOutCubic,
+      ),
     );
   }
 }

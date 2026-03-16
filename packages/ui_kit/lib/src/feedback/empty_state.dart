@@ -22,7 +22,20 @@ class EmptyState extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
-        Icon(icon, size: 40, color: theme.colorScheme.primary),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            color: Color.alphaBlend(
+              theme.colorScheme.primary.withValues(alpha: 0.10),
+              theme.colorScheme.surface,
+            ),
+            borderRadius: BorderRadius.circular(AppRadius.large),
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Icon(icon, size: 40, color: theme.colorScheme.primary),
+          ),
+        ),
         const SizedBox(height: AppSpacing.md),
         Text(title, style: theme.textTheme.titleLarge),
         const SizedBox(height: AppSpacing.xs),
@@ -39,4 +52,3 @@ class EmptyState extends StatelessWidget {
     );
   }
 }
-

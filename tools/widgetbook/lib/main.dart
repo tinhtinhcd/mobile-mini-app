@@ -29,6 +29,15 @@ class FactoryWidgetbook extends StatelessWidget {
                     );
                   },
                 ),
+                WidgetbookUseCase(
+                  name: 'Secondary',
+                  builder: (BuildContext context) {
+                    return const AppSecondaryButton(
+                      label: 'Reset',
+                      icon: Icon(Icons.refresh_rounded),
+                    );
+                  },
+                ),
               ],
             ),
           ],
@@ -46,6 +55,17 @@ class FactoryWidgetbook extends StatelessWidget {
                       label: 'Focus sessions',
                       value: '6',
                       detail: 'Completed today',
+                    );
+                  },
+                ),
+                WidgetbookUseCase(
+                  name: 'Accent Highlight',
+                  builder: (BuildContext context) {
+                    return const StatTile(
+                      label: 'Tracked hours',
+                      value: '12.5h',
+                      detail: 'Accumulated fasting time',
+                      highlight: Color(0xFF1B8A5A),
                     );
                   },
                 ),
@@ -69,6 +89,17 @@ class FactoryWidgetbook extends StatelessWidget {
                     );
                   },
                 ),
+                WidgetbookUseCase(
+                  name: 'With trailing action',
+                  builder: (BuildContext context) {
+                    return const SettingsTile(
+                      title: 'Premium',
+                      subtitle: 'Manage plan and restore purchases',
+                      leading: Icon(Icons.workspace_premium_rounded),
+                      trailing: Icon(Icons.open_in_new_rounded),
+                    );
+                  },
+                ),
               ],
             ),
           ],
@@ -88,6 +119,68 @@ class FactoryWidgetbook extends StatelessWidget {
                       progress: 0.42,
                       statusText: 'Focus in progress',
                       footnote: 'Stay with a single task until the timer ends.',
+                    );
+                  },
+                ),
+                WidgetbookUseCase(
+                  name: 'Paused',
+                  builder: (BuildContext context) {
+                    return const TimerDisplayCard(
+                      label: 'Short break',
+                      timeText: '04:40',
+                      progress: 0.16,
+                      statusText: 'Paused',
+                      footnote:
+                          'Take a quick reset, then come back with clarity.',
+                    );
+                  },
+                ),
+              ],
+            ),
+            WidgetbookComponent(
+              name: 'Selection Pill',
+              useCases: <WidgetbookUseCase>[
+                WidgetbookUseCase(
+                  name: 'Selected',
+                  builder: (BuildContext context) {
+                    return SelectionPill(
+                      label: 'Focus',
+                      selected: true,
+                      leading: const Icon(Icons.bolt_rounded),
+                      onTap: _noop,
+                    );
+                  },
+                ),
+                WidgetbookUseCase(
+                  name: 'Locked',
+                  builder: (BuildContext context) {
+                    return SelectionPill(
+                      label: '20:4',
+                      selected: false,
+                      locked: true,
+                      onTap: _noop,
+                    );
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+        WidgetbookFolder(
+          name: 'Premium',
+          children: <WidgetbookNode>[
+            WidgetbookComponent(
+              name: 'Callout Card',
+              useCases: <WidgetbookUseCase>[
+                WidgetbookUseCase(
+                  name: 'Default',
+                  builder: (BuildContext context) {
+                    return PremiumCalloutCard(
+                      title: 'Premium keeps the experience focused',
+                      subtitle:
+                          'Remove light banner ads and unlock advanced tools without changing the calm core flow.',
+                      actionLabel: 'See premium',
+                      onPressed: _noop,
                     );
                   },
                 ),
@@ -118,3 +211,5 @@ class FactoryWidgetbook extends StatelessWidget {
     );
   }
 }
+
+void _noop() {}

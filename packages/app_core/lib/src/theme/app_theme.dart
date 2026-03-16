@@ -4,17 +4,11 @@ import 'package:flutter/material.dart';
 
 class AppTheme {
   static ThemeData light(Color accentColor) {
-    return _buildTheme(
-      accentColor: accentColor,
-      brightness: Brightness.light,
-    );
+    return _buildTheme(accentColor: accentColor, brightness: Brightness.light);
   }
 
   static ThemeData dark(Color accentColor) {
-    return _buildTheme(
-      accentColor: accentColor,
-      brightness: Brightness.dark,
-    );
+    return _buildTheme(accentColor: accentColor, brightness: Brightness.dark);
   }
 
   static ThemeData _buildTheme({
@@ -25,37 +19,42 @@ class AppTheme {
     final Color surface = isLight ? AppColors.card : AppColors.cardDark;
     final Color background =
         isLight ? AppColors.background : AppColors.backgroundDark;
+    final Color elevatedSurface = Color.alphaBlend(
+      accentColor.withValues(alpha: isLight ? 0.04 : 0.08),
+      surface,
+    );
     final Color textPrimary =
         isLight ? AppColors.textPrimary : AppColors.textPrimaryDark;
     final Color textSecondary =
         isLight ? AppColors.textSecondary : AppColors.textSecondaryDark;
     final Color divider = isLight ? AppColors.divider : AppColors.dividerDark;
 
-    final ThemeData baseTheme = isLight
-        ? FlexThemeData.light(
-            colors: FlexSchemeColor.from(
-              primary: accentColor,
-              secondary: _blend(accentColor, Colors.white, 0.38),
-              tertiary: _blend(accentColor, Colors.white, 0.56),
-            ),
-            surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-            blendLevel: 12,
-            appBarStyle: FlexAppBarStyle.scaffoldBackground,
-            appBarElevation: 0,
-            useMaterial3: true,
-          )
-        : FlexThemeData.dark(
-            colors: FlexSchemeColor.from(
-              primary: accentColor,
-              secondary: _blend(accentColor, Colors.black, 0.24),
-              tertiary: _blend(accentColor, Colors.black, 0.36),
-            ),
-            surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-            blendLevel: 18,
-            appBarStyle: FlexAppBarStyle.scaffoldBackground,
-            appBarElevation: 0,
-            useMaterial3: true,
-          );
+    final ThemeData baseTheme =
+        isLight
+            ? FlexThemeData.light(
+              colors: FlexSchemeColor.from(
+                primary: accentColor,
+                secondary: _blend(accentColor, Colors.white, 0.38),
+                tertiary: _blend(accentColor, Colors.white, 0.56),
+              ),
+              surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
+              blendLevel: 10,
+              appBarStyle: FlexAppBarStyle.scaffoldBackground,
+              appBarElevation: 0,
+              useMaterial3: true,
+            )
+            : FlexThemeData.dark(
+              colors: FlexSchemeColor.from(
+                primary: accentColor,
+                secondary: _blend(accentColor, Colors.black, 0.24),
+                tertiary: _blend(accentColor, Colors.black, 0.36),
+              ),
+              surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
+              blendLevel: 16,
+              appBarStyle: FlexAppBarStyle.scaffoldBackground,
+              appBarElevation: 0,
+              useMaterial3: true,
+            );
 
     final ColorScheme colorScheme = baseTheme.colorScheme.copyWith(
       primary: accentColor,
@@ -131,7 +130,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
-        color: surface,
+        color: elevatedSurface,
         elevation: 0,
         margin: EdgeInsets.zero,
         surfaceTintColor: Colors.transparent,
@@ -154,6 +153,18 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           textStyle: textTheme.labelLarge,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((
+            Set<WidgetState> states,
+          ) {
+            if (states.contains(WidgetState.pressed)) {
+              return Colors.white.withValues(alpha: 0.12);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return Colors.white.withValues(alpha: 0.06);
+            }
+            return null;
+          }),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -173,6 +184,18 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppRadius.large),
           ),
           textStyle: textTheme.labelLarge,
+        ).copyWith(
+          overlayColor: WidgetStateProperty.resolveWith<Color?>((
+            Set<WidgetState> states,
+          ) {
+            if (states.contains(WidgetState.pressed)) {
+              return accentColor.withValues(alpha: 0.08);
+            }
+            if (states.contains(WidgetState.hovered)) {
+              return accentColor.withValues(alpha: 0.04);
+            }
+            return null;
+          }),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -243,6 +266,15 @@ class AppTheme {
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(AppRadius.large),
           ),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: elevatedSurface,
+        contentTextStyle: textTheme.bodyMedium?.copyWith(color: textPrimary),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          side: BorderSide(color: divider),
         ),
       ),
     );

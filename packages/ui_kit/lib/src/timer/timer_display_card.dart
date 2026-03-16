@@ -31,19 +31,17 @@ class TimerDisplayCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: <Color>[
             Color.alphaBlend(
-              primary.withValues(alpha: 0.16),
+              primary.withValues(alpha: 0.18),
               theme.colorScheme.surface,
             ),
             Color.alphaBlend(
-              primary.withValues(alpha: 0.04),
+              primary.withValues(alpha: 0.05),
               theme.colorScheme.surface,
             ),
           ],
         ),
         borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: primary.withValues(alpha: 0.14),
-        ),
+        border: Border.all(color: primary.withValues(alpha: 0.16)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.xl),
@@ -61,16 +59,16 @@ class TimerDisplayCard extends StatelessWidget {
               child: Text(
                 label.toUpperCase(),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  letterSpacing: 1.1,
-                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
             Text(
               timeText,
               style: theme.textTheme.headlineLarge?.copyWith(
-                fontSize: 54,
+                fontSize: 58,
                 fontWeight: FontWeight.w800,
                 fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                 color: theme.colorScheme.onSurface,
@@ -83,16 +81,15 @@ class TimerDisplayCard extends StatelessWidget {
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 child: _StatusChip(
-                  key: ValueKey<String>(statusText!),
-                  label: statusText!,
-                ).animate().fadeIn(duration: 180.ms).slideX(
-                      begin: 0.08,
-                      end: 0,
-                      duration: 180.ms,
-                    ),
+                      key: ValueKey<String>(statusText!),
+                      label: statusText!,
+                    )
+                    .animate()
+                    .fadeIn(duration: 180.ms)
+                    .slideX(begin: 0.08, end: 0, duration: 180.ms),
               ),
             ],
-            const SizedBox(height: AppSpacing.lg),
+            const SizedBox(height: AppSpacing.xl),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.small),
               child: LinearProgressIndicator(value: clampedProgress),
@@ -113,10 +110,7 @@ class TimerDisplayCard extends StatelessWidget {
 }
 
 class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    super.key,
-    required this.label,
-  });
+  const _StatusChip({super.key, required this.label});
 
   final String label;
 

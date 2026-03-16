@@ -41,9 +41,7 @@ class PremiumCalloutCard extends StatelessWidget {
           ],
         ),
         borderRadius: BorderRadius.circular(AppRadius.large),
-        border: Border.all(
-          color: primary.withValues(alpha: 0.18),
-        ),
+        border: Border.all(color: primary.withValues(alpha: 0.18)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -62,7 +60,7 @@ class PremiumCalloutCard extends StatelessWidget {
               child: Text(
                 badgeLabel.toUpperCase(),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   letterSpacing: 0.8,
                 ),
               ),

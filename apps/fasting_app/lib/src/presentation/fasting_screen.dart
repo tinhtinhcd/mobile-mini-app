@@ -128,10 +128,16 @@ class FastingScreen extends ConsumerWidget {
                   footnote: selectedPlan.description,
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                AppSecondaryButton(
-                  label: 'Reset fast',
-                  icon: const Icon(Icons.refresh_rounded),
-                  onPressed: controller.reset,
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: AppSecondaryButton(
+                        label: 'Reset fast',
+                        icon: const Icon(Icons.refresh_rounded),
+                        onPressed: controller.reset,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -143,24 +149,37 @@ class FastingScreen extends ConsumerWidget {
                 'A small proof that both timer apps share the same stats engine.',
             child: Column(
               children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: StatTile(
-                        label: 'Completed fasts',
-                        value: '${state.stats.completedTrackedSessions}',
-                        detail: 'Tracked sessions',
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: StatTile(
-                        label: 'Tracked hours',
-                        value: _trackedHoursLabel(state.stats.trackedMinutes),
-                        detail: 'Accumulated fasting time',
-                      ),
-                    ),
-                  ],
+                LayoutBuilder(
+                  builder: (BuildContext context, BoxConstraints constraints) {
+                    final Widget completedFasts = StatTile(
+                      label: 'Completed fasts',
+                      value: '${state.stats.completedTrackedSessions}',
+                      detail: 'Tracked sessions',
+                    );
+                    final Widget trackedHours = StatTile(
+                      label: 'Tracked hours',
+                      value: _trackedHoursLabel(state.stats.trackedMinutes),
+                      detail: 'Accumulated fasting time',
+                    );
+
+                    if (constraints.maxWidth < 420) {
+                      return Column(
+                        children: <Widget>[
+                          completedFasts,
+                          const SizedBox(height: AppSpacing.md),
+                          trackedHours,
+                        ],
+                      );
+                    }
+
+                    return Row(
+                      children: <Widget>[
+                        Expanded(child: completedFasts),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(child: trackedHours),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.md),
                 StatTile(
@@ -174,8 +193,12 @@ class FastingScreen extends ConsumerWidget {
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
-            Text(message, style: theme.textTheme.bodySmall),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Text(message, style: theme.textTheme.bodySmall),
+            ),
           ],
+          const SizedBox(height: AppSpacing.md),
           MonetizationBanner(
             adService: adService,
             entitlementState: monetization.entitlementState,
@@ -245,12 +268,17 @@ class _PremiumButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntrinsicWidth(
-      child: FilledButton.tonalIcon(
-        onPressed: onPressed,
-        icon: Icon(
-          isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: FilledButton.tonalIcon(
+          onPressed: onPressed,
+          icon: Icon(
+            isPremium
+                ? Icons.workspace_premium_rounded
+                : Icons.lock_open_rounded,
+          ),
+          label: Text(isPremium ? 'Premium' : 'Upgrade'),
         ),
-        label: Text(isPremium ? 'Premium' : 'Upgrade'),
       ),
     );
   }

@@ -25,7 +25,7 @@ class SelectionPill extends StatelessWidget {
         selected
             ? primary
             : Color.alphaBlend(
-              primary.withValues(alpha: 0.04),
+              primary.withValues(alpha: 0.06),
               theme.colorScheme.surface,
             );
 
@@ -45,6 +45,16 @@ class SelectionPill extends StatelessWidget {
           border: Border.all(
             color: selected ? primary : theme.colorScheme.outlineVariant,
           ),
+          boxShadow:
+              selected
+                  ? <BoxShadow>[
+                    BoxShadow(
+                      color: primary.withValues(alpha: 0.18),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ]
+                  : const <BoxShadow>[],
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -63,7 +73,7 @@ class SelectionPill extends StatelessWidget {
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: selected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
             if (locked) ...<Widget>[

@@ -164,8 +164,12 @@ class PomodoroScreen extends ConsumerWidget {
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
-            Text(message, style: theme.textTheme.bodySmall),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Text(message, style: theme.textTheme.bodySmall),
+            ),
           ],
+          const SizedBox(height: AppSpacing.md),
           MonetizationBanner(
             adService: adService,
             entitlementState: monetization.entitlementState,
@@ -252,12 +256,17 @@ class _PremiumButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IntrinsicWidth(
-      child: FilledButton.tonalIcon(
-        onPressed: onPressed,
-        icon: Icon(
-          isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: FilledButton.tonalIcon(
+          onPressed: onPressed,
+          icon: Icon(
+            isPremium
+                ? Icons.workspace_premium_rounded
+                : Icons.lock_open_rounded,
+          ),
+          label: Text(isPremium ? 'Premium' : 'Upgrade'),
         ),
-        label: Text(isPremium ? 'Premium' : 'Upgrade'),
       ),
     );
   }
@@ -275,10 +284,11 @@ class _ModeStatusBadge extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Color.alphaBlend(
-          theme.colorScheme.primary.withValues(alpha: 0.10),
+          theme.colorScheme.primary.withValues(alpha: 0.12),
           theme.colorScheme.surface,
         ),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(

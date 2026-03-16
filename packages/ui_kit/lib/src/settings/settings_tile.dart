@@ -22,7 +22,10 @@ class SettingsTile extends StatelessWidget {
     final ThemeData theme = Theme.of(context);
 
     return Material(
-      color: theme.colorScheme.surface,
+      color: Color.alphaBlend(
+        theme.colorScheme.primary.withValues(alpha: 0.03),
+        theme.colorScheme.surface,
+      ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppRadius.medium),
         side: BorderSide(color: theme.colorScheme.outlineVariant),
@@ -33,7 +36,7 @@ class SettingsTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+            vertical: AppSpacing.md,
           ),
           child: Row(
             children: <Widget>[
@@ -41,13 +44,13 @@ class SettingsTile extends StatelessWidget {
                 DecoratedBox(
                   decoration: BoxDecoration(
                     color: Color.alphaBlend(
-                      theme.colorScheme.primary.withValues(alpha: 0.08),
+                      theme.colorScheme.primary.withValues(alpha: 0.10),
                       theme.colorScheme.surface,
                     ),
                     borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    padding: const EdgeInsets.all(AppSpacing.sm),
                     child: leading!,
                   ),
                 ),
@@ -70,7 +73,7 @@ class SettingsTile extends StatelessWidget {
               else
                 Icon(
                   Icons.chevron_right_rounded,
-                  color: theme.textTheme.bodySmall?.color,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.70),
                 ),
             ],
           ),

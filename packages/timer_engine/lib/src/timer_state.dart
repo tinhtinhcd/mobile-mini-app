@@ -26,8 +26,8 @@ class TimerState {
     required TimerSnapshot snapshot,
   }) {
     final int boundedRemainingSeconds;
-    if (snapshot.remainingSeconds < 0) {
-      boundedRemainingSeconds = 0;
+    if (snapshot.remainingSeconds <= 0) {
+      boundedRemainingSeconds = session.duration.inSeconds;
     } else if (snapshot.remainingSeconds > session.duration.inSeconds) {
       boundedRemainingSeconds = session.duration.inSeconds;
     } else {

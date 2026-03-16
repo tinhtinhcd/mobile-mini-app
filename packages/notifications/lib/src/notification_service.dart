@@ -68,6 +68,7 @@ class NotificationService {
     NotificationChannel? channel,
   }) async {
     await initialize();
+    await _plugin.cancel(id: id);
 
     await _plugin.zonedSchedule(
       id: id,

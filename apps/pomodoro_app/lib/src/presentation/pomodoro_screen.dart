@@ -1,7 +1,10 @@
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
+import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
+import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 class PomodoroScreen extends ConsumerWidget {
@@ -9,15 +12,29 @@ class PomodoroScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(pomodoroControllerProvider);
-    final controller = ref.read(pomodoroControllerProvider.notifier);
-    final theme = Theme.of(context);
-    final currentMode = pomodoroModeFromSession(state.activeSession);
+    final TimerState state = ref.watch(pomodoroControllerProvider);
+    final PomodoroController controller =
+        ref.read(pomodoroControllerProvider.notifier);
+    final StoreMonetizationService monetization =
+        ref.watch(pomodoroMonetizationServiceProvider);
+    final AdService adService = ref.read(pomodoroAdServiceProvider);
+    final ThemeData theme = Theme.of(context);
+    final PomodoroMode currentMode =
+        pomodoroModeFromSession(state.activeSession);
+    final UsageLimitResult sessionNotesAccess = pomodoroSessionNotesPolicy
+        .evaluate(
+          entitlement: monetization.entitlementState,
+          usageCount: 1,
+        );
 
     return FactoryScaffold(
       title: 'Focus Flow',
       subtitle:
           'A Phase 1 demo built on shared packages, with one clear action and reusable cards.',
+      headerTrailing: _PremiumButton(
+        isPremium: monetization.isPremium,
+        onPressed: () => showPomodoroPaywall(context, ref),
+      ),
       action: AppPrimaryButton(
         label: state.isRunning ? 'Pause session' : 'Start session',
         icon: Icon(
@@ -152,13 +169,42 @@ class PomodoroScreen extends ConsumerWidget {
             title: 'Session notes',
             subtitle:
                 'A basic shared input is wired in for future app flows without adding Phase 2 storage yet.',
-            child: const AppTextField(
-              label: 'What matters in this sprint?',
-              hintText:
-                  'Outline the task you want to finish before the timer ends.',
-              maxLines: 3,
-            ),
+            child: sessionNotesAccess.allowed
+                ? const AppTextField(
+                    label: 'What matters in this sprint?',
+                    hintText:
+                        'Outline the task you want to finish before the timer ends.',
+                    maxLines: 3,
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        sessionNotesAccess.message,
+                        style: theme.textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      AppSecondaryButton(
+                        label: 'Unlock premium',
+                        icon: const Icon(Icons.workspace_premium_rounded),
+                        onPressed: () => showPomodoroPaywall(context, ref),
+                      ),
+                    ],
+                  ),
           ),
+          MonetizationBanner(
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: pomodoroBannerAdUnitId,
+          ),
+          if (monetization.entitlementState.message case final String message
+              when message.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );
@@ -176,6 +222,27 @@ class PomodoroScreen extends ConsumerWidget {
     final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
+  }
+}
+
+class _PremiumButton extends StatelessWidget {
+  const _PremiumButton({
+    required this.isPremium,
+    required this.onPressed,
+  });
+
+  final bool isPremium;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+      ),
+      label: Text(isPremium ? 'Premium' : 'Upgrade'),
+    );
   }
 }
 

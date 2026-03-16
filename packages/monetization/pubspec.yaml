@@ -1,0 +1,23 @@
+name: monetization
+description: Shared monetization services and paywall foundations for Mobile App Factory apps.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+  flutter: '>=3.29.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  app_core: ^0.1.0
+  google_mobile_ads: ^7.0.0
+  in_app_purchase: ^3.2.3
+  shared_preferences: ^2.5.3
+  ui_kit: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

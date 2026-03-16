@@ -14,6 +14,7 @@ dependencies:
     sdk: flutter
   flutter_riverpod: ^3.3.1
   app_core: ^0.1.0
+  monetization: ^0.1.0
   notifications: ^0.1.0
   storage: ^0.1.0
   timer_engine: ^0.1.0

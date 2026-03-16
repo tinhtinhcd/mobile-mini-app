@@ -44,6 +44,7 @@ mobile_app_factory/
 
   packages/
     app_core/
+    monetization/
     notifications/
     storage/
     timer_engine/
@@ -56,7 +57,6 @@ mobile_app_factory/
 
 Placeholder directories also exist for future work, but they are **not** in the active workspace and are **not compile-ready yet**:
 
-* `packages/monetization`
 * `packages/export`
 * `packages/form_engine`
 * `packages/tool_engine`
@@ -116,6 +116,19 @@ Includes:
 * layout primitives
 
 All apps must use components from **ui_kit**.
+
+---
+
+## monetization
+
+Active shared monetization layer for utility apps.
+
+Includes:
+
+* ad service abstractions and Google Mobile Ads wiring
+* subscription and entitlement state handling
+* reusable paywall UI foundations
+* usage-limit policies that apps can define locally
 
 ---
 
@@ -263,7 +276,7 @@ Infrastructure partially implemented
 
 * `storage` implemented
 * `notifications` implemented
-* `monetization` planned
+* `monetization` implemented
 * `export` planned
 
 ---
@@ -327,6 +340,7 @@ flutter run
 The active workspace currently validates these modules together:
 
 * `app_core`
+* `monetization`
 * `notifications`
 * `storage`
 * `timer_engine`

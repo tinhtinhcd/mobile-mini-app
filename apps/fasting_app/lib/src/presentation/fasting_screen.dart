@@ -1,8 +1,10 @@
 import 'package:app_core/app_core.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
+import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monetization/monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -14,6 +16,9 @@ class FastingScreen extends ConsumerWidget {
     final TimerState state = ref.watch(fastingControllerProvider);
     final FastingController controller =
         ref.read(fastingControllerProvider.notifier);
+    final StoreMonetizationService monetization =
+        ref.watch(fastingMonetizationServiceProvider);
+    final AdService adService = ref.read(fastingAdServiceProvider);
     final ThemeData theme = Theme.of(context);
     final FastingPlan selectedPlan = controller.selectedPlan;
 
@@ -21,6 +26,10 @@ class FastingScreen extends ConsumerWidget {
       title: 'Fasting Flow',
       subtitle:
           'Track your current fast with shared timer infrastructure and app-specific fasting presets.',
+      headerTrailing: _PremiumButton(
+        isPremium: monetization.isPremium,
+        onPressed: () => showFastingPaywall(context, ref),
+      ),
       action: AppPrimaryButton(
         label: _primaryLabel(state),
         icon: Icon(_primaryIcon(state)),
@@ -38,14 +47,36 @@ class FastingScreen extends ConsumerWidget {
                 Wrap(
                   spacing: AppSpacing.sm,
                   runSpacing: AppSpacing.sm,
-                  children: FastingPlan.values.map((FastingPlan plan) {
+                  children: FastingPlan.values.asMap().entries.map((
+                    MapEntry<int, FastingPlan> entry,
+                  ) {
+                    final UsageLimitResult access = fastingPlanPolicy.evaluate(
+                      entitlement: monetization.entitlementState,
+                      usageCount: entry.key + 1,
+                    );
+
                     return _PlanChip(
-                      plan: plan,
-                      selected: plan == selectedPlan,
-                      onTap: () => controller.selectPlan(plan),
+                      plan: entry.value,
+                      selected: entry.value == selectedPlan && access.allowed,
+                      locked: !access.allowed,
+                      onTap: () {
+                        if (access.allowed) {
+                          controller.selectPlan(entry.value);
+                          return;
+                        }
+
+                        showFastingPaywall(context, ref);
+                      },
                     );
                   }).toList(),
                 ),
+                if (!monetization.isPremium) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    fastingPlanPolicy.upgradeMessage,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 StatTile(
                   label: 'Eating window',
@@ -116,6 +147,11 @@ class FastingScreen extends ConsumerWidget {
               ],
             ),
           ),
+          MonetizationBanner(
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: fastingBannerAdUnitId,
+          ),
           const SizedBox(height: AppSpacing.xl),
           SectionCard(
             title: 'Progress',
@@ -150,6 +186,14 @@ class FastingScreen extends ConsumerWidget {
               ],
             ),
           ),
+          if (monetization.entitlementState.message case final String message
+              when message.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              message,
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
         ],
       ),
     );
@@ -205,11 +249,13 @@ class _PlanChip extends StatelessWidget {
   const _PlanChip({
     required this.plan,
     required this.selected,
+    required this.locked,
     required this.onTap,
   });
 
   final FastingPlan plan;
   final bool selected;
+  final bool locked;
   final VoidCallback onTap;
 
   @override
@@ -233,14 +279,48 @@ class _PlanChip extends StatelessWidget {
             color: selected ? primary : AppColors.divider,
           ),
         ),
-        child: Text(
-          plan.label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: selected ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              plan.label,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: selected ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            if (locked) ...<Widget>[
+              const SizedBox(width: AppSpacing.xs),
+              Icon(
+                Icons.lock_rounded,
+                size: 16,
+                color: selected ? Colors.white : AppColors.textSecondary,
+              ),
+            ],
+          ],
         ),
       ),
+    );
+  }
+}
+
+class _PremiumButton extends StatelessWidget {
+  const _PremiumButton({
+    required this.isPremium,
+    required this.onPressed,
+  });
+
+  final bool isPremium;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton.icon(
+      onPressed: onPressed,
+      icon: Icon(
+        isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
+      ),
+      label: Text(isPremium ? 'Premium' : 'Upgrade'),
     );
   }
 }

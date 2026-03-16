@@ -1,9 +1,11 @@
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:monetization/monetization.dart';
 import 'package:notifications/notifications.dart';
 import 'package:pomodoro_app/app_config.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
+import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:storage/storage.dart';
 
 Future<void> main() async {
@@ -19,6 +21,19 @@ Future<void> main() async {
   await notificationService.initialize();
   await notificationService.requestPermission();
 
+  final StoreMonetizationService monetizationService =
+      StoreMonetizationService(
+        productIds: const <String>[
+          pomodoroMonthlyProductId,
+          pomodoroYearlyProductId,
+        ],
+        entitlementCacheKey: pomodoroEntitlementCacheKey,
+      );
+  await monetizationService.initialize();
+
+  final GoogleMobileAdsService adService = GoogleMobileAdsService();
+  await adService.initialize();
+
   final SharedPreferencesTimerSnapshotStore snapshotStore =
       await SharedPreferencesTimerSnapshotStore.create(
     storageKey: 'pomodoro_app.timer_snapshot',
@@ -28,6 +43,10 @@ Future<void> main() async {
   runApp(
     ProviderScope(
       overrides: [
+        pomodoroMonetizationServiceProvider.overrideWith(
+          (_) => monetizationService,
+        ),
+        pomodoroAdServiceProvider.overrideWith((_) => adService),
         pomodoroNotificationServiceProvider.overrideWith(
           (_) => notificationService,
         ),

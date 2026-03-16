@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="factory_widgetbook"
+        android:label="Factory Widgetbook"
         android:name="${applicationName}"
         android:icon="@drawable/ic_launcher_widgetbook">
         <activity

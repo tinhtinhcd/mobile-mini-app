@@ -17,8 +17,8 @@ class FactoryApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       themeMode: definition.themeMode,
       theme: AppTheme.light(definition.accentColor),
+      darkTheme: AppTheme.dark(definition.accentColor),
       routerConfig: definition.router,
     );
   }
 }
-

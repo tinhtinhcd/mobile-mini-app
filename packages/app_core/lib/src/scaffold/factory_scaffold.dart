@@ -21,57 +21,78 @@ class FactoryScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final ThemeData theme = Theme.of(context);
+    final Color primary = theme.colorScheme.primary;
 
-    final content = Padding(
+    final Widget content = Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.xl,
         AppSpacing.xxxl,
         AppSpacing.xl,
         AppSpacing.xl,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(title, style: theme.textTheme.headlineLarge),
-                    if (subtitle != null) ...<Widget>[
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(subtitle!, style: theme.textTheme.bodyMedium),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: Color.alphaBlend(
+                    primary.withValues(alpha: 0.06),
+                    theme.colorScheme.surface,
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.large),
+                  border: Border.all(
+                    color: theme.colorScheme.outlineVariant,
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(title, style: theme.textTheme.headlineLarge),
+                            if (subtitle != null) ...<Widget>[
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(subtitle!, style: theme.textTheme.bodyMedium),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (headerTrailing != null) ...<Widget>[
+                        const SizedBox(width: AppSpacing.md),
+                        headerTrailing!,
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
-              if (headerTrailing != null) ...<Widget>[
-                const SizedBox(width: AppSpacing.md),
-                headerTrailing!,
+              const SizedBox(height: AppSpacing.xl),
+              Expanded(
+                child: scrollable
+                    ? SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: body,
+                        ),
+                      )
+                    : body,
+              ),
+              if (action != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.lg),
+                action!,
               ],
             ],
           ),
-          const SizedBox(height: AppSpacing.xl),
-          Expanded(
-            child: scrollable
-                ? SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: body,
-                    ),
-                  )
-                : body,
-          ),
-          if (action != null) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            action!,
-          ],
-        ],
+        ),
       ),
     );
 
@@ -82,8 +103,11 @@ class FactoryScaffold extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              AppColors.background,
-              Color.alphaBlend(primary.withOpacity(0.08), AppColors.background),
+              theme.scaffoldBackgroundColor,
+              Color.alphaBlend(
+                primary.withValues(alpha: 0.10),
+                theme.scaffoldBackgroundColor,
+              ),
             ],
           ),
         ),
@@ -93,7 +117,7 @@ class FactoryScaffold extends StatelessWidget {
               top: -90,
               right: -30,
               child: _GlowOrb(
-                color: primary.withOpacity(0.12),
+                color: primary.withValues(alpha: 0.12),
                 size: 220,
               ),
             ),
@@ -101,7 +125,7 @@ class FactoryScaffold extends StatelessWidget {
               left: -80,
               bottom: 100,
               child: _GlowOrb(
-                color: primary.withOpacity(0.08),
+                color: primary.withValues(alpha: 0.08),
                 size: 180,
               ),
             ),
@@ -133,7 +157,7 @@ class _GlowOrb extends StatelessWidget {
           gradient: RadialGradient(
             colors: <Color>[
               color,
-              color.withOpacity(0),
+              color.withValues(alpha: 0),
             ],
           ),
         ),

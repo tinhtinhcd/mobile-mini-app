@@ -17,9 +17,10 @@ class SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
 
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
@@ -33,7 +34,8 @@ class SectionCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        if (title != null) Text(title!, style: theme.textTheme.titleLarge),
+                        if (title != null)
+                          Text(title!, style: theme.textTheme.titleLarge),
                         if (subtitle != null) ...<Widget>[
                           const SizedBox(height: AppSpacing.xs),
                           Text(subtitle!, style: theme.textTheme.bodySmall),
@@ -47,6 +49,11 @@ class SectionCard extends StatelessWidget {
                   ],
                 ],
               ),
+              const SizedBox(height: AppSpacing.md),
+              Divider(
+                height: 1,
+                color: theme.colorScheme.outlineVariant,
+              ),
               const SizedBox(height: AppSpacing.lg),
             ],
             child,
@@ -56,4 +63,3 @@ class SectionCard extends StatelessWidget {
     );
   }
 }
-

@@ -60,8 +60,8 @@ class FastingScreen extends ConsumerWidget {
                       usageCount: entry.key + 1,
                     );
 
-                    return _PlanChip(
-                      plan: entry.value,
+                    return SelectionPill(
+                      label: entry.value.label,
                       selected: entry.value == selectedPlan && access.allowed,
                       locked: !access.allowed,
                       onTap: () {
@@ -81,9 +81,15 @@ class FastingScreen extends ConsumerWidget {
                 ),
                 if (!monetization.isPremium) ...<Widget>[
                   const SizedBox(height: AppSpacing.md),
-                  Text(
-                    fastingPlanPolicy.upgradeMessage,
-                    style: theme.textTheme.bodySmall,
+                  PremiumCalloutCard(
+                    title: 'Premium unlocks extended fasting plans',
+                    subtitle: fastingPlanPolicy.upgradeMessage,
+                    actionLabel: 'See premium',
+                    onPressed: () => openFastingPaywall(
+                      context: context,
+                      ref: ref,
+                      entryPoint: fastingHeaderButtonEntryPoint,
+                    ),
                   ),
                 ],
                 const SizedBox(height: AppSpacing.lg),
@@ -101,51 +107,16 @@ class FastingScreen extends ConsumerWidget {
             subtitle: 'The shared engine handles the countdown. This app only defines fasting rules.',
             child: Column(
               children: <Widget>[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(AppRadius.large),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        selectedPlan.label,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        _formatDuration(state.remaining),
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          fontSize: 56,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        state.isRunning
-                            ? 'Fast in progress'
-                            : state.remaining == state.activeSession.duration
-                                ? 'Ready to begin'
-                                : 'Paused',
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                        child: LinearProgressIndicator(
-                          minHeight: 10,
-                          value: _clampProgress(state.progress),
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
+                TimerDisplayCard(
+                  label: selectedPlan.label,
+                  timeText: _formatDuration(state.remaining),
+                  progress: _clampProgress(state.progress),
+                  statusText: state.isRunning
+                      ? 'Fast in progress'
+                      : state.remaining == state.activeSession.duration
+                          ? 'Ready to begin'
+                          : 'Paused',
+                  footnote: selectedPlan.description,
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 AppSecondaryButton(
@@ -254,65 +225,6 @@ class FastingScreen extends ConsumerWidget {
   }
 }
 
-class _PlanChip extends StatelessWidget {
-  const _PlanChip({
-    required this.plan,
-    required this.selected,
-    required this.locked,
-    required this.onTap,
-  });
-
-  final FastingPlan plan;
-  final bool selected;
-  final bool locked;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-    final Color primary = theme.colorScheme.primary;
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: selected ? primary : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? primary : AppColors.divider,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Text(
-              plan.label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: selected ? Colors.white : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (locked) ...<Widget>[
-              const SizedBox(width: AppSpacing.xs),
-              Icon(
-                Icons.lock_rounded,
-                size: 16,
-                color: selected ? Colors.white : AppColors.textSecondary,
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class _PremiumButton extends StatelessWidget {
   const _PremiumButton({
     required this.isPremium,
@@ -324,7 +236,7 @@ class _PremiumButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
+    return FilledButton.tonalIcon(
       onPressed: onPressed,
       icon: Icon(
         isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,

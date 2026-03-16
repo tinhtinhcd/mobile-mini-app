@@ -54,6 +54,9 @@ mobile_app_factory/
   apps/
     pomodoro_app/
     fasting_app/
+
+  tools/
+    widgetbook/
 ```
 
 Placeholder directories also exist for future work, but they are **not** in the active workspace and are **not compile-ready yet**:
@@ -127,6 +130,7 @@ Includes:
 * stat widgets
 * empty states
 * layout primitives
+* Widgetbook-previewed shared components
 
 All apps must use components from **ui_kit**.
 
@@ -361,6 +365,7 @@ The active workspace currently validates these modules together:
 * `ui_kit`
 * `apps/pomodoro_app`
 * `apps/fasting_app`
+* `tools/widgetbook`
 
 The placeholder modules remain outside the workspace until they have real compile-ready code.
 

@@ -14,6 +14,7 @@ workspace:
   - packages/timer_engine
   - apps/pomodoro_app
   - apps/fasting_app
+  - tools/widgetbook
 
 dev_dependencies:
   melos: ^7.4.0

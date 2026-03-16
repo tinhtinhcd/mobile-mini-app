@@ -19,39 +19,63 @@ class SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final ThemeData theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppRadius.medium),
-      child: Ink(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        child: Row(
-          children: <Widget>[
-            if (leading != null) ...<Widget>[
-              leading!,
-              const SizedBox(width: AppSpacing.md),
-            ],
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title, style: theme.textTheme.titleMedium),
-                  if (subtitle != null) ...<Widget>[
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(subtitle!, style: theme.textTheme.bodySmall),
+    return Material(
+      color: theme.colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        side: BorderSide(color: theme.colorScheme.outlineVariant),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
+          child: Row(
+            children: <Widget>[
+              if (leading != null) ...<Widget>[
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Color.alphaBlend(
+                      theme.colorScheme.primary.withValues(alpha: 0.08),
+                      theme.colorScheme.surface,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.small),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    child: leading!,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(title, style: theme.textTheme.titleMedium),
+                    if (subtitle != null) ...<Widget>[
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(subtitle!, style: theme.textTheme.bodySmall),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            if (trailing != null) trailing! else const Icon(Icons.chevron_right),
-          ],
+              if (trailing != null)
+                trailing!
+              else
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: theme.textTheme.bodySmall?.color,
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
-

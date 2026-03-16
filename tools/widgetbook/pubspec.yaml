@@ -1,5 +1,5 @@
-name: ui_kit
-description: Shared UI components for Mobile App Factory apps.
+name: factory_widgetbook
+description: Shared component preview tool for Mobile App Factory.
 version: 0.1.0
 publish_to: none
 
@@ -13,7 +13,8 @@ dependencies:
   flutter:
     sdk: flutter
   app_core: ^0.1.0
-  flutter_animate: ^4.5.0
+  ui_kit: ^0.1.0
+  widgetbook: ^3.16.0
 
 dev_dependencies:
   flutter_test:

@@ -76,6 +76,13 @@ class _PaywallSheet extends StatelessWidget {
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: AppSpacing.xl),
+                  PremiumCalloutCard(
+                    title: 'Premium keeps the experience focused',
+                    subtitle:
+                        'Remove ads, unlock limits, and keep the timer tools feeling lightweight.',
+                    badgeLabel: 'Upgrade',
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   SectionCard(
                     title: 'Premium unlocks',
                     child: Column(

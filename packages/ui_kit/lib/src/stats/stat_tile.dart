@@ -17,13 +17,20 @@ class StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = highlight ?? theme.colorScheme.primary;
+    final ThemeData theme = Theme.of(context);
+    final Color color = highlight ?? theme.colorScheme.primary;
+    final Color background = Color.alphaBlend(
+      color.withValues(alpha: 0.08),
+      theme.colorScheme.surface,
+    );
 
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: background,
         borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(
+          color: color.withValues(alpha: 0.18),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -31,13 +38,19 @@ class StatTile extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
+              label.toUpperCase(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                letterSpacing: 0.8,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
               value,
               style: theme.textTheme.headlineMedium?.copyWith(color: color),
             ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(label, style: theme.textTheme.titleMedium),
             if (detail != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.xxs),
+              const SizedBox(height: AppSpacing.sm),
               Text(detail!, style: theme.textTheme.bodySmall),
             ],
           ],

@@ -14,37 +14,36 @@ class PomodoroScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final TimerState state = ref.watch(pomodoroControllerProvider);
-    final PomodoroController controller =
-        ref.read(pomodoroControllerProvider.notifier);
-    final StoreMonetizationService monetization =
-        ref.watch(pomodoroMonetizationServiceProvider);
+    final PomodoroController controller = ref.read(
+      pomodoroControllerProvider.notifier,
+    );
+    final StoreMonetizationService monetization = ref.watch(
+      pomodoroMonetizationServiceProvider,
+    );
     final AdService adService = ref.read(pomodoroAdServiceProvider);
     final ThemeData theme = Theme.of(context);
-    final PomodoroMode currentMode =
-        pomodoroModeFromSession(state.activeSession);
+    final PomodoroMode currentMode = pomodoroModeFromSession(
+      state.activeSession,
+    );
     final UsageLimitResult sessionNotesAccess = pomodoroSessionNotesPolicy
-        .evaluate(
-          entitlement: monetization.entitlementState,
-          usageCount: 1,
-        );
+        .evaluate(entitlement: monetization.entitlementState, usageCount: 1);
 
     return FactoryScaffold(
       title: 'Focus Flow',
       subtitle:
-          'A Phase 1 demo built on shared packages, with one clear action and reusable cards.',
+          'A calm timer for focused work, deliberate breaks, and a cleaner daily rhythm.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
-        onPressed: () => openPomodoroPaywall(
-          context: context,
-          ref: ref,
-          entryPoint: pomodoroHeaderButtonEntryPoint,
-        ),
+        onPressed:
+            () => openPomodoroPaywall(
+              context: context,
+              ref: ref,
+              entryPoint: pomodoroHeaderButtonEntryPoint,
+            ),
       ),
       action: AppPrimaryButton(
-        label: state.isRunning ? 'Pause session' : 'Start session',
-        icon: Icon(
-          state.isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded,
-        ),
+        label: _primaryLabel(state, currentMode),
+        icon: Icon(_primaryIcon(state)),
         onPressed: controller.toggleTimer,
       ),
       body: Column(
@@ -52,154 +51,115 @@ class PomodoroScreen extends ConsumerWidget {
         children: <Widget>[
           SectionCard(
             title: 'Current cycle',
-            subtitle: 'Switch modes to preview the reusable timer layout.',
+            subtitle: 'Keep one task in focus and let the timer set the pace.',
+            trailing: _ModeStatusBadge(label: currentMode.label),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: PomodoroMode.values.map((PomodoroMode mode) {
-                    return _ModeChip(
-                      mode: mode,
-                      selected: currentMode == mode,
-                      onTap: () => controller.selectMode(mode),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary.withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(AppRadius.large),
-                  ),
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        state.activeSession.label.toUpperCase(),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        _formatDuration(state.remaining),
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          fontSize: 56,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.small),
-                        child: LinearProgressIndicator(
-                          minHeight: 10,
-                          value: state.progress < 0
-                              ? 0
-                              : state.progress > 1
-                                  ? 1
-                                  : state.progress,
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                    ],
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: TimerDisplayCard(
+                    key: ValueKey<String>(state.activeSession.id),
+                    label: state.activeSession.label,
+                    timeText: _formatDuration(state.remaining),
+                    progress: state.progress,
+                    statusText: _sessionStatusText(state, currentMode),
+                    footnote: _timerFootnote(currentMode),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: AppSecondaryButton(
-                        label: 'Reset',
-                        icon: const Icon(Icons.refresh_rounded),
-                        onPressed: controller.reset,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: AppSecondaryButton(
-                        label: 'Skip',
-                        icon: const Icon(Icons.skip_next_rounded),
-                        onPressed: controller.skipToNextMode,
-                      ),
-                    ),
-                  ],
+                _SupportPanel(
+                  title: 'Mode',
+                  child: Wrap(
+                    spacing: AppSpacing.sm,
+                    runSpacing: AppSpacing.sm,
+                    children:
+                        PomodoroMode.values.map((PomodoroMode mode) {
+                          return SelectionPill(
+                            label: mode.label,
+                            selected: currentMode == mode,
+                            leading: Icon(_modeIcon(mode)),
+                            onTap: () => controller.selectMode(mode),
+                          );
+                        }).toList(),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _ResponsiveButtonRow(
+                  leading: AppSecondaryButton(
+                    label: 'Reset',
+                    icon: const Icon(Icons.refresh_rounded),
+                    onPressed: controller.reset,
+                  ),
+                  trailing: AppSecondaryButton(
+                    label: 'Skip',
+                    icon: const Icon(Icons.skip_next_rounded),
+                    onPressed: controller.skipToNextMode,
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
           SectionCard(
-            title: 'Today',
-            subtitle:
-                'Shared stat tiles make it easy to spin up more timer apps later.',
+            title: 'Today at a glance',
+            subtitle: 'A compact view of your focus momentum so far.',
             child: Column(
               children: <Widget>[
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: StatTile(
-                        label: 'Focus sessions',
-                        value: '${state.stats.completedTrackedSessions}',
-                        detail: 'Completed',
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: StatTile(
-                        label: 'Minutes deep work',
-                        value: '${state.stats.trackedMinutes}',
-                        detail: 'Tracked locally',
-                      ),
-                    ),
-                  ],
+                _ResponsiveMetricRow(
+                  leading: StatTile(
+                    label: 'Focus sessions',
+                    value: '${state.stats.completedTrackedSessions}',
+                    detail:
+                        state.stats.completedTrackedSessions == 0
+                            ? 'Start one session to build momentum'
+                            : 'Completed today',
+                  ),
+                  trailing: StatTile(
+                    label: 'Minutes deep work',
+                    value: '${state.stats.trackedMinutes}',
+                    detail:
+                        state.stats.trackedMinutes == 0
+                            ? 'No tracked minutes yet'
+                            : 'Tracked locally',
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.md),
                 StatTile(
                   label: 'Current rhythm',
                   value: _buildRhythmLabel(currentMode),
-                  detail: currentMode == PomodoroMode.focus
-                      ? 'Stay on task until the bell.'
-                      : 'Use the break to reset before the next focus block.',
+                  detail:
+                      currentMode == PomodoroMode.focus
+                          ? 'Stay on task until the bell.'
+                          : 'Use the break to reset before the next focus block.',
                 ),
               ],
             ),
           ),
           const SizedBox(height: AppSpacing.xl),
           SectionCard(
-            title: 'Session notes',
-            subtitle:
-                'A basic shared input is wired in for future app flows without adding Phase 2 storage yet.',
-            child: sessionNotesAccess.allowed
-                ? const AppTextField(
-                    label: 'What matters in this sprint?',
-                    hintText:
-                        'Outline the task you want to finish before the timer ends.',
-                    maxLines: 3,
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        sessionNotesAccess.message,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      AppSecondaryButton(
-                        label: 'Unlock premium',
-                        icon: const Icon(Icons.workspace_premium_rounded),
-                        onPressed: () => openPomodoroPaywall(
-                          context: context,
-                          ref: ref,
-                          entryPoint: pomodoroSessionNotesGateEntryPoint,
-                        ),
-                      ),
-                    ],
-                  ),
+            title: 'Focus note',
+            subtitle: 'Keep a short prompt for the task in front of you.',
+            child:
+                sessionNotesAccess.allowed
+                    ? const AppTextField(
+                      label: 'What matters right now?',
+                      hintText: 'Write the one thing this session is for.',
+                      maxLines: 3,
+                    )
+                    : PremiumCalloutCard(
+                      title: 'Session notes are part of Premium',
+                      subtitle: sessionNotesAccess.message,
+                      actionLabel: 'Unlock premium',
+                      onPressed:
+                          () => openPomodoroPaywall(
+                            context: context,
+                            ref: ref,
+                            entryPoint: pomodoroSessionNotesGateEntryPoint,
+                          ),
+                    ),
           ),
           MonetizationBanner(
             adService: adService,
@@ -209,10 +169,7 @@ class PomodoroScreen extends ConsumerWidget {
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
-            Text(
-              message,
-              style: theme.textTheme.bodySmall,
-            ),
+            Text(message, style: theme.textTheme.bodySmall),
           ],
         ],
       ),
@@ -232,20 +189,69 @@ class PomodoroScreen extends ConsumerWidget {
     final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
     return '$minutes:$seconds';
   }
+
+  String _sessionStatusText(TimerState state, PomodoroMode mode) {
+    if (state.isRunning) {
+      return mode == PomodoroMode.focus
+          ? 'Focus in progress'
+          : 'Break in progress';
+    }
+
+    if (state.remaining == state.activeSession.duration) {
+      return 'Ready to begin';
+    }
+
+    return 'Paused';
+  }
+
+  String _timerFootnote(PomodoroMode mode) {
+    return switch (mode) {
+      PomodoroMode.focus => 'Stay with a single task until the timer ends.',
+      PomodoroMode.shortBreak =>
+        'Take a quick reset, then come back with clarity.',
+      PomodoroMode.longBreak =>
+        'Step away for a longer recharge before the next block.',
+    };
+  }
+
+  String _primaryLabel(TimerState state, PomodoroMode mode) {
+    if (state.isRunning) {
+      return mode == PomodoroMode.focus ? 'Pause focus' : 'Pause break';
+    }
+
+    if (state.remaining != state.activeSession.duration) {
+      return mode == PomodoroMode.focus ? 'Resume focus' : 'Resume break';
+    }
+
+    return mode == PomodoroMode.focus ? 'Start focus session' : 'Start break';
+  }
+
+  IconData _primaryIcon(TimerState state) {
+    if (state.isRunning) {
+      return Icons.pause_rounded;
+    }
+
+    return Icons.play_arrow_rounded;
+  }
+
+  IconData _modeIcon(PomodoroMode mode) {
+    return switch (mode) {
+      PomodoroMode.focus => Icons.bolt_rounded,
+      PomodoroMode.shortBreak => Icons.coffee_rounded,
+      PomodoroMode.longBreak => Icons.hotel_rounded,
+    };
+  }
 }
 
 class _PremiumButton extends StatelessWidget {
-  const _PremiumButton({
-    required this.isPremium,
-    required this.onPressed,
-  });
+  const _PremiumButton({required this.isPremium, required this.onPressed});
 
   final bool isPremium;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return TextButton.icon(
+    return FilledButton.tonalIcon(
       onPressed: onPressed,
       icon: Icon(
         isPremium ? Icons.workspace_premium_rounded : Icons.lock_open_rounded,
@@ -255,46 +261,139 @@ class _PremiumButton extends StatelessWidget {
   }
 }
 
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
-    required this.mode,
-    required this.selected,
-    required this.onTap,
-  });
+class _ModeStatusBadge extends StatelessWidget {
+  const _ModeStatusBadge({required this.label});
 
-  final PomodoroMode mode;
-  final bool selected;
-  final VoidCallback onTap;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primary = theme.colorScheme.primary;
+    final ThemeData theme = Theme.of(context);
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: 0.10),
+          theme.colorScheme.surface,
         ),
-        decoration: BoxDecoration(
-          color: selected ? primary : Colors.white,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(
-            color: selected ? primary : AppColors.divider,
-          ),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
         ),
         child: Text(
-          mode.label,
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: selected ? Colors.white : AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
+    );
+  }
+}
+
+class _SupportPanel extends StatelessWidget {
+  const _SupportPanel({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: 0.04),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              title.toUpperCase(),
+              style: theme.textTheme.bodySmall?.copyWith(
+                letterSpacing: 0.8,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ResponsiveButtonRow extends StatelessWidget {
+  const _ResponsiveButtonRow({required this.leading, required this.trailing});
+
+  final Widget leading;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < 420) {
+          return Column(
+            children: <Widget>[
+              leading,
+              const SizedBox(height: AppSpacing.md),
+              trailing,
+            ],
+          );
+        }
+
+        return Row(
+          children: <Widget>[
+            Expanded(child: leading),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: trailing),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ResponsiveMetricRow extends StatelessWidget {
+  const _ResponsiveMetricRow({required this.leading, required this.trailing});
+
+  final Widget leading;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        if (constraints.maxWidth < 420) {
+          return Column(
+            children: <Widget>[
+              leading,
+              const SizedBox(height: AppSpacing.md),
+              trailing,
+            ],
+          );
+        }
+
+        return Row(
+          children: <Widget>[
+            Expanded(child: leading),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(child: trailing),
+          ],
+        );
+      },
     );
   }
 }

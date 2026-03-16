@@ -14,17 +14,24 @@ class AppPrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget button;
+
     if (icon == null) {
-      return FilledButton(
+      button = FilledButton(
         onPressed: onPressed,
         child: Text(label),
       );
+    } else {
+      button = FilledButton.icon(
+        onPressed: onPressed,
+        icon: icon!,
+        label: Text(label),
+      );
     }
 
-    return FilledButton.icon(
-      onPressed: onPressed,
-      icon: icon!,
-      label: Text(label),
+    return SizedBox(
+      width: double.infinity,
+      child: button,
     );
   }
 }
@@ -43,18 +50,24 @@ class AppSecondaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Widget button;
+
     if (icon == null) {
-      return OutlinedButton(
+      button = OutlinedButton(
         onPressed: onPressed,
         child: Text(label),
       );
+    } else {
+      button = OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: icon!,
+        label: Text(label),
+      );
     }
 
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: icon!,
-      label: Text(label),
+    return SizedBox(
+      width: double.infinity,
+      child: button,
     );
   }
 }
-

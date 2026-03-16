@@ -171,7 +171,6 @@ Includes:
 These directories exist only as placeholders right now and are not wired into the workspace yet:
 
 * `monetization`
-* `notifications`
 * `export`
 * `form_engine`
 * `tool_engine`

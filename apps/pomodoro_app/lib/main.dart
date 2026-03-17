@@ -38,7 +38,7 @@ Widget createPomodoroApp({
           defaultChannel: const NotificationChannel(
             id: 'pomodoro_timers',
             name: 'Pomodoro Timers',
-            description: 'Session completion alerts for Pomodoro cycles.',
+            description: 'Completion alerts for Pomodoro sessions.',
           ),
         ),
     monetizationService:

@@ -22,63 +22,48 @@ class SectionCard extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Color.alphaBlend(
-          theme.colorScheme.primary.withValues(alpha: 0.025),
+          theme.colorScheme.primary.withValues(alpha: 0.018),
           theme.colorScheme.surfaceContainerLowest,
         ),
         borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.9),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.7),
         ),
       ),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppRadius.medium),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (title != null ||
-                  subtitle != null ||
-                  trailing != null) ...<Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          if (title != null)
-                            Text(title!, style: theme.textTheme.titleLarge),
-                          if (subtitle != null) ...<Widget>[
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(subtitle!, style: theme.textTheme.bodySmall),
-                          ],
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            if (title != null ||
+                subtitle != null ||
+                trailing != null) ...<Widget>[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        if (title != null)
+                          Text(title!, style: theme.textTheme.titleMedium),
+                        if (subtitle != null) ...<Widget>[
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(subtitle!, style: theme.textTheme.bodySmall),
                         ],
-                      ),
-                    ),
-                    if (trailing != null) ...<Widget>[
-                      const SizedBox(width: AppSpacing.md),
-                      trailing!,
-                    ],
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: theme.colorScheme.outlineVariant.withValues(
-                      alpha: 0.55,
+                      ],
                     ),
                   ),
-                  child: const SizedBox(height: 1, width: double.infinity),
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              child,
+                  if (trailing != null) ...<Widget>[
+                    const SizedBox(width: AppSpacing.md),
+                    trailing!,
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
             ],
-          ),
+            child,
+          ],
         ),
       ),
     );

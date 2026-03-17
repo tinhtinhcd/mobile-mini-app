@@ -41,115 +41,89 @@ class PomodoroScreen extends ConsumerWidget {
               entryPoint: pomodoroHeaderButtonEntryPoint,
             ),
       ),
-      action: AppPrimaryButton(
-        label: _primaryLabel(state, currentMode),
-        icon: Icon(_primaryIcon(state)),
-        onPressed: controller.toggleTimer,
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SectionCard(
+          _CompactSectionHeader(
             title: 'Current cycle',
-            subtitle: 'Keep one task in focus and let the timer set the pace.',
             trailing: _ModeStatusBadge(label: currentMode.label),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  child: TimerDisplayCard(
-                    key: ValueKey<String>(state.activeSession.id),
-                    label: state.activeSession.label,
-                    timeText: _formatDuration(state.remaining),
-                    progress: state.progress,
-                    statusText: _sessionStatusText(state, currentMode),
-                    footnote: _timerFootnote(currentMode),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                _SupportPanel(
-                  title: 'Mode',
-                  child: Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.sm,
-                    children:
-                        PomodoroMode.values.map((PomodoroMode mode) {
-                          return SelectionPill(
-                            label: mode.label,
-                            selected: currentMode == mode,
-                            leading: Icon(_modeIcon(mode)),
-                            onTap: () => controller.selectMode(mode),
-                          );
-                        }).toList(),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Quick actions',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    letterSpacing: 0.8,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _ResponsiveButtonRow(
-                  leading: AppSecondaryButton(
-                    label: 'Reset',
-                    icon: const Icon(Icons.refresh_rounded),
-                    onPressed: controller.reset,
-                  ),
-                  trailing: AppSecondaryButton(
-                    label: 'Skip',
-                    icon: const Icon(Icons.skip_next_rounded),
-                    onPressed: controller.skipToNextMode,
-                  ),
-                ),
-              ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 220),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            child: TimerDisplayCard(
+              key: ValueKey<String>(state.activeSession.id),
+              label: state.activeSession.label,
+              timeText: _formatDuration(state.remaining),
+              progress: state.progress,
+              statusText: _sessionStatusText(state, currentMode),
+              footnote: _timerFootnote(currentMode),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          SectionCard(
-            title: 'Today at a glance',
-            subtitle: 'A compact view of your focus momentum so far.',
-            child: Column(
-              children: <Widget>[
-                _ResponsiveMetricRow(
-                  leading: StatTile(
-                    label: 'Focus sessions',
-                    value: '${state.stats.completedTrackedSessions}',
-                    detail:
-                        state.stats.completedTrackedSessions == 0
-                            ? 'Start one session to build momentum'
-                            : 'Completed today',
-                  ),
-                  trailing: StatTile(
-                    label: 'Minutes deep work',
-                    value: '${state.stats.trackedMinutes}',
-                    detail:
-                        state.stats.trackedMinutes == 0
-                            ? 'No tracked minutes yet'
-                            : 'Tracked locally',
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SettingsTile(
-                  title: 'Current rhythm',
-                  subtitle:
-                      currentMode == PomodoroMode.focus
-                          ? 'Stay on task until the bell.'
-                          : 'Use the break to reset before the next focus block.',
-                  leading: Icon(_modeIcon(currentMode)),
-                  trailing: _ModeStatusBadge(
-                    label: _buildRhythmLabel(currentMode),
-                  ),
-                ),
-              ],
+          const SizedBox(height: AppSpacing.md),
+          AppPrimaryButton(
+            label: _primaryLabel(state, currentMode),
+            icon: Icon(_primaryIcon(state)),
+            onPressed: controller.toggleTimer,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SupportPanel(
+            title: 'Mode',
+            child: Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children:
+                  PomodoroMode.values.map((PomodoroMode mode) {
+                    return SelectionPill(
+                      label: mode.label,
+                      selected: currentMode == mode,
+                      leading: Icon(_modeIcon(mode)),
+                      onTap: () => controller.selectMode(mode),
+                    );
+                  }).toList(),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
+          const SizedBox(height: AppSpacing.sm),
+          _ResponsiveButtonRow(
+            leading: AppSecondaryButton(
+              label: 'Reset',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: controller.reset,
+            ),
+            trailing: AppSecondaryButton(
+              label: 'Skip',
+              icon: const Icon(Icons.skip_next_rounded),
+              onPressed: controller.skipToNextMode,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Today', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          CompactStatStrip(
+            items: <CompactStatItem>[
+              CompactStatItem(
+                label: 'focus sessions',
+                value: '${state.stats.completedTrackedSessions}',
+              ),
+              CompactStatItem(
+                label: 'minutes deep work',
+                value: '${state.stats.trackedMinutes}',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SettingsTile(
+            title: 'Current rhythm',
+            subtitle:
+                currentMode == PomodoroMode.focus
+                    ? 'Stay on task until the bell.'
+                    : 'Use the break to reset before the next focus block.',
+            leading: Icon(_modeIcon(currentMode)),
+            trailing: _ModeStatusBadge(label: _buildRhythmLabel(currentMode)),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           SectionCard(
             title: 'Focus note',
             subtitle: 'Keep a short prompt for the task in front of you.',
@@ -259,6 +233,32 @@ class PomodoroScreen extends ConsumerWidget {
   }
 }
 
+class _CompactSectionHeader extends StatelessWidget {
+  const _CompactSectionHeader({required this.title, this.trailing});
+
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
+    );
+  }
+}
+
 class _PremiumButton extends StatelessWidget {
   const _PremiumButton({required this.isPremium, required this.onPressed});
 
@@ -360,38 +360,6 @@ class _SupportPanel extends StatelessWidget {
 
 class _ResponsiveButtonRow extends StatelessWidget {
   const _ResponsiveButtonRow({required this.leading, required this.trailing});
-
-  final Widget leading;
-  final Widget trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        if (constraints.maxWidth < 420) {
-          return Column(
-            children: <Widget>[
-              leading,
-              const SizedBox(height: AppSpacing.md),
-              trailing,
-            ],
-          );
-        }
-
-        return Row(
-          children: <Widget>[
-            Expanded(child: leading),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: trailing),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _ResponsiveMetricRow extends StatelessWidget {
-  const _ResponsiveMetricRow({required this.leading, required this.trailing});
 
   final Widget leading;
   final Widget trailing;

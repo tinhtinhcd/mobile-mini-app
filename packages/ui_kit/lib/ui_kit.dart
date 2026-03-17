@@ -9,4 +9,5 @@ export 'src/premium/premium_callout_card.dart';
 export 'src/selection/selection_pill.dart';
 export 'src/settings/settings_tile.dart';
 export 'src/stats/stat_tile.dart';
+export 'src/stats/compact_stat_strip.dart';
 export 'src/timer/timer_display_card.dart';

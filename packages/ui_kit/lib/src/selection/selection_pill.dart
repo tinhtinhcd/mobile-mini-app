@@ -36,7 +36,7 @@ class SelectionPill extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.sm,
           vertical: AppSpacing.sm,
         ),
         decoration: BoxDecoration(
@@ -49,9 +49,9 @@ class SelectionPill extends StatelessWidget {
               selected
                   ? <BoxShadow>[
                     BoxShadow(
-                      color: primary.withValues(alpha: 0.18),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
+                      color: primary.withValues(alpha: 0.12),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
                     ),
                   ]
                   : const <BoxShadow>[],
@@ -73,7 +73,7 @@ class SelectionPill extends StatelessWidget {
               label,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: selected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             if (locked) ...<Widget>[

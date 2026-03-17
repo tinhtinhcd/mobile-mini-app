@@ -44,7 +44,7 @@ class TimerDisplayCard extends StatelessWidget {
         border: Border.all(color: primary.withValues(alpha: 0.16)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xl),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: <Widget>[
             Container(
@@ -64,11 +64,11 @@ class TimerDisplayCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               timeText,
               style: theme.textTheme.headlineLarge?.copyWith(
-                fontSize: 58,
+                fontSize: 52,
                 fontWeight: FontWeight.w800,
                 fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                 color: theme.colorScheme.onSurface,
@@ -89,7 +89,7 @@ class TimerDisplayCard extends StatelessWidget {
                     .slideX(begin: 0.08, end: 0, duration: 180.ms),
               ),
             ],
-            const SizedBox(height: AppSpacing.xl),
+            const SizedBox(height: AppSpacing.lg),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.small),
               child: LinearProgressIndicator(value: clampedProgress),

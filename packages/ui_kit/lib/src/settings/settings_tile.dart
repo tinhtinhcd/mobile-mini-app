@@ -36,7 +36,7 @@ class SettingsTile extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
           child: Row(
             children: <Widget>[
@@ -50,7 +50,7 @@ class SettingsTile extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppRadius.small),
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
+                    padding: const EdgeInsets.all(AppSpacing.xs),
                     child: leading!,
                   ),
                 ),
@@ -60,7 +60,12 @@ class SettingsTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Text(title, style: theme.textTheme.titleMedium),
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     if (subtitle != null) ...<Widget>[
                       const SizedBox(height: AppSpacing.xxs),
                       Text(subtitle!, style: theme.textTheme.bodySmall),

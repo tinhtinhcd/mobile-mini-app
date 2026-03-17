@@ -40,11 +40,11 @@ class PremiumCalloutCard extends StatelessWidget {
             ),
           ],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.large),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
         border: Border.all(color: primary.withValues(alpha: 0.18)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -65,12 +65,12 @@ class PremiumCalloutCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.md),
-            Text(title, style: theme.textTheme.titleLarge),
+            const SizedBox(height: AppSpacing.sm),
+            Text(title, style: theme.textTheme.titleMedium),
             const SizedBox(height: AppSpacing.xs),
             Text(subtitle, style: theme.textTheme.bodyMedium),
             if (actionLabel != null && onPressed != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.md),
               AppSecondaryButton(
                 label: actionLabel!,
                 icon: const Icon(Icons.workspace_premium_rounded),

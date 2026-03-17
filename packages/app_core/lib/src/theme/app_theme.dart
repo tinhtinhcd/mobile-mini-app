@@ -77,44 +77,44 @@ class AppTheme {
     final TextTheme textTheme = baseTheme.textTheme.copyWith(
       headlineLarge: baseTheme.textTheme.headlineLarge?.copyWith(
         fontSize: 30,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: textPrimary,
-        letterSpacing: -0.9,
+        letterSpacing: -0.8,
       ),
       headlineMedium: baseTheme.textTheme.headlineMedium?.copyWith(
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: FontWeight.w700,
         color: textPrimary,
-        letterSpacing: -0.6,
+        letterSpacing: -0.4,
       ),
       titleLarge: baseTheme.textTheme.titleLarge?.copyWith(
-        fontSize: 20,
+        fontSize: 18,
         fontWeight: FontWeight.w700,
         color: textPrimary,
-        letterSpacing: -0.3,
+        letterSpacing: -0.2,
       ),
       titleMedium: baseTheme.textTheme.titleMedium?.copyWith(
-        fontSize: 16,
+        fontSize: 15,
         fontWeight: FontWeight.w600,
         color: textPrimary,
       ),
       bodyLarge: baseTheme.textTheme.bodyLarge?.copyWith(
         fontSize: 15,
-        height: 1.5,
+        height: 1.4,
         color: textPrimary,
       ),
       bodyMedium: baseTheme.textTheme.bodyMedium?.copyWith(
         fontSize: 14,
-        height: 1.5,
+        height: 1.4,
         color: textSecondary,
       ),
       bodySmall: baseTheme.textTheme.bodySmall?.copyWith(
         fontSize: 12,
-        height: 1.45,
+        height: 1.35,
         color: textSecondary,
       ),
       labelLarge: baseTheme.textTheme.labelLarge?.copyWith(
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: FontWeight.w700,
       ),
     );
@@ -141,16 +141,16 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
+          minimumSize: const Size.fromHeight(54),
           backgroundColor: accentColor,
           foregroundColor: Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           textStyle: textTheme.labelLarge,
         ).copyWith(
@@ -169,7 +169,7 @@ class AppTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          minimumSize: const Size.fromHeight(56),
+          minimumSize: const Size.fromHeight(48),
           foregroundColor: textPrimary,
           side: BorderSide(color: divider),
           backgroundColor: Color.alphaBlend(
@@ -177,11 +177,11 @@ class AppTheme {
             surface,
           ),
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.lg,
-            vertical: AppSpacing.md,
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
           ),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.large),
+            borderRadius: BorderRadius.circular(AppRadius.medium),
           ),
           textStyle: textTheme.labelLarge,
         ).copyWith(
@@ -221,7 +221,7 @@ class AppTheme {
           fontWeight: FontWeight.w600,
         ),
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
+          horizontal: AppSpacing.sm,
           vertical: AppSpacing.xs,
         ),
       ),
@@ -243,7 +243,7 @@ class AppTheme {
         labelStyle: textTheme.bodyMedium?.copyWith(color: textSecondary),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
+          vertical: AppSpacing.sm,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.medium),

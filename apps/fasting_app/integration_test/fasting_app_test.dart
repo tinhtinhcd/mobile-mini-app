@@ -1,4 +1,5 @@
 import 'package:fasting_app/main.dart' as app;
+import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:monetization/monetization.dart';
@@ -120,7 +121,13 @@ void main() {
       await tester.tap(find.text('Resume fast'));
       await tester.pump(const Duration(milliseconds: 1200));
       expect(find.text('16:00:00'), findsOneWidget);
-      expect(find.text('Tracked sessions'), findsOneWidget);
+      expect(
+        find.byWidgetPredicate((widget) {
+          return widget is RichText &&
+              widget.text.toPlainText().contains('completed fasts');
+        }),
+        findsOneWidget,
+      );
     });
 
     testWidgets(

@@ -16,8 +16,8 @@ class AppPrimaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle primaryStyle = FilledButton.styleFrom(
-      minimumSize: const Size.fromHeight(56),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      minimumSize: const Size.fromHeight(54),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     );
     final Widget button;
 
@@ -61,8 +61,8 @@ class AppSecondaryButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ButtonStyle secondaryStyle = OutlinedButton.styleFrom(
-      minimumSize: const Size.fromHeight(48),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      minimumSize: const Size.fromHeight(46),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
     );
     final Widget button;
 

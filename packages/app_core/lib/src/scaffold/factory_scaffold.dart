@@ -31,7 +31,6 @@ class FactoryScaffold extends StatelessWidget {
       action: action,
       body: body,
       primary: primary,
-      surface: surface,
     );
 
     return Scaffold(
@@ -74,7 +73,7 @@ class FactoryScaffold extends StatelessWidget {
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.md,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.md,
                     AppSpacing.xl,
                   ),
@@ -85,7 +84,7 @@ class FactoryScaffold extends StatelessWidget {
               return Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppSpacing.md,
-                  AppSpacing.lg,
+                  AppSpacing.md,
                   AppSpacing.md,
                   AppSpacing.xl,
                 ),
@@ -107,7 +106,6 @@ class _ScaffoldContent extends StatelessWidget {
     required this.action,
     required this.body,
     required this.primary,
-    required this.surface,
   });
 
   final String title;
@@ -116,7 +114,6 @@ class _ScaffoldContent extends StatelessWidget {
   final Widget? action;
   final Widget body;
   final Color primary;
-  final Color surface;
 
   @override
   Widget build(BuildContext context) {
@@ -126,72 +123,42 @@ class _ScaffoldContent extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: Color.alphaBlend(primary.withValues(alpha: 0.035), surface),
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-            border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.9),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Expanded(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surface.withValues(
-                              alpha: 0.88,
-                            ),
-                            borderRadius: BorderRadius.circular(999),
-                            border: Border.all(
-                              color: theme.colorScheme.outlineVariant,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            child: Text(
-                              'UTILITY APP',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                letterSpacing: 0.8,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    title,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  if (subtitle != null) ...<Widget>[
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      subtitle!,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    if (headerTrailing != null) ...<Widget>[
-                      const SizedBox(width: AppSpacing.md),
-                      Flexible(child: headerTrailing!),
-                    ],
                   ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(title, style: theme.textTheme.headlineMedium),
-                if (subtitle != null) ...<Widget>[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(subtitle!, style: theme.textTheme.bodyMedium),
                 ],
-              ],
+              ),
             ),
-          ),
+            if (headerTrailing != null) ...<Widget>[
+              const SizedBox(width: AppSpacing.md),
+              Flexible(child: headerTrailing!),
+            ],
+          ],
         ),
         if (action != null) ...<Widget>[
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
           action!,
         ],
-        const SizedBox(height: AppSpacing.xl),
+        const SizedBox(height: AppSpacing.lg),
         SizedBox(width: double.infinity, child: body),
       ],
     );

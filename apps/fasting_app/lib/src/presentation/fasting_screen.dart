@@ -38,160 +38,116 @@ class FastingScreen extends ConsumerWidget {
               entryPoint: fastingHeaderButtonEntryPoint,
             ),
       ),
-      action: AppPrimaryButton(
-        label: _primaryLabel(state),
-        icon: Icon(_primaryIcon(state)),
-        onPressed: controller.toggleTimer,
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          SectionCard(
+          _CompactSectionHeader(
             title: 'Current fast',
-            subtitle:
-                'The shared engine handles the countdown. This app only defines fasting rules.',
-            child: Column(
-              children: <Widget>[
-                TimerDisplayCard(
-                  label: selectedPlan.label,
-                  timeText: _formatDuration(state.remaining),
-                  progress: _clampProgress(state.progress),
-                  statusText:
-                      state.isRunning
-                          ? 'Fast in progress'
-                          : state.remaining == state.activeSession.duration
-                          ? 'Ready to begin'
-                          : 'Paused',
-                  footnote: selectedPlan.description,
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                Row(
-                  children: <Widget>[
-                    Expanded(
-                      child: AppSecondaryButton(
-                        label: 'Reset fast',
-                        icon: const Icon(Icons.refresh_rounded),
-                        onPressed: controller.reset,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          SectionCard(
-            title: 'Plans',
-            subtitle: 'Choose the fasting rhythm you want to follow today.',
             trailing: _PlanBadge(label: selectedPlan.label),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children:
-                      FastingPlan.values.asMap().entries.map((
-                        MapEntry<int, FastingPlan> entry,
-                      ) {
-                        final UsageLimitResult access = fastingPlanPolicy
-                            .evaluate(
-                              entitlement: monetization.entitlementState,
-                              usageCount: entry.key + 1,
-                            );
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TimerDisplayCard(
+            label: selectedPlan.label,
+            timeText: _formatDuration(state.remaining),
+            progress: _clampProgress(state.progress),
+            statusText:
+                state.isRunning
+                    ? 'Fast in progress'
+                    : state.remaining == state.activeSession.duration
+                    ? 'Ready to begin'
+                    : 'Paused',
+            footnote: selectedPlan.description,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          AppPrimaryButton(
+            label: _primaryLabel(state),
+            icon: Icon(_primaryIcon(state)),
+            onPressed: controller.toggleTimer,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          AppSecondaryButton(
+            label: 'Reset fast',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: controller.reset,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Plans', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          _PlanPanel(
+            child: Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children:
+                  FastingPlan.values.asMap().entries.map((
+                    MapEntry<int, FastingPlan> entry,
+                  ) {
+                    final UsageLimitResult access = fastingPlanPolicy.evaluate(
+                      entitlement: monetization.entitlementState,
+                      usageCount: entry.key + 1,
+                    );
 
-                        return SelectionPill(
-                          label: entry.value.label,
-                          selected:
-                              entry.value == selectedPlan && access.allowed,
-                          locked: !access.allowed,
-                          onTap: () {
-                            if (access.allowed) {
-                              controller.selectPlan(entry.value);
-                              return;
-                            }
+                    return SelectionPill(
+                      label: entry.value.label,
+                      selected: entry.value == selectedPlan && access.allowed,
+                      locked: !access.allowed,
+                      onTap: () {
+                        if (access.allowed) {
+                          controller.selectPlan(entry.value);
+                          return;
+                        }
 
-                            openFastingPaywall(
-                              context: context,
-                              ref: ref,
-                              entryPoint: fastingLockedPlanEntryPoint,
-                            );
-                          },
-                        );
-                      }).toList(),
-                ),
-                if (!monetization.isPremium) ...<Widget>[
-                  const SizedBox(height: AppSpacing.md),
-                  PremiumCalloutCard(
-                    title: 'Premium unlocks extended fasting plans',
-                    subtitle: fastingPlanPolicy.upgradeMessage,
-                    actionLabel: 'See premium',
-                    onPressed:
-                        () => openFastingPaywall(
+                        openFastingPaywall(
                           context: context,
                           ref: ref,
-                          entryPoint: fastingHeaderButtonEntryPoint,
-                        ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.md),
-                SettingsTile(
-                  title: 'Eating window',
-                  subtitle: selectedPlan.description,
-                  leading: const Icon(Icons.restaurant_rounded),
-                  trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
-                ),
-              ],
+                          entryPoint: fastingLockedPlanEntryPoint,
+                        );
+                      },
+                    );
+                  }).toList(),
             ),
           ),
-          const SizedBox(height: AppSpacing.xl),
-          SectionCard(
-            title: 'Progress',
-            subtitle:
-                'A small proof that both timer apps share the same stats engine.',
-            child: Column(
-              children: <Widget>[
-                LayoutBuilder(
-                  builder: (BuildContext context, BoxConstraints constraints) {
-                    final Widget completedFasts = StatTile(
-                      label: 'Completed fasts',
-                      value: '${state.stats.completedTrackedSessions}',
-                      detail: 'Tracked sessions',
-                    );
-                    final Widget trackedHours = StatTile(
-                      label: 'Tracked hours',
-                      value: _trackedHoursLabel(state.stats.trackedMinutes),
-                      detail: 'Accumulated fasting time',
-                    );
-
-                    if (constraints.maxWidth < 420) {
-                      return Column(
-                        children: <Widget>[
-                          completedFasts,
-                          const SizedBox(height: AppSpacing.md),
-                          trackedHours,
-                        ],
-                      );
-                    }
-
-                    return Row(
-                      children: <Widget>[
-                        Expanded(child: completedFasts),
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: trackedHours),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                SettingsTile(
-                  title: 'Current plan',
-                  subtitle: selectedPlan.description,
-                  leading: const Icon(Icons.schedule_rounded),
-                  trailing: _PlanBadge(label: selectedPlan.label),
-                ),
-              ],
+          if (!monetization.isPremium) ...<Widget>[
+            const SizedBox(height: AppSpacing.md),
+            PremiumCalloutCard(
+              title: 'Premium unlocks extended fasting plans',
+              subtitle: fastingPlanPolicy.upgradeMessage,
+              actionLabel: 'See premium',
+              onPressed:
+                  () => openFastingPaywall(
+                    context: context,
+                    ref: ref,
+                    entryPoint: fastingHeaderButtonEntryPoint,
+                  ),
             ),
+          ],
+          const SizedBox(height: AppSpacing.sm),
+          SettingsTile(
+            title: 'Eating window',
+            subtitle: selectedPlan.description,
+            leading: const Icon(Icons.restaurant_rounded),
+            trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Progress', style: theme.textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.sm),
+          CompactStatStrip(
+            items: <CompactStatItem>[
+              CompactStatItem(
+                label: 'completed fasts',
+                value: '${state.stats.completedTrackedSessions}',
+              ),
+              CompactStatItem(
+                label: 'tracked hours',
+                value: _trackedHoursLabel(state.stats.trackedMinutes),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          SettingsTile(
+            title: 'Current plan',
+            subtitle: selectedPlan.description,
+            leading: const Icon(Icons.schedule_rounded),
+            trailing: _PlanBadge(label: selectedPlan.label),
           ),
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
@@ -260,6 +216,58 @@ class FastingScreen extends ConsumerWidget {
   String _trackedHoursLabel(int trackedMinutes) {
     final double trackedHours = trackedMinutes / 60;
     return '${trackedHours.toStringAsFixed(1)}h';
+  }
+}
+
+class _CompactSectionHeader extends StatelessWidget {
+  const _CompactSectionHeader({required this.title, this.trailing});
+
+  final String title;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: Text(
+            title,
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        if (trailing != null) trailing!,
+      ],
+    );
+  }
+}
+
+class _PlanPanel extends StatelessWidget {
+  const _PlanPanel({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          theme.colorScheme.primary.withValues(alpha: 0.03),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.medium),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: child,
+      ),
+    );
   }
 }
 

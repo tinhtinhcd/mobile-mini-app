@@ -3,10 +3,7 @@ import 'package:app_core/src/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
 class FactoryApp extends StatelessWidget {
-  const FactoryApp({
-    super.key,
-    required this.definition,
-  });
+  const FactoryApp({super.key, required this.definition});
 
   final AppDefinition definition;
 

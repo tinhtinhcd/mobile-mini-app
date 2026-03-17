@@ -9,13 +9,7 @@ GoRouter createAppRouter({
   return GoRouter(
     initialLocation: initialLocation,
     routes: <RouteBase>[
-      GoRoute(
-        path: '/',
-        name: 'home',
-        builder: builder,
-        routes: routes,
-      ),
+      GoRoute(path: '/', name: 'home', builder: builder, routes: routes),
     ],
   );
 }
-

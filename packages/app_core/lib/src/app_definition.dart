@@ -17,4 +17,3 @@ class AppDefinition {
   final GoRouter router;
   final ThemeMode themeMode;
 }
-

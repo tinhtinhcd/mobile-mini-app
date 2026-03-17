@@ -1,5 +1,5 @@
-name: app_core
-description: Shared application foundation for Mobile App Factory apps.
+name: design_system
+description: Shared design system for Mobile App Factory apps.
 version: 0.1.0
 publish_to: none
 
@@ -12,8 +12,7 @@ resolution: workspace
 dependencies:
   flutter:
     sdk: flutter
-  design_system: ^0.1.0
-  go_router: ^17.1.0
+  flex_color_scheme: ^8.2.0
 
 dev_dependencies:
   flutter_test:

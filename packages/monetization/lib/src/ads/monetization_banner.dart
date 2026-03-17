@@ -165,35 +165,32 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xl),
-      child: Center(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Sponsored',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    letterSpacing: 0.7,
-                    fontWeight: FontWeight.w700,
-                  ),
+    return Center(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                'Sponsored',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  letterSpacing: 0.7,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              SizedBox(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            ],
           ),
         ),
       ),

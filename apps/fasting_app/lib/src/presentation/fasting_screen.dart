@@ -27,8 +27,6 @@ class FastingScreen extends ConsumerWidget {
 
     return FactoryScaffold(
       title: 'Fasting Flow',
-      subtitle:
-          'Track your current fast with shared timer infrastructure and app-specific fasting presets.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
         onPressed:
@@ -38,14 +36,30 @@ class FastingScreen extends ConsumerWidget {
               entryPoint: fastingHeaderButtonEntryPoint,
             ),
       ),
+      drawerItems: _buildDrawerItems(context, ref),
+      footer: MonetizationBanner(
+        startupAppId: 'fasting_app',
+        adService: adService,
+        entitlementState: monetization.entitlementState,
+        adUnitId: fastingBannerAdUnitId,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _CompactSectionHeader(
-            title: 'Current fast',
-            trailing: _PlanBadge(label: selectedPlan.label),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Current fast',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              _PlanBadge(label: selectedPlan.label),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           TimerDisplayCard(
             label: selectedPlan.label,
             timeText: _formatDuration(state.remaining),
@@ -71,83 +85,97 @@ class FastingScreen extends ConsumerWidget {
             onPressed: controller.reset,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Plans', style: theme.textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          _PlanPanel(
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children:
-                  FastingPlan.values.asMap().entries.map((
-                    MapEntry<int, FastingPlan> entry,
-                  ) {
-                    final UsageLimitResult access = fastingPlanPolicy.evaluate(
-                      entitlement: monetization.entitlementState,
-                      usageCount: entry.key + 1,
-                    );
+          CompactSection(
+            title: 'Plans',
+            subtitle: 'Choose the fasting rhythm you want to follow today.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children:
+                      FastingPlan.values.asMap().entries.map((
+                        MapEntry<int, FastingPlan> entry,
+                      ) {
+                        final UsageLimitResult access = fastingPlanPolicy
+                            .evaluate(
+                              entitlement: monetization.entitlementState,
+                              usageCount: entry.key + 1,
+                            );
 
-                    return SelectionPill(
-                      label: entry.value.label,
-                      selected: entry.value == selectedPlan && access.allowed,
-                      locked: !access.allowed,
-                      onTap: () {
-                        if (access.allowed) {
-                          controller.selectPlan(entry.value);
-                          return;
-                        }
+                        return SelectionPill(
+                          label: entry.value.label,
+                          selected:
+                              entry.value == selectedPlan && access.allowed,
+                          locked: !access.allowed,
+                          onTap: () {
+                            if (access.allowed) {
+                              controller.selectPlan(entry.value);
+                              return;
+                            }
 
-                        openFastingPaywall(
+                            openFastingPaywall(
+                              context: context,
+                              ref: ref,
+                              entryPoint: fastingLockedPlanEntryPoint,
+                            );
+                          },
+                        );
+                      }).toList(),
+                ),
+                if (!monetization.isPremium) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  PremiumCalloutCard(
+                    title: 'Premium unlocks extended fasting plans',
+                    subtitle: fastingPlanPolicy.upgradeMessage,
+                    actionLabel: 'See premium',
+                    onPressed:
+                        () => openFastingPaywall(
                           context: context,
                           ref: ref,
-                          entryPoint: fastingLockedPlanEntryPoint,
-                        );
-                      },
-                    );
-                  }).toList(),
-            ),
-          ),
-          if (!monetization.isPremium) ...<Widget>[
-            const SizedBox(height: AppSpacing.md),
-            PremiumCalloutCard(
-              title: 'Premium unlocks extended fasting plans',
-              subtitle: fastingPlanPolicy.upgradeMessage,
-              actionLabel: 'See premium',
-              onPressed:
-                  () => openFastingPaywall(
-                    context: context,
-                    ref: ref,
-                    entryPoint: fastingHeaderButtonEntryPoint,
+                          entryPoint: fastingHeaderButtonEntryPoint,
+                        ),
                   ),
+                ],
+                const SizedBox(height: AppSpacing.sm),
+                SettingsTile(
+                  title: 'Eating window',
+                  subtitle: selectedPlan.description,
+                  leading: const Icon(Icons.restaurant_rounded),
+                  trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
+                ),
+              ],
             ),
-          ],
-          const SizedBox(height: AppSpacing.sm),
-          SettingsTile(
-            title: 'Eating window',
-            subtitle: selectedPlan.description,
-            leading: const Icon(Icons.restaurant_rounded),
-            trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Progress', style: theme.textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          CompactStatStrip(
-            items: <CompactStatItem>[
-              CompactStatItem(
-                label: 'completed fasts',
-                value: '${state.stats.completedTrackedSessions}',
-              ),
-              CompactStatItem(
-                label: 'tracked hours',
-                value: _trackedHoursLabel(state.stats.trackedMinutes),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SettingsTile(
-            title: 'Current plan',
-            subtitle: selectedPlan.description,
-            leading: const Icon(Icons.schedule_rounded),
-            trailing: _PlanBadge(label: selectedPlan.label),
+          CompactSection(
+            title: 'Progress',
+            subtitle: 'A compact summary of your fasting streak so far.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CompactStatStrip(
+                  items: <CompactStatItem>[
+                    CompactStatItem(
+                      label: 'completed fasts',
+                      value: '${state.stats.completedTrackedSessions}',
+                    ),
+                    CompactStatItem(
+                      label: 'tracked hours',
+                      value: _trackedHoursLabel(state.stats.trackedMinutes),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SettingsTile(
+                  title: 'Current plan',
+                  subtitle: selectedPlan.description,
+                  leading: const Icon(Icons.schedule_rounded),
+                  trailing: _PlanBadge(label: selectedPlan.label),
+                ),
+              ],
+            ),
           ),
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
@@ -157,15 +185,100 @@ class FastingScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          MonetizationBanner(
-            startupAppId: 'fasting_app',
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: fastingBannerAdUnitId,
-          ),
         ],
       ),
+    );
+  }
+
+  List<AppDrawerItem> _buildDrawerItems(BuildContext context, WidgetRef ref) {
+    return <AppDrawerItem>[
+      AppDrawerItem(
+        label: 'About App',
+        icon: Icons.info_outline_rounded,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'About Fasting Flow',
+              message:
+                  'Fasting Flow keeps your current fasting session, plan, and progress easy to check at a glance.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Config / Settings',
+        icon: Icons.tune_rounded,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Settings',
+              message:
+                  'Future reminder and display preferences can live here without taking over the main screen.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Subscription Plan',
+        icon: Icons.workspace_premium_outlined,
+        onTap:
+            () => openFastingPaywall(
+              context: context,
+              ref: ref,
+              entryPoint: fastingHeaderButtonEntryPoint,
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Privacy',
+        icon: Icons.privacy_tip_outlined,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Privacy',
+              message:
+                  'Privacy details and data handling notes can be placed here as the ecosystem grows.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Feedback',
+        icon: Icons.forum_outlined,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Feedback',
+              message:
+                  'A lightweight feedback destination can be added here later while the core fasting flow stays focused.',
+            ),
+      ),
+    ];
+  }
+
+  Future<void> _showDrawerSheet({
+    required BuildContext context,
+    required String title,
+    required String message,
+  }) {
+    final ThemeData theme = Theme.of(context);
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder:
+          (BuildContext context) => SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: theme.textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(message, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
     );
   }
 
@@ -219,58 +332,6 @@ class FastingScreen extends ConsumerWidget {
   }
 }
 
-class _CompactSectionHeader extends StatelessWidget {
-  const _CompactSectionHeader({required this.title, this.trailing});
-
-  final String title;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        if (trailing != null) trailing!,
-      ],
-    );
-  }
-}
-
-class _PlanPanel extends StatelessWidget {
-  const _PlanPanel({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(
-          theme.colorScheme.primary.withValues(alpha: 0.03),
-          theme.colorScheme.surface,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: child,
-      ),
-    );
-  }
-}
-
 class _PlanBadge extends StatelessWidget {
   const _PlanBadge({required this.label});
 
@@ -286,7 +347,7 @@ class _PlanBadge extends StatelessWidget {
           theme.colorScheme.primary.withValues(alpha: 0.12),
           theme.colorScheme.surface,
         ),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(

@@ -5,6 +5,7 @@ environment:
   sdk: ^3.7.0
 
 workspace:
+  - packages/design_system
   - packages/app_core
   - packages/ui_kit
   - packages/analytics

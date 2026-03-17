@@ -1,4 +1,4 @@
-import 'package:app_core/app_core.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 class CompactStatItem {
@@ -34,7 +34,7 @@ class CompactStatStrip extends StatelessWidget {
                   accent.withValues(alpha: 0.05),
                   theme.colorScheme.surface,
                 ),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
                 border: Border.all(color: accent.withValues(alpha: 0.12)),
               ),
               child: Padding(

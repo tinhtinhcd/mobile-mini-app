@@ -1,4 +1,4 @@
-import 'package:app_core/app_core.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 class SettingsTile extends StatelessWidget {
@@ -78,6 +78,7 @@ class SettingsTile extends StatelessWidget {
               else
                 Icon(
                   Icons.chevron_right_rounded,
+                  size: AppIconSize.large,
                   color: theme.colorScheme.primary.withValues(alpha: 0.70),
                 ),
             ],

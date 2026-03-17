@@ -1,4 +1,4 @@
-import 'package:app_core/app_core.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 class SelectionPill extends StatelessWidget {
@@ -31,7 +31,7 @@ class SelectionPill extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppRadius.pill),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
@@ -41,7 +41,7 @@ class SelectionPill extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: background,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppRadius.pill),
           border: Border.all(
             color: selected ? primary : theme.colorScheme.outlineVariant,
           ),
@@ -62,7 +62,7 @@ class SelectionPill extends StatelessWidget {
             if (leading != null) ...<Widget>[
               IconTheme(
                 data: IconThemeData(
-                  size: 16,
+                  size: AppIconSize.small,
                   color: selected ? Colors.white : theme.colorScheme.onSurface,
                 ),
                 child: leading!,
@@ -80,7 +80,7 @@ class SelectionPill extends StatelessWidget {
               const SizedBox(width: AppSpacing.xs),
               Icon(
                 Icons.lock_rounded,
-                size: 16,
+                size: AppIconSize.small,
                 color:
                     selected ? Colors.white : theme.textTheme.bodySmall?.color,
               ),

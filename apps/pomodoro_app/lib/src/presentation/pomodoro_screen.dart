@@ -30,8 +30,6 @@ class PomodoroScreen extends ConsumerWidget {
 
     return FactoryScaffold(
       title: 'Focus Flow',
-      subtitle:
-          'A calm timer for focused work, deliberate breaks, and a cleaner daily rhythm.',
       headerTrailing: _PremiumButton(
         isPremium: monetization.isPremium,
         onPressed:
@@ -41,14 +39,30 @@ class PomodoroScreen extends ConsumerWidget {
               entryPoint: pomodoroHeaderButtonEntryPoint,
             ),
       ),
+      drawerItems: _buildDrawerItems(context, ref),
+      footer: MonetizationBanner(
+        startupAppId: 'pomodoro_app',
+        adService: adService,
+        entitlementState: monetization.entitlementState,
+        adUnitId: pomodoroBannerAdUnitId,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          _CompactSectionHeader(
-            title: 'Current cycle',
-            trailing: _ModeStatusBadge(label: currentMode.label),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  'Current cycle',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              _ModeStatusBadge(label: currentMode.label),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 220),
             switchInCurve: Curves.easeOutCubic,
@@ -69,8 +83,9 @@ class PomodoroScreen extends ConsumerWidget {
             onPressed: controller.toggleTimer,
           ),
           const SizedBox(height: AppSpacing.md),
-          _SupportPanel(
+          CompactSection(
             title: 'Mode',
+            inset: false,
             child: Wrap(
               spacing: AppSpacing.sm,
               runSpacing: AppSpacing.sm,
@@ -99,32 +114,41 @@ class PomodoroScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text('Today', style: theme.textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.sm),
-          CompactStatStrip(
-            items: <CompactStatItem>[
-              CompactStatItem(
-                label: 'focus sessions',
-                value: '${state.stats.completedTrackedSessions}',
-              ),
-              CompactStatItem(
-                label: 'minutes deep work',
-                value: '${state.stats.trackedMinutes}',
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SettingsTile(
-            title: 'Current rhythm',
-            subtitle:
-                currentMode == PomodoroMode.focus
-                    ? 'Stay on task until the bell.'
-                    : 'Use the break to reset before the next focus block.',
-            leading: Icon(_modeIcon(currentMode)),
-            trailing: _ModeStatusBadge(label: _buildRhythmLabel(currentMode)),
+          CompactSection(
+            title: 'Today',
+            subtitle: 'Your current rhythm at a glance.',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CompactStatStrip(
+                  items: <CompactStatItem>[
+                    CompactStatItem(
+                      label: 'focus sessions',
+                      value: '${state.stats.completedTrackedSessions}',
+                    ),
+                    CompactStatItem(
+                      label: 'minutes deep work',
+                      value: '${state.stats.trackedMinutes}',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SettingsTile(
+                  title: 'Current rhythm',
+                  subtitle:
+                      currentMode == PomodoroMode.focus
+                          ? 'Stay on task until the bell.'
+                          : 'Use the break to reset before the next focus block.',
+                  leading: Icon(_modeIcon(currentMode)),
+                  trailing: _ModeStatusBadge(
+                    label: _buildRhythmLabel(currentMode),
+                  ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          SectionCard(
+          CompactSection(
             title: 'Focus note',
             subtitle: 'Keep a short prompt for the task in front of you.',
             child:
@@ -154,15 +178,100 @@ class PomodoroScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          MonetizationBanner(
-            startupAppId: 'pomodoro_app',
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: pomodoroBannerAdUnitId,
-          ),
         ],
       ),
+    );
+  }
+
+  List<AppDrawerItem> _buildDrawerItems(BuildContext context, WidgetRef ref) {
+    return <AppDrawerItem>[
+      AppDrawerItem(
+        label: 'About App',
+        icon: Icons.info_outline_rounded,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'About Focus Flow',
+              message:
+                  'Focus Flow keeps your Pomodoro sessions simple, calm, and easy to return to throughout the day.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Config / Settings',
+        icon: Icons.tune_rounded,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Settings',
+              message:
+                  'Shared settings and timer preferences can live here when that surface is ready.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Subscription Plan',
+        icon: Icons.workspace_premium_outlined,
+        onTap:
+            () => openPomodoroPaywall(
+              context: context,
+              ref: ref,
+              entryPoint: pomodoroHeaderButtonEntryPoint,
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Privacy',
+        icon: Icons.privacy_tip_outlined,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Privacy',
+              message:
+                  'Privacy details and data controls can be surfaced here without crowding the timer screen.',
+            ),
+      ),
+      AppDrawerItem(
+        label: 'Feedback',
+        icon: Icons.forum_outlined,
+        onTap:
+            () => _showDrawerSheet(
+              context: context,
+              title: 'Feedback',
+              message:
+                  'A lightweight feedback flow can be added here later while keeping the main screen focused.',
+            ),
+      ),
+    ];
+  }
+
+  Future<void> _showDrawerSheet({
+    required BuildContext context,
+    required String title,
+    required String message,
+  }) {
+    final ThemeData theme = Theme.of(context);
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder:
+          (BuildContext context) => SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.md,
+                AppSpacing.sm,
+                AppSpacing.md,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(title, style: theme.textTheme.titleLarge),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(message, style: theme.textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ),
     );
   }
 
@@ -175,8 +284,14 @@ class PomodoroScreen extends ConsumerWidget {
   }
 
   String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
+    final String minutes = duration.inMinutes
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
+    final String seconds = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, '0');
     return '$minutes:$seconds';
   }
 
@@ -233,32 +348,6 @@ class PomodoroScreen extends ConsumerWidget {
   }
 }
 
-class _CompactSectionHeader extends StatelessWidget {
-  const _CompactSectionHeader({required this.title, this.trailing});
-
-  final String title;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: Text(
-            title,
-            style: theme.textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        if (trailing != null) trailing!,
-      ],
-    );
-  }
-}
-
 class _PremiumButton extends StatelessWidget {
   const _PremiumButton({required this.isPremium, required this.onPressed});
 
@@ -299,7 +388,7 @@ class _ModeStatusBadge extends StatelessWidget {
           theme.colorScheme.primary.withValues(alpha: 0.12),
           theme.colorScheme.surface,
         ),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(
@@ -312,46 +401,6 @@ class _ModeStatusBadge extends StatelessWidget {
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SupportPanel extends StatelessWidget {
-  const _SupportPanel({required this.title, required this.child});
-
-  final String title;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Color.alphaBlend(
-          theme.colorScheme.primary.withValues(alpha: 0.04),
-          theme.colorScheme.surface,
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.medium),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              title.toUpperCase(),
-              style: theme.textTheme.bodySmall?.copyWith(
-                letterSpacing: 0.8,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            child,
-          ],
         ),
       ),
     );

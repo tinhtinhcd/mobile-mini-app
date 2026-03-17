@@ -25,11 +25,7 @@ class AppTextField extends StatelessWidget {
       maxLines: maxLines,
       keyboardType: keyboardType,
       onChanged: onChanged,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hintText,
-      ),
+      decoration: InputDecoration(labelText: label, hintText: hintText),
     );
   }
 }
-

@@ -1,4 +1,4 @@
-import 'package:app_core/app_core.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 
 import '../buttons/app_buttons.dart';
@@ -55,7 +55,7 @@ class PremiumCalloutCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.84),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 badgeLabel.toUpperCase(),
@@ -73,7 +73,10 @@ class PremiumCalloutCard extends StatelessWidget {
               const SizedBox(height: AppSpacing.md),
               AppSecondaryButton(
                 label: actionLabel!,
-                icon: const Icon(Icons.workspace_premium_rounded),
+                icon: const Icon(
+                  Icons.workspace_premium_rounded,
+                  size: AppIconSize.medium,
+                ),
                 onPressed: onPressed,
               ),
             ],

@@ -1,4 +1,4 @@
-import 'package:app_core/app_core.dart';
+import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -54,7 +54,7 @@ class TimerDisplayCard extends StatelessWidget {
               ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.72),
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppRadius.pill),
               ),
               child: Text(
                 label.toUpperCase(),
@@ -67,8 +67,7 @@ class TimerDisplayCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               timeText,
-              style: theme.textTheme.headlineLarge?.copyWith(
-                fontSize: 52,
+              style: theme.textTheme.displayLarge?.copyWith(
                 fontWeight: FontWeight.w800,
                 fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
                 color: theme.colorScheme.onSurface,
@@ -120,7 +119,7 @@ class _StatusChip extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: theme.colorScheme.surface.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Padding(

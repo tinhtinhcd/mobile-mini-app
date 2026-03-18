@@ -77,6 +77,10 @@ class _FastingBootstrap extends StatefulWidget {
 }
 
 class _FastingBootstrapState extends State<_FastingBootstrap> {
+  static const Duration _lightServicesDelay = Duration(milliseconds: 300);
+  static const Duration _monetizationDelay = Duration(milliseconds: 1400);
+  static const Duration _adsWarmupDelay = Duration(milliseconds: 2600);
+
   TimerSnapshot? _restoredSnapshot;
   late final StartupTiming _startupTiming = StartupTiming.forApp('fasting_app');
   late final FastingMonetizationAnalyticsBinding _analyticsBinding =
@@ -104,8 +108,6 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
 
   Future<void> _runTierB() async {
     _startupTiming.mark('bootstrap_start');
-    unawaited(_initializeAnalytics());
-    unawaited(_initializeNotifications());
 
     try {
       _startupTiming.mark('snapshot_restore_start');
@@ -128,26 +130,33 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
       }
       setState(() {});
     } finally {
-      _startupTiming.mark('bootstrap_finish');
+      _startupTiming.mark('bootstrap_interactive');
     }
   }
 
   Future<void> _runTierC() async {
-    if (kDebugMode) {
-      _startupTiming.mark('monetization_init_skipped_debug');
-      _startupTiming.mark('ads_init_deferred');
+    await Future<void>.delayed(_lightServicesDelay);
+    if (!mounted) {
       return;
     }
 
-    await Future<void>.delayed(const Duration(seconds: 2));
-    _startupTiming.mark('monetization_init_start');
+    await Future.wait<void>(<Future<void>>[
+      _initializeAnalytics(),
+      _initializeNotifications(),
+    ]);
 
-    try {
-      await widget.monetizationService.initialize();
-      _startupTiming.mark('monetization_init_done');
-    } catch (_) {}
+    if (kDebugMode) {
+      _startupTiming.mark('monetization_init_skipped_debug');
+      _startupTiming.mark('ads_init_skipped_debug');
+      _startupTiming.mark('bootstrap_finish');
+      return;
+    }
 
-    _startupTiming.mark('ads_init_deferred');
+    await Future.wait<void>(<Future<void>>[
+      _initializeMonetization(),
+      _warmAds(),
+    ]);
+    _startupTiming.mark('bootstrap_finish');
   }
 
   Future<void> _initializeAnalytics() async {
@@ -164,6 +173,37 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
       await widget.notificationService.initialize();
       _startupTiming.mark('notifications_init_done');
     } catch (_) {}
+  }
+
+  Future<void> _initializeMonetization() async {
+    await Future<void>.delayed(_monetizationDelay);
+    if (!mounted) {
+      return;
+    }
+
+    try {
+      _startupTiming.mark('monetization_init_start');
+      await widget.monetizationService.initialize();
+      _startupTiming.mark('monetization_init_done');
+    } catch (_) {
+      _startupTiming.mark('monetization_init_failed');
+    }
+  }
+
+  Future<void> _warmAds() async {
+    _startupTiming.mark('ads_init_deferred');
+    await Future<void>.delayed(_adsWarmupDelay);
+    if (!mounted) {
+      return;
+    }
+
+    try {
+      _startupTiming.mark('ads_init_start');
+      await widget.adService.initialize();
+      _startupTiming.mark('ads_init_done');
+    } catch (_) {
+      _startupTiming.mark('ads_init_failed');
+    }
   }
 
   @override

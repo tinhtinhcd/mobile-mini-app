@@ -1,4 +1,5 @@
 import 'package:design_system/src/tokens/shell.dart';
+import 'package:design_system/src/tokens/spacing.dart';
 import 'package:flutter/material.dart';
 
 class ScreenLayout extends StatelessWidget {
@@ -64,8 +65,6 @@ class AppContentFrame extends StatelessWidget {
         ),
       ),
       child: SafeArea(
-        top: false,
-        bottom: false,
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final double contentWidth =
@@ -82,9 +81,9 @@ class AppContentFrame extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.fromLTRB(
                   AppShellMetrics.contentHorizontalPadding,
-                  AppShellMetrics.contentTopPadding,
                   AppShellMetrics.contentHorizontalPadding,
-                  AppShellMetrics.contentBottomPadding,
+                  AppShellMetrics.contentHorizontalPadding,
+                  AppSpacing.xl,
                 ),
                 child: alignedChild,
               );
@@ -93,9 +92,9 @@ class AppContentFrame extends StatelessWidget {
             return Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppShellMetrics.contentHorizontalPadding,
-                AppShellMetrics.contentTopPadding,
                 AppShellMetrics.contentHorizontalPadding,
-                AppShellMetrics.contentBottomPadding,
+                AppShellMetrics.contentHorizontalPadding,
+                AppSpacing.xl,
               ),
               child: alignedChild,
             );

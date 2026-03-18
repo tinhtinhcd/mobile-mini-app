@@ -36,13 +36,6 @@ class FastingScreen extends ConsumerWidget {
               entryPoint: fastingHeaderButtonEntryPoint,
             ),
       ),
-      drawerItems: _buildDrawerItems(context, ref),
-      footer: MonetizationBanner(
-        startupAppId: 'fasting_app',
-        adService: adService,
-        entitlementState: monetization.entitlementState,
-        adUnitId: fastingBannerAdUnitId,
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -185,100 +178,15 @@ class FastingScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
+          const SizedBox(height: AppSpacing.md),
+          MonetizationBanner(
+            startupAppId: 'fasting_app',
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: fastingBannerAdUnitId,
+          ),
         ],
       ),
-    );
-  }
-
-  List<AppDrawerItem> _buildDrawerItems(BuildContext context, WidgetRef ref) {
-    return <AppDrawerItem>[
-      AppDrawerItem(
-        label: 'About App',
-        icon: Icons.info_outline_rounded,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'About Fasting Flow',
-              message:
-                  'Fasting Flow keeps your current fasting session, plan, and progress easy to check at a glance.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Config / Settings',
-        icon: Icons.tune_rounded,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Settings',
-              message:
-                  'Future reminder and display preferences can live here without taking over the main screen.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Subscription Plan',
-        icon: Icons.workspace_premium_outlined,
-        onTap:
-            () => openFastingPaywall(
-              context: context,
-              ref: ref,
-              entryPoint: fastingHeaderButtonEntryPoint,
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Privacy',
-        icon: Icons.privacy_tip_outlined,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Privacy',
-              message:
-                  'Privacy details and data handling notes can be placed here as the ecosystem grows.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Feedback',
-        icon: Icons.forum_outlined,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Feedback',
-              message:
-                  'A lightweight feedback destination can be added here later while the core fasting flow stays focused.',
-            ),
-      ),
-    ];
-  }
-
-  Future<void> _showDrawerSheet({
-    required BuildContext context,
-    required String title,
-    required String message,
-  }) {
-    final ThemeData theme = Theme.of(context);
-    return showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder:
-          (BuildContext context) => SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.lg,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title, style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(message, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ),
     );
   }
 

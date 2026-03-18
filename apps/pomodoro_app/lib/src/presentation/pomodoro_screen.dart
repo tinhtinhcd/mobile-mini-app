@@ -39,13 +39,6 @@ class PomodoroScreen extends ConsumerWidget {
               entryPoint: pomodoroHeaderButtonEntryPoint,
             ),
       ),
-      drawerItems: _buildDrawerItems(context, ref),
-      footer: MonetizationBanner(
-        startupAppId: 'pomodoro_app',
-        adService: adService,
-        entitlementState: monetization.entitlementState,
-        adUnitId: pomodoroBannerAdUnitId,
-      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -178,100 +171,15 @@ class PomodoroScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
+          const SizedBox(height: AppSpacing.md),
+          MonetizationBanner(
+            startupAppId: 'pomodoro_app',
+            adService: adService,
+            entitlementState: monetization.entitlementState,
+            adUnitId: pomodoroBannerAdUnitId,
+          ),
         ],
       ),
-    );
-  }
-
-  List<AppDrawerItem> _buildDrawerItems(BuildContext context, WidgetRef ref) {
-    return <AppDrawerItem>[
-      AppDrawerItem(
-        label: 'About App',
-        icon: Icons.info_outline_rounded,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'About Focus Flow',
-              message:
-                  'Focus Flow keeps your Pomodoro sessions simple, calm, and easy to return to throughout the day.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Config / Settings',
-        icon: Icons.tune_rounded,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Settings',
-              message:
-                  'Shared settings and timer preferences can live here when that surface is ready.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Subscription Plan',
-        icon: Icons.workspace_premium_outlined,
-        onTap:
-            () => openPomodoroPaywall(
-              context: context,
-              ref: ref,
-              entryPoint: pomodoroHeaderButtonEntryPoint,
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Privacy',
-        icon: Icons.privacy_tip_outlined,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Privacy',
-              message:
-                  'Privacy details and data controls can be surfaced here without crowding the timer screen.',
-            ),
-      ),
-      AppDrawerItem(
-        label: 'Feedback',
-        icon: Icons.forum_outlined,
-        onTap:
-            () => _showDrawerSheet(
-              context: context,
-              title: 'Feedback',
-              message:
-                  'A lightweight feedback flow can be added here later while keeping the main screen focused.',
-            ),
-      ),
-    ];
-  }
-
-  Future<void> _showDrawerSheet({
-    required BuildContext context,
-    required String title,
-    required String message,
-  }) {
-    final ThemeData theme = Theme.of(context);
-    return showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder:
-          (BuildContext context) => SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.md,
-                AppSpacing.sm,
-                AppSpacing.md,
-                AppSpacing.lg,
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title, style: theme.textTheme.titleLarge),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(message, style: theme.textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ),
     );
   }
 

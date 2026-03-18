@@ -171,14 +171,13 @@ class PomodoroScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          MonetizationBanner(
-            startupAppId: 'pomodoro_app',
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: pomodoroBannerAdUnitId,
-          ),
         ],
+      ),
+      footer: MonetizationBanner(
+        startupAppId: 'pomodoro_app',
+        adService: adService,
+        entitlementState: monetization.entitlementState,
+        adUnitId: pomodoroBannerAdUnitId,
       ),
     );
   }

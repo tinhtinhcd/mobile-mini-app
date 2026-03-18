@@ -178,14 +178,13 @@ class FastingScreen extends ConsumerWidget {
               child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
-          const SizedBox(height: AppSpacing.md),
-          MonetizationBanner(
-            startupAppId: 'fasting_app',
-            adService: adService,
-            entitlementState: monetization.entitlementState,
-            adUnitId: fastingBannerAdUnitId,
-          ),
         ],
+      ),
+      footer: MonetizationBanner(
+        startupAppId: 'fasting_app',
+        adService: adService,
+        entitlementState: monetization.entitlementState,
+        adUnitId: fastingBannerAdUnitId,
       ),
     );
   }

@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/main.dart' as app;
 import 'package:timer_engine/timer_engine.dart';
+import 'package:ui_kit/ui_kit.dart';
 
 import 'support/test_services.dart';
 
@@ -59,24 +61,21 @@ void main() {
       );
 
       await pumpUntilVisible(tester, find.text('Focus Flow'));
-      await tester.ensureVisible(find.text('Start focus session'));
-      await tester.tap(find.text('Start focus session'));
+      await tapFilledButton(tester, 'Start focus session');
       await tester.pump(const Duration(seconds: 1));
       expect(find.text('Pause focus'), findsOneWidget);
       expect(notifications.scheduledIds, isNotEmpty);
 
-      await tester.tap(find.text('Pause focus'));
+      await tapFilledButton(tester, 'Pause focus');
       await tester.pump();
       expect(find.text('Resume focus'), findsOneWidget);
       expect(notifications.canceledIds, isNotEmpty);
 
-      await tester.ensureVisible(find.text('Reset'));
-      await tester.tap(find.text('Reset'));
+      await tapOutlinedButton(tester, 'Reset');
       await tester.pump();
       expect(find.text('25:00'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Short break'));
-      await tester.tap(find.text('Short break'));
+      await tapSelectionPill(tester, 'Short break');
       await tester.pump();
       expect(find.text('05:00'), findsOneWidget);
       expect(find.text('Start break'), findsOneWidget);
@@ -117,8 +116,7 @@ void main() {
         await pumpUntilVisible(tester, find.text('00:01'));
         expect(find.text('Resume focus'), findsOneWidget);
 
-        await tester.ensureVisible(find.text('Resume focus'));
-        await tester.tap(find.text('Resume focus'));
+        await tapFilledButton(tester, 'Resume focus');
         await tester.pump(const Duration(milliseconds: 1200));
         expect(find.text('Short break'), findsWidgets);
         expect(find.text('Start break'), findsOneWidget);
@@ -150,14 +148,44 @@ void main() {
       expect(find.text('25:00'), findsOneWidget);
       expect(find.text('Start focus session'), findsOneWidget);
 
-      await tester.tap(find.text('Upgrade'));
+      await tapFilledButton(tester, 'Upgrade');
       await tester.pumpAndSettle();
       expect(find.text('Upgrade Focus Flow'), findsOneWidget);
 
-      await tester.ensureVisible(find.text('Maybe later'));
-      await tester.tap(find.text('Maybe later'));
+      await tapTextButton(tester, 'Maybe later');
       await tester.pumpAndSettle();
       expect(find.text('Upgrade Focus Flow'), findsNothing);
     });
   });
+}
+
+Future<void> tapFilledButton(WidgetTester tester, String label) async {
+  final Finder button = find.widgetWithText(FilledButton, label);
+  expect(button, findsOneWidget);
+  tester.widget<FilledButton>(button).onPressed!.call();
+  await tester.pump();
+}
+
+Future<void> tapOutlinedButton(WidgetTester tester, String label) async {
+  final Finder button = find.widgetWithText(OutlinedButton, label);
+  expect(button, findsOneWidget);
+  tester.widget<OutlinedButton>(button).onPressed!.call();
+  await tester.pump();
+}
+
+Future<void> tapTextButton(WidgetTester tester, String label) async {
+  final Finder button = find.widgetWithText(TextButton, label);
+  expect(button, findsOneWidget);
+  tester.widget<TextButton>(button).onPressed!.call();
+  await tester.pump();
+}
+
+Future<void> tapSelectionPill(WidgetTester tester, String label) async {
+  final Finder pill = find.ancestor(
+    of: find.text(label),
+    matching: find.byType(SelectionPill),
+  );
+  expect(pill, findsOneWidget);
+  tester.widget<SelectionPill>(pill).onTap();
+  await tester.pump();
 }

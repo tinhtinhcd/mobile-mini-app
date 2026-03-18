@@ -13,6 +13,68 @@ class AppDrawerItem {
   final VoidCallback onTap;
 }
 
+class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+  const AppHeader({
+    super.key,
+    required this.title,
+    this.trailing,
+    this.hasDrawer = false,
+  });
+
+  final String title;
+  final Widget? trailing;
+  final bool hasDrawer;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(AppShellMetrics.headerHeight);
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return AppBar(
+      automaticallyImplyLeading: false,
+      toolbarHeight: AppShellMetrics.headerHeight,
+      titleSpacing: AppSpacing.xs,
+      leading:
+          hasDrawer
+              ? Builder(
+                builder:
+                    (BuildContext context) => IconButton(
+                      tooltip: 'Open menu',
+                      icon: const Icon(Icons.menu_rounded),
+                      onPressed: () => Scaffold.of(context).openDrawer(),
+                    ),
+              )
+              : null,
+      title: Text(
+        title,
+        style: theme.textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: theme.colorScheme.onSurface,
+        ),
+      ),
+      actions:
+          trailing == null
+              ? null
+              : <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: Center(child: trailing!),
+                ),
+              ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Divider(
+          height: 1,
+          thickness: 1,
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+        ),
+      ),
+    );
+  }
+}
+
 class AppShell extends StatelessWidget {
   const AppShell({
     super.key,
@@ -22,6 +84,7 @@ class AppShell extends StatelessWidget {
     this.footer,
     this.drawerItems = const <AppDrawerItem>[],
     this.scrollable = true,
+    this.contentMaxWidth = 720,
   });
 
   final String title;
@@ -30,6 +93,7 @@ class AppShell extends StatelessWidget {
   final Widget? footer;
   final List<AppDrawerItem> drawerItems;
   final bool scrollable;
+  final double contentMaxWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -38,55 +102,26 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        toolbarHeight: AppShellMetrics.headerHeight,
-        titleSpacing: AppSpacing.xs,
-        leading:
-            hasDrawer
-                ? Builder(
-                  builder:
-                      (BuildContext context) => IconButton(
-                        tooltip: 'Open menu',
-                        icon: const Icon(Icons.menu_rounded),
-                        onPressed: () => Scaffold.of(context).openDrawer(),
-                      ),
-                )
-                : null,
-        title: Text(
-          title,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: theme.colorScheme.onSurface,
-          ),
-        ),
-        actions:
-            headerTrailing == null
-                ? null
-                : <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.only(right: AppSpacing.sm),
-                    child: Center(child: headerTrailing!),
-                  ),
-                ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
-          ),
-        ),
+      appBar: AppHeader(
+        title: title,
+        trailing: headerTrailing,
+        hasDrawer: hasDrawer,
       ),
-      drawer: hasDrawer ? _AppDrawer(title: title, items: drawerItems) : null,
-      body: AppContentFrame(scrollable: scrollable, child: body),
-      bottomNavigationBar: _AppFooter(child: footer),
+      drawer: hasDrawer ? AppDrawer(title: title, items: drawerItems) : null,
+      body: AppContentFrame(
+        maxWidth: contentMaxWidth,
+        scrollable: scrollable,
+        includeTopSafeArea: false,
+        includeBottomSafeArea: false,
+        child: body,
+      ),
+      bottomNavigationBar: AppFooter(child: footer),
     );
   }
 }
 
-class _AppDrawer extends StatelessWidget {
-  const _AppDrawer({required this.title, required this.items});
+class AppDrawer extends StatelessWidget {
+  const AppDrawer({super.key, required this.title, required this.items});
 
   final String title;
   final List<AppDrawerItem> items;
@@ -142,8 +177,8 @@ class _AppDrawer extends StatelessWidget {
   }
 }
 
-class _AppFooter extends StatelessWidget {
-  const _AppFooter({this.child});
+class AppFooter extends StatelessWidget {
+  const AppFooter({super.key, this.child});
 
   final Widget? child;
 
@@ -174,7 +209,20 @@ class _AppFooter extends StatelessWidget {
               horizontal: AppSpacing.md,
               vertical: AppSpacing.xs,
             ),
-            child: Center(child: child ?? const SizedBox.shrink()),
+            child: Center(
+              child:
+                  child ??
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.outlineVariant.withValues(
+                        alpha: 0.55,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.pill),
+                    ),
+                  ),
+            ),
           ),
         ),
       ),

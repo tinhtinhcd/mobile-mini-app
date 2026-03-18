@@ -34,11 +34,15 @@ class AppContentFrame extends StatelessWidget {
     required this.child,
     this.maxWidth = 720,
     this.scrollable = true,
+    this.includeTopSafeArea = true,
+    this.includeBottomSafeArea = true,
   });
 
   final Widget child;
   final double maxWidth;
   final bool scrollable;
+  final bool includeTopSafeArea;
+  final bool includeBottomSafeArea;
 
   @override
   Widget build(BuildContext context) {
@@ -65,6 +69,8 @@ class AppContentFrame extends StatelessWidget {
         ),
       ),
       child: SafeArea(
+        top: includeTopSafeArea,
+        bottom: includeBottomSafeArea,
         child: LayoutBuilder(
           builder: (BuildContext context, BoxConstraints constraints) {
             final double contentWidth =

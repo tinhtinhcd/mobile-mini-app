@@ -13,7 +13,7 @@ class AppDrawerItem {
   final VoidCallback onTap;
 }
 
-class AppHeader extends StatelessWidget implements PreferredSizeWidget {
+class AppHeader extends StatelessWidget {
   const AppHeader({
     super.key,
     required this.title,
@@ -26,49 +26,49 @@ class AppHeader extends StatelessWidget implements PreferredSizeWidget {
   final bool hasDrawer;
 
   @override
-  Size get preferredSize => const Size.fromHeight(AppShellMetrics.headerHeight);
-
-  @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    return AppBar(
-      automaticallyImplyLeading: false,
-      toolbarHeight: AppShellMetrics.headerHeight,
-      titleSpacing: AppSpacing.xs,
-      leading:
-          hasDrawer
-              ? Builder(
-                builder:
-                    (BuildContext context) => IconButton(
-                      tooltip: 'Open menu',
-                      icon: const Icon(Icons.menu_rounded),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
-              )
-              : null,
-      title: Text(
-        title,
-        style: theme.textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: theme.colorScheme.onSurface,
+    return Material(
+      color: theme.colorScheme.surface,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+            ),
+          ),
         ),
-      ),
-      actions:
-          trailing == null
-              ? null
-              : <Widget>[
-                Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: Center(child: trailing!),
+        child: SizedBox(
+          height: AppShellMetrics.headerHeight,
+          child: Row(
+            children: <Widget>[
+              if (hasDrawer)
+                Builder(
+                  builder:
+                      (BuildContext context) => IconButton(
+                        tooltip: 'Open menu',
+                        icon: const Icon(Icons.menu_rounded),
+                        onPressed: () => Scaffold.of(context).openDrawer(),
+                      ),
+                )
+              else
+                const SizedBox(width: AppSpacing.xxxl + AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
-              ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(1),
-        child: Divider(
-          height: 1,
-          thickness: 1,
-          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.65),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: trailing ?? const SizedBox.shrink(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -102,20 +102,29 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      appBar: AppHeader(
-        title: title,
-        trailing: headerTrailing,
-        hasDrawer: hasDrawer,
-      ),
       drawer: hasDrawer ? AppDrawer(title: title, items: drawerItems) : null,
-      body: AppContentFrame(
-        maxWidth: contentMaxWidth,
-        scrollable: scrollable,
-        includeTopSafeArea: false,
-        includeBottomSafeArea: false,
-        child: body,
+      body: Column(
+        children: <Widget>[
+          SafeArea(
+            bottom: false,
+            child: AppHeader(
+              title: title,
+              trailing: headerTrailing,
+              hasDrawer: hasDrawer,
+            ),
+          ),
+          Expanded(
+            child: AppContentFrame(
+              maxWidth: contentMaxWidth,
+              scrollable: scrollable,
+              includeTopSafeArea: false,
+              includeBottomSafeArea: false,
+              child: body,
+            ),
+          ),
+          AppFooter(child: footer),
+        ],
       ),
-      bottomNavigationBar: AppFooter(child: footer),
     );
   }
 }

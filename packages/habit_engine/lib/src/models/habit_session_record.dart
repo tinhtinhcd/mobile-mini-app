@@ -1,8 +1,10 @@
-class HabitSessionRecord {
+import 'package:habit_engine/src/models/habit_session.dart';
+
+class HabitSessionRecord extends HabitSession {
   const HabitSessionRecord({
-    required this.type,
-    required this.completedAtUtcMillis,
-    required this.durationMinutes,
+    required super.type,
+    required super.completedAtUtcMillis,
+    required super.durationMinutes,
   });
 
   factory HabitSessionRecord.fromJson(Map<String, dynamic> json) {
@@ -11,25 +13,5 @@ class HabitSessionRecord {
       completedAtUtcMillis: (json['completedAtUtcMillis'] as num).toInt(),
       durationMinutes: (json['durationMinutes'] as num?)?.toInt() ?? 0,
     );
-  }
-
-  final String type;
-  final int completedAtUtcMillis;
-  final int durationMinutes;
-
-  DateTime get completedAtLocal =>
-      DateTime.fromMillisecondsSinceEpoch(
-        completedAtUtcMillis,
-        isUtc: true,
-      ).toLocal();
-
-  Duration get duration => Duration(minutes: durationMinutes);
-
-  Map<String, dynamic> toJson() {
-    return <String, dynamic>{
-      'type': type,
-      'completedAtUtcMillis': completedAtUtcMillis,
-      'durationMinutes': durationMinutes,
-    };
   }
 }

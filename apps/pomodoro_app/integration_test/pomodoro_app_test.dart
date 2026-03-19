@@ -148,7 +148,8 @@ void main() {
       expect(find.text('25:00'), findsOneWidget);
       expect(find.text('Start focus session'), findsOneWidget);
 
-      await tapFilledButton(tester, 'Upgrade');
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Subscription Plan');
       await tester.pumpAndSettle();
       expect(find.text('Upgrade Focus Flow'), findsOneWidget);
 
@@ -188,4 +189,18 @@ Future<void> tapSelectionPill(WidgetTester tester, String label) async {
   expect(pill, findsOneWidget);
   tester.widget<SelectionPill>(pill).onTap();
   await tester.pump();
+}
+
+Future<void> openDrawer(WidgetTester tester) async {
+  final Finder menuButton = find.byIcon(Icons.menu_rounded);
+  expect(menuButton, findsOneWidget);
+  await tester.tap(menuButton);
+  await tester.pumpAndSettle();
+}
+
+Future<void> tapDrawerItem(WidgetTester tester, String label) async {
+  final Finder item = find.text(label);
+  expect(item, findsWidgets);
+  await tester.tap(item.last);
+  await tester.pumpAndSettle();
 }

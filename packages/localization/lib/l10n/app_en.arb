@@ -1,0 +1,183 @@
+{
+  "@@locale": "en",
+  "commonStart": "Start",
+  "commonPause": "Pause",
+  "commonReset": "Reset",
+  "commonStreak": "Streak",
+  "commonToday": "Today",
+  "commonUpgrade": "Upgrade",
+  "commonPremium": "Premium",
+  "commonReadyToBegin": "Ready to begin",
+  "commonPaused": "Paused",
+  "commonRecentActivity": "Recent activity",
+  "commonActiveDays": "Active days",
+  "commonMode": "Mode",
+  "commonPlan": "Plan",
+  "commonSeePremium": "See premium",
+  "shellOpenMenuTooltip": "Open menu",
+  "shellUtilityAppMenu": "Utility app menu",
+  "shellAboutApp": "About App",
+  "shellSettingsConfig": "Settings / Config",
+  "shellSubscriptionPlan": "Subscription Plan",
+  "shellPrivacy": "Privacy",
+  "shellFeedback": "Feedback",
+  "shellAboutTitle": "About {appTitle}",
+  "@shellAboutTitle": {
+    "placeholders": {
+      "appTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "shellAboutDescription": "A reusable placeholder surface for app information. Hook the real destination in when the page is ready.",
+  "shellSettingsTitle": "Settings",
+  "shellSettingsDescription": "Settings lives in the shared shell now. Wire in the real configuration screen when it is implemented.",
+  "shellSubscriptionDescription": "Subscription management can be connected here without cluttering the main task screen.",
+  "shellPrivacyDescription": "Add the privacy destination here when the shared legal pages are ready.",
+  "shellFeedbackDescription": "Route feedback and support flows here without changing the main app flow.",
+  "pomodoroTitle": "Focus Flow",
+  "pomodoroCurrentCycle": "Current cycle",
+  "pomodoroModeFocus": "Focus",
+  "pomodoroModeShortBreak": "Short break",
+  "pomodoroModeLongBreak": "Long break",
+  "pomodoroFocusInProgress": "Focus in progress",
+  "pomodoroBreakInProgress": "Break in progress",
+  "pomodoroFocusFootnote": "Stay with a single task until the timer ends.",
+  "pomodoroShortBreakFootnote": "Take a quick reset, then come back with clarity.",
+  "pomodoroLongBreakFootnote": "Step away for a longer recharge before the next block.",
+  "pomodoroStartFocusSession": "Start focus session",
+  "pomodoroStartBreak": "Start break",
+  "pomodoroPauseFocus": "Pause focus",
+  "pomodoroPauseBreak": "Pause break",
+  "pomodoroResumeFocus": "Resume focus",
+  "pomodoroResumeBreak": "Resume break",
+  "pomodoroTodaySessionsValue": "{count}/{goal} sessions",
+  "@pomodoroTodaySessionsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFocusTime": "Focus time",
+  "pomodoroSevenDaySummary": "7-day summary: {sessions} sessions | {minutes} minutes deep work",
+  "@pomodoroSevenDaySummary": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFreeSessionsLeft": "{remaining} free focus sessions left today.",
+  "@pomodoroFreeSessionsLeft": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFocusLength": "Focus length",
+  "pomodoroCustomFocusPremiumTitle": "Custom focus lengths are Premium",
+  "pomodoroUnlockPremium": "Unlock premium",
+  "pomodoroResetAction": "Reset",
+  "pomodoroSkipAction": "Skip",
+  "pomodoroAdvancedInsights": "Advanced insights",
+  "pomodoroAverageFocus": "Avg focus",
+  "pomodoroFocusNote": "Focus note",
+  "pomodoroFocusNoteLabel": "What matters right now?",
+  "pomodoroFocusNoteHint": "Write the one thing this session is for.",
+  "pomodoroSessionNotesPremiumTitle": "Session notes are part of Premium",
+  "pomodoroHistoryItem": "{minutes}m focus | {month}/{day} at {time}",
+  "@pomodoroHistoryItem": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingTitle": "Fasting Flow",
+  "fastingCurrentFast": "Current fast",
+  "fastingFastInProgress": "Fast in progress",
+  "fastingStartFast": "Start fast",
+  "fastingPauseFast": "Pause fast",
+  "fastingResumeFast": "Resume fast",
+  "fastingTodayFastsValue": "{count}/1 fast",
+  "@fastingTodayFastsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fastingLastFast": "Last fast",
+  "fastingSevenDaySummary": "7-day summary: {fasts} fasts | {hours} total fasting",
+  "@fastingSevenDaySummary": {
+    "placeholders": {
+      "fasts": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingResetFast": "Reset fast",
+  "fastingPremiumHistoryUnlock": "Premium unlocks your full fasting history.",
+  "fastingDeeperInsights": "Deeper insights",
+  "fastingLongestFast": "Longest fast",
+  "fastingPremiumPlansTitle": "Premium unlocks extended fasting plans",
+  "fastingPlanSummary": "{plan} plan | Eating window {window} | {description}",
+  "@fastingPlanSummary": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "window": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingHistoryItem": "{hours} fast | {month}/{day} at {time}",
+  "@fastingHistoryItem": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingPlanReset12Description": "A balanced reset for building consistency.",
+  "fastingPlanLean16Description": "The classic daily fasting rhythm.",
+  "fastingPlanPerformance18Description": "A longer fast with a compact fueling block.",
+  "fastingPlanDeep20Description": "A deep fast for experienced routines.",
+  "fastingEatingWindow12": "12h eating window",
+  "fastingEatingWindow8": "8h eating window",
+  "fastingEatingWindow6": "6h eating window",
+  "fastingEatingWindow4": "4h eating window"
+}

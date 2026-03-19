@@ -1,6 +1,7 @@
 import 'package:app_core/src/app_definition.dart';
 import 'package:app_core/src/theme/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 
 class FactoryApp extends StatelessWidget {
   const FactoryApp({super.key, required this.definition});
@@ -15,6 +16,8 @@ class FactoryApp extends StatelessWidget {
       themeMode: definition.themeMode,
       theme: AppTheme.light(definition.accentColor),
       darkTheme: AppTheme.dark(definition.accentColor),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: definition.router,
     );
   }

@@ -15,12 +15,10 @@ class PomodoroScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final TimerState state = ref.watch(pomodoroControllerProvider);
     final PomodoroController controller = ref.read(
       pomodoroControllerProvider.notifier,
-    );
-    final StoreMonetizationService monetization = ref.watch(
-      pomodoroMonetizationServiceProvider,
     );
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(pomodoroAdServiceProvider);
@@ -69,16 +67,13 @@ class PomodoroScreen extends ConsumerWidget {
     );
 
     return FactoryScaffold(
-      title: 'Focus Flow',
-      headerTrailing: _PremiumButton(
-        isPremium: monetization.isPremium,
-        onPressed:
-            () => openPomodoroPaywall(
-              context: context,
-              ref: ref,
-              entryPoint: pomodoroHeaderButtonEntryPoint,
-            ),
-      ),
+      title: l10n.pomodoroTitle,
+      onSubscriptionTap:
+          () => openPomodoroPaywall(
+            context: context,
+            ref: ref,
+            entryPoint: pomodoroHeaderButtonEntryPoint,
+          ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -86,13 +81,13 @@ class PomodoroScreen extends ConsumerWidget {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  'Current cycle',
+                  l10n.pomodoroCurrentCycle,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              _ModeStatusBadge(label: currentMode.label),
+              _ModeStatusBadge(label: _modeLabel(l10n, currentMode)),
             ],
           ),
           const SizedBox(height: AppSpacing.xs),
@@ -102,16 +97,16 @@ class PomodoroScreen extends ConsumerWidget {
             switchOutCurve: Curves.easeInCubic,
             child: TimerDisplayCard(
               key: ValueKey<String>(state.activeSession.id),
-              label: state.activeSession.label,
+              label: _modeLabel(l10n, currentMode),
               timeText: _formatDuration(state.remaining),
               progress: state.progress,
-              statusText: _sessionStatusText(state, currentMode),
-              footnote: _timerFootnote(currentMode),
+              statusText: _sessionStatusText(l10n, state, currentMode),
+              footnote: _timerFootnote(l10n, currentMode),
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           AppPrimaryButton(
-            label: _primaryLabel(state, currentMode),
+            label: _primaryLabel(l10n, state, currentMode),
             icon: Icon(_primaryIcon(state)),
             onPressed: () {
               if (!unlimitedSessionsAccess.allowed) {
@@ -129,12 +124,18 @@ class PomodoroScreen extends ConsumerWidget {
           CompactStatStrip(
             items: <CompactStatItem>[
               CompactStatItem(
-                label: 'today',
-                value: '$todaySessions/$dailyGoal sessions',
+                label: l10n.commonToday,
+                value: l10n.pomodoroTodaySessionsValue(
+                  todaySessions,
+                  dailyGoal,
+                ),
               ),
-              CompactStatItem(label: 'focus time', value: '${todayMinutes}m'),
               CompactStatItem(
-                label: 'streak',
+                label: l10n.pomodoroFocusTime,
+                value: '${todayMinutes}m',
+              ),
+              CompactStatItem(
+                label: l10n.commonStreak,
                 value: '${streakDays}d',
                 highlight: theme.colorScheme.tertiary,
               ),
@@ -144,28 +145,14 @@ class PomodoroScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: Text(
-              '7-day summary: $weeklySessions sessions | $weeklyMinutes minutes deep work',
+              l10n.pomodoroSevenDaySummary(weeklySessions, weeklyMinutes),
               style: theme.textTheme.bodySmall,
             ),
           ),
-          if (!entitlements.has(Entitlement.unlimitedSessions))
-            Padding(
-              padding: const EdgeInsets.only(
-                top: AppSpacing.xs,
-                left: AppSpacing.xs,
-                right: AppSpacing.xs,
-              ),
-              child: Text(
-                unlimitedSessionsAccess.allowed
-                    ? '${unlimitedSessionsAccess.remainingFreeUses} free focus sessions left today.'
-                    : pomodoroUnlimitedSessionsPolicy.upgradeMessage,
-                style: theme.textTheme.bodySmall,
-              ),
-            ),
           const SizedBox(height: AppSpacing.md),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Mode',
+            l10n.commonMode,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -177,7 +164,7 @@ class PomodoroScreen extends ConsumerWidget {
             children:
                 PomodoroMode.values.map((PomodoroMode mode) {
                   return SelectionPill(
-                    label: mode.label,
+                    label: _modeLabel(l10n, mode),
                     selected: currentMode == mode,
                     leading: Icon(_modeIcon(mode)),
                     onTap: () => controller.selectMode(mode),
@@ -187,7 +174,7 @@ class PomodoroScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           if (currentMode == PomodoroMode.focus) ...<Widget>[
             Text(
-              'Focus length',
+              l10n.pomodoroFocusLength,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -209,11 +196,11 @@ class PomodoroScreen extends ConsumerWidget {
                     }).toList(),
               )
             else
-              PremiumCalloutCard(
-                title: 'Custom focus lengths are Premium',
-                subtitle: customDurationsAccess.message,
-                actionLabel: 'Unlock premium',
-                onPressed:
+              SelectionPill(
+                label: durationPreset.shortLabel,
+                selected: true,
+                locked: true,
+                onTap:
                     () => openPomodoroPaywall(
                       context: context,
                       ref: ref,
@@ -224,12 +211,12 @@ class PomodoroScreen extends ConsumerWidget {
           ],
           _ResponsiveButtonRow(
             leading: AppSecondaryButton(
-              label: 'Reset',
+              label: l10n.pomodoroResetAction,
               icon: const Icon(Icons.refresh_rounded),
               onPressed: controller.reset,
             ),
             trailing: AppSecondaryButton(
-              label: 'Skip',
+              label: l10n.pomodoroSkipAction,
               icon: const Icon(Icons.skip_next_rounded),
               onPressed: controller.skipToNextMode,
             ),
@@ -237,7 +224,7 @@ class PomodoroScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           if (recentEntries.isNotEmpty) ...<Widget>[
             Text(
-              'Recent activity',
+              l10n.commonRecentActivity,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -247,7 +234,7 @@ class PomodoroScreen extends ConsumerWidget {
               (HabitSessionRecord entry) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: Text(
-                  _historyLabel(entry),
+                  _historyLabel(l10n, entry),
                   style: theme.textTheme.bodySmall,
                 ),
               ),
@@ -256,7 +243,7 @@ class PomodoroScreen extends ConsumerWidget {
           ],
           if (advancedStatsUnlocked) ...<Widget>[
             Text(
-              'Advanced insights',
+              l10n.pomodoroAdvancedInsights,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -265,12 +252,12 @@ class PomodoroScreen extends ConsumerWidget {
             CompactStatStrip(
               items: <CompactStatItem>[
                 CompactStatItem(
-                  label: 'active days',
+                  label: l10n.commonActiveDays,
                   value:
                       '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
                 ),
                 CompactStatItem(
-                  label: 'avg focus',
+                  label: l10n.pomodoroAverageFocus,
                   value: _averageMinutesLabel(weeklySessions, weeklyMinutes),
                 ),
               ],
@@ -278,38 +265,31 @@ class PomodoroScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.md),
           ],
           Text(
-            'Focus note',
+            l10n.pomodoroFocusNote,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
           if (sessionNotesAccess.allowed)
-            const AppTextField(
-              label: 'What matters right now?',
-              hintText: 'Write the one thing this session is for.',
+            AppTextField(
+              label: l10n.pomodoroFocusNoteLabel,
+              hintText: l10n.pomodoroFocusNoteHint,
               maxLines: 3,
             )
           else
-            PremiumCalloutCard(
-              title: 'Session notes are part of Premium',
-              subtitle: sessionNotesAccess.message,
-              actionLabel: 'Unlock premium',
-              onPressed:
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.lock_outline_rounded),
+              title: Text(l10n.pomodoroFocusNoteLabel),
+              subtitle: Text(sessionNotesAccess.message),
+              onTap:
                   () => openPomodoroPaywall(
                     context: context,
                     ref: ref,
                     entryPoint: pomodoroSessionNotesGateEntryPoint,
                   ),
             ),
-          if (monetization.entitlementState.message case final String message
-              when message.isNotEmpty) ...<Widget>[
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Text(message, style: theme.textTheme.bodySmall),
-            ),
-          ],
         ],
       ),
       footer: MonetizationBanner(
@@ -333,40 +313,52 @@ class PomodoroScreen extends ConsumerWidget {
     return '$minutes:$seconds';
   }
 
-  String _sessionStatusText(TimerState state, PomodoroMode mode) {
+  String _sessionStatusText(
+    AppLocalizations l10n,
+    TimerState state,
+    PomodoroMode mode,
+  ) {
     if (state.isRunning) {
       return mode == PomodoroMode.focus
-          ? 'Focus in progress'
-          : 'Break in progress';
+          ? l10n.pomodoroFocusInProgress
+          : l10n.pomodoroBreakInProgress;
     }
 
     if (state.remaining == state.activeSession.duration) {
-      return 'Ready to begin';
+      return l10n.commonReadyToBegin;
     }
 
-    return 'Paused';
+    return l10n.commonPaused;
   }
 
-  String _timerFootnote(PomodoroMode mode) {
+  String _timerFootnote(AppLocalizations l10n, PomodoroMode mode) {
     return switch (mode) {
-      PomodoroMode.focus => 'Stay with a single task until the timer ends.',
-      PomodoroMode.shortBreak =>
-        'Take a quick reset, then come back with clarity.',
-      PomodoroMode.longBreak =>
-        'Step away for a longer recharge before the next block.',
+      PomodoroMode.focus => l10n.pomodoroFocusFootnote,
+      PomodoroMode.shortBreak => l10n.pomodoroShortBreakFootnote,
+      PomodoroMode.longBreak => l10n.pomodoroLongBreakFootnote,
     };
   }
 
-  String _primaryLabel(TimerState state, PomodoroMode mode) {
+  String _primaryLabel(
+    AppLocalizations l10n,
+    TimerState state,
+    PomodoroMode mode,
+  ) {
     if (state.isRunning) {
-      return mode == PomodoroMode.focus ? 'Pause focus' : 'Pause break';
+      return mode == PomodoroMode.focus
+          ? l10n.pomodoroPauseFocus
+          : l10n.pomodoroPauseBreak;
     }
 
     if (state.remaining != state.activeSession.duration) {
-      return mode == PomodoroMode.focus ? 'Resume focus' : 'Resume break';
+      return mode == PomodoroMode.focus
+          ? l10n.pomodoroResumeFocus
+          : l10n.pomodoroResumeBreak;
     }
 
-    return mode == PomodoroMode.focus ? 'Start focus session' : 'Start break';
+    return mode == PomodoroMode.focus
+        ? l10n.pomodoroStartFocusSession
+        : l10n.pomodoroStartBreak;
   }
 
   IconData _primaryIcon(TimerState state) {
@@ -392,35 +384,23 @@ class PomodoroScreen extends ConsumerWidget {
     return '${(weeklyMinutes / weeklySessions).round()}m';
   }
 
-  String _historyLabel(HabitSessionRecord entry) {
+  String _modeLabel(AppLocalizations l10n, PomodoroMode mode) {
+    return switch (mode) {
+      PomodoroMode.focus => l10n.pomodoroModeFocus,
+      PomodoroMode.shortBreak => l10n.pomodoroModeShortBreak,
+      PomodoroMode.longBreak => l10n.pomodoroModeLongBreak,
+    };
+  }
+
+  String _historyLabel(AppLocalizations l10n, HabitSessionRecord entry) {
     final DateTime completedAt = entry.completedAtLocal;
     final String hours = completedAt.hour.toString().padLeft(2, '0');
     final String minutes = completedAt.minute.toString().padLeft(2, '0');
-    return '${entry.durationMinutes}m focus | ${completedAt.month}/${completedAt.day} at $hours:$minutes';
-  }
-}
-
-class _PremiumButton extends StatelessWidget {
-  const _PremiumButton({required this.isPremium, required this.onPressed});
-
-  final bool isPremium;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: FilledButton.tonalIcon(
-          onPressed: onPressed,
-          icon: Icon(
-            isPremium
-                ? Icons.workspace_premium_rounded
-                : Icons.lock_open_rounded,
-          ),
-          label: Text(isPremium ? 'Premium' : 'Upgrade'),
-        ),
-      ),
+    return l10n.pomodoroHistoryItem(
+      entry.durationMinutes,
+      completedAt.month,
+      completedAt.day,
+      '$hours:$minutes',
     );
   }
 }

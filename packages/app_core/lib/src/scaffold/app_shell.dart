@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 
 class AppDrawerItem {
   const AppDrawerItem({
@@ -28,6 +29,7 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final AppLocalizations l10n = context.l10n;
 
     return Material(
       color: theme.colorScheme.surface,
@@ -47,7 +49,7 @@ class AppHeader extends StatelessWidget {
                 Builder(
                   builder:
                       (BuildContext context) => IconButton(
-                        tooltip: 'Open menu',
+                        tooltip: l10n.shellOpenMenuTooltip,
                         icon: const Icon(Icons.menu_rounded),
                         onPressed: () => Scaffold.of(context).openDrawer(),
                       ),
@@ -138,6 +140,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final AppLocalizations l10n = context.l10n;
 
     return Drawer(
       width: AppShellMetrics.drawerWidth,
@@ -157,7 +160,10 @@ class AppDrawer extends StatelessWidget {
                 children: <Widget>[
                   Text(title, style: theme.textTheme.titleLarge),
                   const SizedBox(height: AppSpacing.xxs),
-                  Text('Utility app menu', style: theme.textTheme.bodySmall),
+                  Text(
+                    l10n.shellUtilityAppMenu,
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ],
               ),
             ),

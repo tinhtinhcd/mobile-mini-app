@@ -149,22 +149,22 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
       return;
     }
 
-    await Future.wait<void>(<Future<void>>[
+    final List<Future<void>> deferredTasks = <Future<void>>[
       _initializeAnalytics(),
       _initializeNotifications(),
-    ]);
+    ];
 
     if (kDebugMode) {
       _startupTiming.mark('monetization_init_skipped_debug');
       _startupTiming.mark('ads_init_skipped_debug');
-      _startupTiming.mark('bootstrap_finish');
-      return;
+    } else {
+      deferredTasks.addAll(<Future<void>>[
+        _initializeMonetization(),
+        _warmAds(),
+      ]);
     }
 
-    await Future.wait<void>(<Future<void>>[
-      _initializeMonetization(),
-      _warmAds(),
-    ]);
+    await Future.wait<void>(deferredTasks);
     _startupTiming.mark('bootstrap_finish');
   }
 

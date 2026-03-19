@@ -6,6 +6,7 @@ environment:
 
 workspace:
   - packages/design_system
+  - packages/localization
   - packages/app_core
   - packages/ui_kit
   - packages/analytics

@@ -46,6 +46,7 @@ class HabitService extends ChangeNotifier {
   HabitGoal _goal;
   Future<void>? _initializeFuture;
   bool _initialized = false;
+  bool _disposed = false;
 
   bool get isInitialized => _initialized;
 
@@ -85,12 +86,21 @@ class HabitService extends ChangeNotifier {
 
   Future<void> _initialize() async {
     await _refresh();
+    if (_disposed) {
+      return;
+    }
     _initialized = true;
     notifyListeners();
   }
 
   Future<void> updateDailyGoal(int dailyGoal) async {
+    if (_disposed) {
+      return;
+    }
     await initialize();
+    if (_disposed) {
+      return;
+    }
     await _repository.saveGoal(
       HabitGoal(
         dailyTarget: dailyGoal > 0 ? dailyGoal : _defaultDailyGoal,
@@ -105,11 +115,14 @@ class HabitService extends ChangeNotifier {
     required Duration duration,
     DateTime? completedAt,
   }) async {
-    if (duration <= Duration.zero) {
+    if (_disposed || duration <= Duration.zero) {
       return;
     }
 
     await initialize();
+    if (_disposed) {
+      return;
+    }
     await _repository.saveSession(
       HabitSession(
         type: type,
@@ -175,9 +188,15 @@ class HabitService extends ChangeNotifier {
     _weeklySummary = await _repository.getWeeklySummary();
     _streak = await _repository.getStreak();
     _goal = await _repository.getGoal();
-    if (notify) {
+    if (notify && !_disposed) {
       notifyListeners();
     }
+  }
+
+  @override
+  void dispose() {
+    _disposed = true;
+    super.dispose();
   }
 
   List<HabitSessionRecord> _entriesForDay(DateTime day) {

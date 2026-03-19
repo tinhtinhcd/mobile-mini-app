@@ -1,5 +1,6 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:localization/localization.dart';
 
 import 'app_shell.dart';
 
@@ -14,6 +15,7 @@ class FactoryScaffold extends StatelessWidget {
     this.scrollable = true,
     this.footer,
     this.drawerItems = const <AppDrawerItem>[],
+    this.onSubscriptionTap,
   });
 
   final String title;
@@ -24,12 +26,17 @@ class FactoryScaffold extends StatelessWidget {
   final bool scrollable;
   final Widget? footer;
   final List<AppDrawerItem> drawerItems;
+  final VoidCallback? onSubscriptionTap;
 
   @override
   Widget build(BuildContext context) {
     final List<AppDrawerItem> resolvedDrawerItems =
         drawerItems.isEmpty
-            ? _buildDefaultDrawerItems(context, title: title)
+            ? _buildDefaultDrawerItems(
+              context,
+              title: title,
+              onSubscriptionTap: onSubscriptionTap,
+            )
             : drawerItems;
     final Widget content = _ScaffoldContent(
       subtitle: subtitle,
@@ -50,61 +57,60 @@ class FactoryScaffold extends StatelessWidget {
   List<AppDrawerItem> _buildDefaultDrawerItems(
     BuildContext context, {
     required String title,
+    VoidCallback? onSubscriptionTap,
   }) {
+    final AppLocalizations l10n = context.l10n;
+
     return <AppDrawerItem>[
       AppDrawerItem(
-        label: 'About App',
+        label: l10n.shellAboutApp,
         icon: Icons.info_outline_rounded,
         onTap:
             () => _showPlaceholderSheet(
               context,
-              title: 'About $title',
-              description:
-                  'A reusable placeholder surface for app information. Hook the real destination in when the page is ready.',
+              title: l10n.shellAboutTitle(title),
+              description: l10n.shellAboutDescription,
             ),
       ),
       AppDrawerItem(
-        label: 'Settings / Config',
+        label: l10n.shellSettingsConfig,
         icon: Icons.settings_outlined,
         onTap:
             () => _showPlaceholderSheet(
               context,
-              title: 'Settings',
-              description:
-                  'Settings lives in the shared shell now. Wire in the real configuration screen when it is implemented.',
+              title: l10n.shellSettingsTitle,
+              description: l10n.shellSettingsDescription,
             ),
       ),
       AppDrawerItem(
-        label: 'Subscription Plan',
+        label: l10n.shellSubscriptionPlan,
         icon: Icons.workspace_premium_outlined,
         onTap:
+            onSubscriptionTap ??
             () => _showPlaceholderSheet(
               context,
-              title: 'Subscription Plan',
-              description:
-                  'Subscription management can be connected here without cluttering the main task screen.',
+              title: l10n.shellSubscriptionPlan,
+              description: l10n.shellSubscriptionDescription,
             ),
       ),
       AppDrawerItem(
-        label: 'Privacy',
+        label: l10n.shellPrivacy,
         icon: Icons.privacy_tip_outlined,
         onTap:
             () => _showPlaceholderSheet(
               context,
-              title: 'Privacy',
-              description:
-                  'Add the privacy destination here when the shared legal pages are ready.',
+              title: l10n.shellPrivacy,
+              description: l10n.shellPrivacyDescription,
             ),
       ),
       AppDrawerItem(
-        label: 'Feedback',
+        label: l10n.shellFeedback,
         icon: Icons.feedback_outlined,
         onTap:
             () => _showPlaceholderSheet(
               context,
-              title: 'Feedback',
-              description:
-                  'Route feedback and support flows here without changing the main app flow.',
+              title: l10n.shellFeedback,
+              description: l10n.shellFeedbackDescription,
             ),
       ),
     ];

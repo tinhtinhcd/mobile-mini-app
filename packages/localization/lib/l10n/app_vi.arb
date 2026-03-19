@@ -1,0 +1,183 @@
+{
+  "@@locale": "vi",
+  "commonStart": "Bắt đầu",
+  "commonPause": "Tạm dừng",
+  "commonReset": "Đặt lại",
+  "commonStreak": "Chuỗi ngày",
+  "commonToday": "Hôm nay",
+  "commonUpgrade": "Nâng cấp",
+  "commonPremium": "Premium",
+  "commonReadyToBegin": "Sẵn sàng bắt đầu",
+  "commonPaused": "Đã tạm dừng",
+  "commonRecentActivity": "Hoạt động gần đây",
+  "commonActiveDays": "Ngày hoạt động",
+  "commonMode": "Chế độ",
+  "commonPlan": "Lộ trình",
+  "commonSeePremium": "Xem Premium",
+  "shellOpenMenuTooltip": "Mở menu",
+  "shellUtilityAppMenu": "Menu tiện ích",
+  "shellAboutApp": "Giới thiệu ứng dụng",
+  "shellSettingsConfig": "Cài đặt / Tùy chỉnh",
+  "shellSubscriptionPlan": "Gói đăng ký",
+  "shellPrivacy": "Quyền riêng tư",
+  "shellFeedback": "Phản hồi",
+  "shellAboutTitle": "Giới thiệu {appTitle}",
+  "@shellAboutTitle": {
+    "placeholders": {
+      "appTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "shellAboutDescription": "Đây là bề mặt giữ chỗ dùng lại cho thông tin ứng dụng. Kết nối trang thật khi nó sẵn sàng.",
+  "shellSettingsTitle": "Cài đặt",
+  "shellSettingsDescription": "Cài đặt hiện nằm trong shared shell. Hãy nối màn hình cấu hình thật khi triển khai xong.",
+  "shellSubscriptionDescription": "Quản lý gói đăng ký có thể được nối vào đây mà không làm rối màn hình chính.",
+  "shellPrivacyDescription": "Thêm điểm đến quyền riêng tư ở đây khi các trang pháp lý dùng chung sẵn sàng.",
+  "shellFeedbackDescription": "Điều hướng phản hồi và hỗ trợ vào đây mà không thay đổi luồng ứng dụng chính.",
+  "pomodoroTitle": "Focus Flow",
+  "pomodoroCurrentCycle": "Chu kỳ hiện tại",
+  "pomodoroModeFocus": "Tập trung",
+  "pomodoroModeShortBreak": "Nghỉ ngắn",
+  "pomodoroModeLongBreak": "Nghỉ dài",
+  "pomodoroFocusInProgress": "Đang tập trung",
+  "pomodoroBreakInProgress": "Đang nghỉ",
+  "pomodoroFocusFootnote": "Bám vào một việc duy nhất cho tới khi hết giờ.",
+  "pomodoroShortBreakFootnote": "Nghỉ nhanh để reset rồi quay lại rõ ràng hơn.",
+  "pomodoroLongBreakFootnote": "Rời màn hình lâu hơn một chút trước phiên tiếp theo.",
+  "pomodoroStartFocusSession": "Bắt đầu phiên tập trung",
+  "pomodoroStartBreak": "Bắt đầu nghỉ",
+  "pomodoroPauseFocus": "Tạm dừng tập trung",
+  "pomodoroPauseBreak": "Tạm dừng nghỉ",
+  "pomodoroResumeFocus": "Tiếp tục tập trung",
+  "pomodoroResumeBreak": "Tiếp tục nghỉ",
+  "pomodoroTodaySessionsValue": "{count}/{goal} phiên",
+  "@pomodoroTodaySessionsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "goal": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFocusTime": "Thời gian tập trung",
+  "pomodoroSevenDaySummary": "Tóm tắt 7 ngày: {sessions} phiên | {minutes} phút làm việc sâu",
+  "@pomodoroSevenDaySummary": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFreeSessionsLeft": "Bạn còn {remaining} phiên tập trung miễn phí hôm nay.",
+  "@pomodoroFreeSessionsLeft": {
+    "placeholders": {
+      "remaining": {
+        "type": "int"
+      }
+    }
+  },
+  "pomodoroFocusLength": "Độ dài phiên tập trung",
+  "pomodoroCustomFocusPremiumTitle": "Độ dài tập trung tùy chỉnh là Premium",
+  "pomodoroUnlockPremium": "Mở khóa Premium",
+  "pomodoroResetAction": "Đặt lại",
+  "pomodoroSkipAction": "Bỏ qua",
+  "pomodoroAdvancedInsights": "Phân tích nâng cao",
+  "pomodoroAverageFocus": "TB tập trung",
+  "pomodoroFocusNote": "Ghi chú tập trung",
+  "pomodoroFocusNoteLabel": "Điều gì quan trọng ngay bây giờ?",
+  "pomodoroFocusNoteHint": "Viết ra một việc duy nhất cho phiên này.",
+  "pomodoroSessionNotesPremiumTitle": "Ghi chú phiên là tính năng Premium",
+  "pomodoroHistoryItem": "{minutes}p tập trung | {month}/{day} lúc {time}",
+  "@pomodoroHistoryItem": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingTitle": "Fasting Flow",
+  "fastingCurrentFast": "Phiên nhịn hiện tại",
+  "fastingFastInProgress": "Đang nhịn",
+  "fastingStartFast": "Bắt đầu nhịn",
+  "fastingPauseFast": "Tạm dừng nhịn",
+  "fastingResumeFast": "Tiếp tục nhịn",
+  "fastingTodayFastsValue": "{count}/1 phiên",
+  "@fastingTodayFastsValue": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "fastingLastFast": "Lần nhịn gần nhất",
+  "fastingSevenDaySummary": "Tóm tắt 7 ngày: {fasts} phiên | {hours} tổng thời gian nhịn",
+  "@fastingSevenDaySummary": {
+    "placeholders": {
+      "fasts": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingResetFast": "Đặt lại phiên nhịn",
+  "fastingPremiumHistoryUnlock": "Premium mở khóa toàn bộ lịch sử nhịn của bạn.",
+  "fastingDeeperInsights": "Phân tích sâu hơn",
+  "fastingLongestFast": "Phiên dài nhất",
+  "fastingPremiumPlansTitle": "Premium mở khóa các lộ trình nhịn mở rộng",
+  "fastingPlanSummary": "Lộ trình {plan} | Cửa sổ ăn {window} | {description}",
+  "@fastingPlanSummary": {
+    "placeholders": {
+      "plan": {
+        "type": "String"
+      },
+      "window": {
+        "type": "String"
+      },
+      "description": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingHistoryItem": "{hours} nhịn | {month}/{day} lúc {time}",
+  "@fastingHistoryItem": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      },
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingPlanReset12Description": "Khởi động cân bằng để xây dựng sự ổn định.",
+  "fastingPlanLean16Description": "Nhịp nhịn hàng ngày cổ điển.",
+  "fastingPlanPerformance18Description": "Phiên nhịn dài hơn với khoảng ăn ngắn gọn.",
+  "fastingPlanDeep20Description": "Phiên nhịn sâu cho thói quen đã quen nhịp.",
+  "fastingEatingWindow12": "cửa sổ ăn 12h",
+  "fastingEatingWindow8": "cửa sổ ăn 8h",
+  "fastingEatingWindow6": "cửa sổ ăn 6h",
+  "fastingEatingWindow4": "cửa sổ ăn 4h"
+}

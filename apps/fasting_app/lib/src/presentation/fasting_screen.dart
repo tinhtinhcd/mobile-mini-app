@@ -16,12 +16,10 @@ class FastingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppLocalizations l10n = context.l10n;
     final TimerState state = ref.watch(fastingControllerProvider);
     final FastingController controller = ref.read(
       fastingControllerProvider.notifier,
-    );
-    final StoreMonetizationService monetization = ref.watch(
-      fastingMonetizationServiceProvider,
     );
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(fastingAdServiceProvider);
@@ -49,16 +47,13 @@ class FastingScreen extends ConsumerWidget {
     );
 
     return FactoryScaffold(
-      title: 'Fasting Flow',
-      headerTrailing: _PremiumButton(
-        isPremium: monetization.isPremium,
-        onPressed:
-            () => openFastingPaywall(
-              context: context,
-              ref: ref,
-              entryPoint: fastingHeaderButtonEntryPoint,
-            ),
-      ),
+      title: l10n.fastingTitle,
+      onSubscriptionTap:
+          () => openFastingPaywall(
+            context: context,
+            ref: ref,
+            entryPoint: fastingHeaderButtonEntryPoint,
+          ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -66,7 +61,7 @@ class FastingScreen extends ConsumerWidget {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  'Current fast',
+                  l10n.fastingCurrentFast,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
@@ -82,28 +77,31 @@ class FastingScreen extends ConsumerWidget {
             progress: _clampProgress(state.progress),
             statusText:
                 state.isRunning
-                    ? 'Fast in progress'
+                    ? l10n.fastingFastInProgress
                     : state.remaining == state.activeSession.duration
-                    ? 'Ready to begin'
-                    : 'Paused',
-            footnote: selectedPlan.description,
+                    ? l10n.commonReadyToBegin
+                    : l10n.commonPaused,
+            footnote: _planDescription(l10n, selectedPlan),
           ),
           const SizedBox(height: AppSpacing.md),
           AppPrimaryButton(
-            label: _primaryLabel(state),
+            label: _primaryLabel(l10n, state),
             icon: Icon(_primaryIcon(state)),
             onPressed: controller.toggleTimer,
           ),
           const SizedBox(height: AppSpacing.md),
           CompactStatStrip(
             items: <CompactStatItem>[
-              CompactStatItem(label: 'today', value: '$todayFasts/1 fast'),
               CompactStatItem(
-                label: 'last fast',
+                label: l10n.commonToday,
+                value: l10n.fastingTodayFastsValue(todayFasts),
+              ),
+              CompactStatItem(
+                label: l10n.fastingLastFast,
                 value: _durationLabel(lastFastDuration),
               ),
               CompactStatItem(
-                label: 'streak',
+                label: l10n.commonStreak,
                 value: '${streakDays}d',
                 highlight: theme.colorScheme.tertiary,
               ),
@@ -113,13 +111,16 @@ class FastingScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: Text(
-              '7-day summary: $weeklyFasts fasts | ${_trackedHoursLabel(weeklyMinutes)} total fasting',
+              l10n.fastingSevenDaySummary(
+                weeklyFasts,
+                _trackedHoursLabel(weeklyMinutes),
+              ),
               style: theme.textTheme.bodySmall,
             ),
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'Plan',
+            l10n.commonPlan,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -160,7 +161,7 @@ class FastingScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           AppSecondaryButton(
-            label: 'Reset fast',
+            label: l10n.fastingResetFast,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: controller.reset,
           ),
@@ -168,14 +169,18 @@ class FastingScreen extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
             child: Text(
-              '${selectedPlan.label} plan | Eating window ${selectedPlan.eatingWindowLabel} | ${selectedPlan.description}',
+              l10n.fastingPlanSummary(
+                selectedPlan.label,
+                _eatingWindowLabel(l10n, selectedPlan),
+                _planDescription(l10n, selectedPlan),
+              ),
               style: theme.textTheme.bodySmall,
             ),
           ),
           if (recentEntries.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Recent activity',
+              l10n.commonRecentActivity,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -185,27 +190,16 @@ class FastingScreen extends ConsumerWidget {
               (HabitSessionRecord entry) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.xs),
                 child: Text(
-                  _historyLabel(entry),
+                  _historyLabel(l10n, entry),
                   style: theme.textTheme.bodySmall,
                 ),
-              ),
-            ),
-          ],
-          if (!unlimitedHistoryUnlocked &&
-              weeklyEntries.length > 1) ...<Widget>[
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Text(
-                'Premium unlocks your full fasting history.',
-                style: theme.textTheme.bodySmall,
               ),
             ),
           ],
           if (advancedInsightsUnlocked) ...<Widget>[
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Deeper insights',
+              l10n.fastingDeeperInsights,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -214,38 +208,15 @@ class FastingScreen extends ConsumerWidget {
             CompactStatStrip(
               items: <CompactStatItem>[
                 CompactStatItem(
-                  label: 'active days',
+                  label: l10n.commonActiveDays,
                   value:
                       '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
                 ),
                 CompactStatItem(
-                  label: 'longest fast',
+                  label: l10n.fastingLongestFast,
                   value: _longestFastLabel(weeklyEntries),
                 ),
               ],
-            ),
-          ],
-          if (!advancedInsightsUnlocked ||
-              !entitlements.has(Entitlement.advancedPlans)) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            PremiumCalloutCard(
-              title: 'Premium unlocks extended fasting plans',
-              subtitle: fastingPlanPolicy.upgradeMessage,
-              actionLabel: 'See premium',
-              onPressed:
-                  () => openFastingPaywall(
-                    context: context,
-                    ref: ref,
-                    entryPoint: fastingHeaderButtonEntryPoint,
-                  ),
-            ),
-          ],
-          if (monetization.entitlementState.message case final String message
-              when message.isNotEmpty) ...<Widget>[
-            const SizedBox(height: AppSpacing.md),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-              child: Text(message, style: theme.textTheme.bodySmall),
             ),
           ],
         ],
@@ -283,16 +254,16 @@ class FastingScreen extends ConsumerWidget {
     return '$hours:$minutes:$seconds';
   }
 
-  String _primaryLabel(TimerState state) {
+  String _primaryLabel(AppLocalizations l10n, TimerState state) {
     if (state.isRunning) {
-      return 'Pause fast';
+      return l10n.fastingPauseFast;
     }
 
     if (state.remaining != state.activeSession.duration) {
-      return 'Resume fast';
+      return l10n.fastingResumeFast;
     }
 
-    return 'Start fast';
+    return l10n.fastingStartFast;
   }
 
   IconData _primaryIcon(TimerState state) {
@@ -325,11 +296,34 @@ class FastingScreen extends ConsumerWidget {
     return _trackedHoursLabel(longestMinutes);
   }
 
-  String _historyLabel(HabitSessionRecord entry) {
+  String _planDescription(AppLocalizations l10n, FastingPlan plan) {
+    return switch (plan) {
+      FastingPlan.reset12 => l10n.fastingPlanReset12Description,
+      FastingPlan.lean16 => l10n.fastingPlanLean16Description,
+      FastingPlan.performance18 => l10n.fastingPlanPerformance18Description,
+      FastingPlan.deep20 => l10n.fastingPlanDeep20Description,
+    };
+  }
+
+  String _eatingWindowLabel(AppLocalizations l10n, FastingPlan plan) {
+    return switch (plan) {
+      FastingPlan.reset12 => l10n.fastingEatingWindow12,
+      FastingPlan.lean16 => l10n.fastingEatingWindow8,
+      FastingPlan.performance18 => l10n.fastingEatingWindow6,
+      FastingPlan.deep20 => l10n.fastingEatingWindow4,
+    };
+  }
+
+  String _historyLabel(AppLocalizations l10n, HabitSessionRecord entry) {
     final DateTime completedAt = entry.completedAtLocal;
     final String hours = completedAt.hour.toString().padLeft(2, '0');
     final String minutes = completedAt.minute.toString().padLeft(2, '0');
-    return '${_trackedHoursLabel(entry.durationMinutes)} fast | ${completedAt.month}/${completedAt.day} at $hours:$minutes';
+    return l10n.fastingHistoryItem(
+      _trackedHoursLabel(entry.durationMinutes),
+      completedAt.month,
+      completedAt.day,
+      '$hours:$minutes',
+    );
   }
 }
 
@@ -361,31 +355,6 @@ class _PlanBadge extends StatelessWidget {
           style: theme.textTheme.bodySmall?.copyWith(
             fontWeight: FontWeight.w700,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PremiumButton extends StatelessWidget {
-  const _PremiumButton({required this.isPremium, required this.onPressed});
-
-  final bool isPremium;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return IntrinsicWidth(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 48),
-        child: FilledButton.tonalIcon(
-          onPressed: onPressed,
-          icon: Icon(
-            isPremium
-                ? Icons.workspace_premium_rounded
-                : Icons.lock_open_rounded,
-          ),
-          label: Text(isPremium ? 'Premium' : 'Upgrade'),
         ),
       ),
     );

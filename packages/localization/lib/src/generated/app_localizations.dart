@@ -176,6 +176,24 @@ abstract class AppLocalizations {
   /// **'Plan'**
   String get commonPlan;
 
+  /// No description provided for @commonMomentum.
+  ///
+  /// In en, this message translates to:
+  /// **'Momentum'**
+  String get commonMomentum;
+
+  /// No description provided for @commonDailyGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily goal'**
+  String get commonDailyGoal;
+
+  /// No description provided for @commonWeeklyRhythm.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly rhythm'**
+  String get commonWeeklyRhythm;
+
   /// No description provided for @commonSeePremium.
   ///
   /// In en, this message translates to:
@@ -422,11 +440,35 @@ abstract class AppLocalizations {
   /// **'Advanced insights'**
   String get pomodoroAdvancedInsights;
 
+  /// No description provided for @pomodoroAdvancedInsightsSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Today: {todayMinutes} minutes focused | This week: {weeklyMinutes} minutes banked'**
+  String pomodoroAdvancedInsightsSummary(int todayMinutes, int weeklyMinutes);
+
   /// No description provided for @pomodoroAverageFocus.
   ///
   /// In en, this message translates to:
   /// **'Avg focus'**
   String get pomodoroAverageFocus;
+
+  /// No description provided for @pomodoroCustomModesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom modes'**
+  String get pomodoroCustomModesTitle;
+
+  /// No description provided for @pomodoroPremiumTeaserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium adds advanced stats and custom modes'**
+  String get pomodoroPremiumTeaserTitle;
+
+  /// No description provided for @pomodoroPremiumTeaserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'See deeper consistency signals, unlock longer presets, and keep notes attached to each focus block.'**
+  String get pomodoroPremiumTeaserSubtitle;
 
   /// No description provided for @pomodoroFocusNote.
   ///
@@ -497,8 +539,8 @@ abstract class AppLocalizations {
   /// No description provided for @fastingTodayFastsValue.
   ///
   /// In en, this message translates to:
-  /// **'{count}/1 fast'**
-  String fastingTodayFastsValue(int count);
+  /// **'{count}/{goal} fasts'**
+  String fastingTodayFastsValue(int count, int goal);
 
   /// No description provided for @fastingLastFast.
   ///
@@ -535,6 +577,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Longest fast'**
   String get fastingLongestFast;
+
+  /// No description provided for @fastingAdvancedPlansTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced plans'**
+  String get fastingAdvancedPlansTitle;
+
+  /// No description provided for @fastingWeeklyConsistencySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{activeDays}/7 active days | {hours} total fasting this week'**
+  String fastingWeeklyConsistencySummary(int activeDays, String hours);
+
+  /// No description provided for @fastingPremiumTeaserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Premium adds extended plans and deeper insights'**
+  String get fastingPremiumTeaserTitle;
+
+  /// No description provided for @fastingPremiumTeaserSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlock 18:6 and 20:4 plans, plus stronger weekly insight into your fasting consistency.'**
+  String get fastingPremiumTeaserSubtitle;
 
   /// No description provided for @fastingPremiumPlansTitle.
   ///

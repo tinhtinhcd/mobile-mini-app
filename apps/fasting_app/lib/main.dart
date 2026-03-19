@@ -7,7 +7,6 @@ import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
 import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habit_engine/habit_engine.dart';
@@ -152,15 +151,7 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
       _initializeNotifications(),
     ];
 
-    if (kDebugMode) {
-      _startupTiming.mark('monetization_init_skipped_debug');
-      _startupTiming.mark('ads_init_skipped_debug');
-    } else {
-      deferredTasks.addAll(<Future<void>>[
-        _initializeMonetization(),
-        _warmAds(),
-      ]);
-    }
+    deferredTasks.addAll(<Future<void>>[_initializeMonetization(), _warmAds()]);
 
     await Future.wait<void>(deferredTasks);
     _startupTiming.mark('bootstrap_finish');

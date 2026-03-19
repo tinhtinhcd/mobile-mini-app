@@ -1,0 +1,8 @@
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "../../branding/pomodoro_app/icon_source.png"
+  adaptive_icon_background: "../../branding/pomodoro_app/icon_background.png"
+  adaptive_icon_foreground: "../../branding/pomodoro_app/icon_foreground.png"
+  min_sdk_android: 21
+  remove_alpha_ios: true

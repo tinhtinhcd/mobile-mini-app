@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:analytics/analytics.dart';
 import 'package:app_core/app_core.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habit_engine/habit_engine.dart';
@@ -154,15 +153,7 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
       _initializeNotifications(),
     ];
 
-    if (kDebugMode) {
-      _startupTiming.mark('monetization_init_skipped_debug');
-      _startupTiming.mark('ads_init_skipped_debug');
-    } else {
-      deferredTasks.addAll(<Future<void>>[
-        _initializeMonetization(),
-        _warmAds(),
-      ]);
-    }
+    deferredTasks.addAll(<Future<void>>[_initializeMonetization(), _warmAds()]);
 
     await Future.wait<void>(deferredTasks);
     _startupTiming.mark('bootstrap_finish');

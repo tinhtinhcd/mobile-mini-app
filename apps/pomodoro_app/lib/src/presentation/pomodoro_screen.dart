@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,9 +16,12 @@ import 'package:ui_kit/ui_kit.dart';
 class PomodoroScreen extends ConsumerWidget {
   const PomodoroScreen({super.key});
 
+  static const List<int> _dailyGoalOptions = <int>[2, 4, 6];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
+    final ThemeData theme = Theme.of(context);
     final TimerState state = ref.watch(pomodoroControllerProvider);
     final PomodoroController controller = ref.read(
       pomodoroControllerProvider.notifier,
@@ -24,7 +29,6 @@ class PomodoroScreen extends ConsumerWidget {
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(pomodoroAdServiceProvider);
     final HabitService habits = ref.watch(pomodoroHabitServiceProvider);
-    final ThemeData theme = Theme.of(context);
     final PomodoroMode currentMode = pomodoroModeFromSession(
       state.activeSession,
     );
@@ -37,9 +41,20 @@ class PomodoroScreen extends ConsumerWidget {
     final int weeklySessions = habits.weeklyCount;
     final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
+    final int longestStreak = habits.longestStreak;
     final int dailyGoal = habits.dailyGoal;
     final List<HabitSessionRecord> recentEntries = habits.recentRecords(
       limit: 3,
+    );
+    final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(
+      7,
+      referenceDate: now,
+    );
+    final int weeklyActiveDays = _activeDays(weeklyEntries);
+    final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
+      context,
+      habits,
+      now,
     );
     final bool isFreshFocusStart =
         !state.isRunning &&
@@ -117,36 +132,82 @@ class PomodoroScreen extends ConsumerWidget {
             },
           ),
           const SizedBox(height: AppSpacing.lg),
-          CompactStatStrip(
-            items: <CompactStatItem>[
-              CompactStatItem(
-                label: l10n.commonToday,
-                value: l10n.pomodoroTodaySessionsValue(
-                  todaySessions,
-                  dailyGoal,
+          SectionCard(
+            title: l10n.commonMomentum,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CompactStatStrip(
+                  items: <CompactStatItem>[
+                    CompactStatItem(
+                      label: l10n.commonToday,
+                      value: l10n.pomodoroTodaySessionsValue(
+                        todaySessions,
+                        dailyGoal,
+                      ),
+                    ),
+                    CompactStatItem(
+                      label: l10n.commonActiveDays,
+                      value: '$weeklyActiveDays/7',
+                    ),
+                    CompactStatItem(
+                      label: l10n.commonStreak,
+                      value: '${streakDays}d',
+                      highlight: theme.colorScheme.tertiary,
+                    ),
+                  ],
                 ),
-              ),
-              CompactStatItem(
-                label: l10n.pomodoroFocusTime,
-                value: '${todayMinutes}m',
-              ),
-              CompactStatItem(
-                label: l10n.commonStreak,
-                value: '${streakDays}d',
-                highlight: theme.colorScheme.tertiary,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: Text(
-              l10n.pomodoroSevenDaySummary(weeklySessions, weeklyMinutes),
-              style: theme.textTheme.bodySmall,
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.commonDailyGoal,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: LinearProgressIndicator(
+                    value: habits.goalProgress,
+                    minHeight: 10,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children:
+                      _dailyGoalOptions.map((int goal) {
+                        return SelectionPill(
+                          label: '$goal',
+                          selected: dailyGoal == goal,
+                          onTap: () {
+                            if (dailyGoal == goal) {
+                              return;
+                            }
+                            unawaited(habits.updateDailyGoal(goal));
+                          },
+                        );
+                      }).toList(),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.commonWeeklyRhythm,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                WeeklyActivityStrip(entries: weeklyActivity),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.pomodoroSevenDaySummary(weeklySessions, weeklyMinutes),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.commonMode,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -170,7 +231,7 @@ class PomodoroScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           if (currentMode == PomodoroMode.focus) ...<Widget>[
             Text(
-              l10n.pomodoroFocusLength,
+              l10n.pomodoroCustomModesTitle,
               style: theme.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
@@ -217,49 +278,76 @@ class PomodoroScreen extends ConsumerWidget {
               onPressed: controller.skipToNextMode,
             ),
           ),
-          const SizedBox(height: AppSpacing.lg),
           if (recentEntries.isNotEmpty) ...<Widget>[
-            Text(
-              l10n.commonRecentActivity,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+            const SizedBox(height: AppSpacing.lg),
+            SectionCard(
+              title: l10n.commonRecentActivity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children:
+                    recentEntries.map((HabitSessionRecord entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                        child: Text(
+                          _historyLabel(l10n, entry),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            ...recentEntries.map(
-              (HabitSessionRecord entry) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: Text(
-                  _historyLabel(l10n, entry),
-                  style: theme.textTheme.bodySmall,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
           ],
-          if (advancedStatsUnlocked) ...<Widget>[
-            Text(
-              l10n.pomodoroAdvancedInsights,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+          const SizedBox(height: AppSpacing.lg),
+          if (advancedStatsUnlocked)
+            SectionCard(
+              title: l10n.pomodoroAdvancedInsights,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  CompactStatStrip(
+                    items: <CompactStatItem>[
+                      CompactStatItem(
+                        label: l10n.commonActiveDays,
+                        value: '$weeklyActiveDays/7',
+                      ),
+                      CompactStatItem(
+                        label: l10n.pomodoroAverageFocus,
+                        value: _averageMinutesLabel(
+                          weeklySessions,
+                          weeklyMinutes,
+                        ),
+                      ),
+                      CompactStatItem(
+                        label: l10n.commonStreak,
+                        value: '${longestStreak}d',
+                        highlight: theme.colorScheme.tertiary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.pomodoroAdvancedInsightsSummary(
+                      todayMinutes,
+                      weeklyMinutes,
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
               ),
+            )
+          else
+            PremiumCalloutCard(
+              title: l10n.pomodoroPremiumTeaserTitle,
+              subtitle: l10n.pomodoroPremiumTeaserSubtitle,
+              actionLabel: l10n.commonSeePremium,
+              onPressed:
+                  () => openPomodoroPaywall(
+                    context: context,
+                    ref: ref,
+                    entryPoint: pomodoroHeaderButtonEntryPoint,
+                  ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            CompactStatStrip(
-              items: <CompactStatItem>[
-                CompactStatItem(
-                  label: l10n.commonActiveDays,
-                  value:
-                      '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
-                ),
-                CompactStatItem(
-                  label: l10n.pomodoroAverageFocus,
-                  value: _averageMinutesLabel(weeklySessions, weeklyMinutes),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-          ],
+          const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.pomodoroFocusNote,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -295,6 +383,50 @@ class PomodoroScreen extends ConsumerWidget {
         adUnitId: pomodoroBannerAdUnitId,
       ),
     );
+  }
+
+  List<WeeklyActivityEntry> _buildWeeklyActivity(
+    BuildContext context,
+    HabitService habits,
+    DateTime referenceDate,
+  ) {
+    return List<WeeklyActivityEntry>.generate(7, (int index) {
+      final DateTime day = DateTime(
+        referenceDate.year,
+        referenceDate.month,
+        referenceDate.day,
+      ).subtract(Duration(days: 6 - index));
+      return WeeklyActivityEntry(
+        label: _weekdayLabel(context, day),
+        value: habits.countForDay(day).toDouble(),
+        emphasis: _isSameDay(day, referenceDate),
+      );
+    });
+  }
+
+  int _activeDays(List<HabitSessionRecord> entries) {
+    return entries
+        .map(
+          (HabitSessionRecord entry) => DateTime(
+            entry.completedAtLocal.year,
+            entry.completedAtLocal.month,
+            entry.completedAtLocal.day,
+          ),
+        )
+        .toSet()
+        .length;
+  }
+
+  String _weekdayLabel(BuildContext context, DateTime day) {
+    final List<String> labels =
+        MaterialLocalizations.of(context).narrowWeekdays;
+    return labels[day.weekday % 7];
+  }
+
+  bool _isSameDay(DateTime left, DateTime right) {
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
   }
 
   String _formatDuration(Duration duration) {

@@ -200,6 +200,7 @@ class AppFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
+    final bool hasCustomFooter = child != null;
 
     return SafeArea(
       top: false,
@@ -215,29 +216,31 @@ class AppFooter extends StatelessWidget {
             ),
           ),
         ),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(
-            minHeight: AppShellMetrics.footerHeight,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: hasCustomFooter ? AppSpacing.xxs : AppSpacing.xs,
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.xs,
-            ),
-            child: Center(
-              child:
-                  child ??
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.outlineVariant.withValues(
-                        alpha: 0.55,
+          child: Center(
+            child:
+                child ??
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: AppShellMetrics.footerHeight,
+                  ),
+                  child: Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.55,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadius.pill),
                       ),
-                      borderRadius: BorderRadius.circular(AppRadius.pill),
                     ),
                   ),
-            ),
+                ),
           ),
         ),
       ),

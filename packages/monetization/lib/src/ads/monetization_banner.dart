@@ -35,18 +35,12 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   @override
   void initState() {
     super.initState();
-    if (kDebugMode) {
-      return;
-    }
     _scheduleLoadAdIfNeeded();
   }
 
   @override
   void didUpdateWidget(MonetizationBanner oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (kDebugMode) {
-      return;
-    }
     final bool hidesAds = widget.entitlementService.has(Entitlement.noAds);
     final bool oldHidesAds = oldWidget.entitlementService.has(
       Entitlement.noAds,
@@ -110,6 +104,12 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
           },
           onAdFailedToLoad: (Ad ad, LoadAdError error) {
             ad.dispose();
+            if (kDebugMode) {
+              debugPrint(
+                'Banner ad failed to load for ${widget.startupAppId ?? 'app'}: '
+                '${error.code} ${error.message}',
+              );
+            }
             if (!mounted) {
               return;
             }
@@ -145,45 +145,43 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
 
-    if (kDebugMode) {
-      return const SizedBox.shrink();
-    }
-
     if (widget.entitlementService.has(Entitlement.noAds) ||
         !_isLoaded ||
         _bannerAd == null) {
       return const SizedBox.shrink();
     }
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.xl),
-      child: Center(
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppRadius.medium),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
+    return Center(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppRadius.medium),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.sm,
+            AppSpacing.xs,
+            AppSpacing.sm,
+            AppSpacing.xs,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.sm),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Sponsored',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    letterSpacing: 0.7,
-                    fontWeight: FontWeight.w700,
-                  ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                'Sponsored',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  letterSpacing: 0.5,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                SizedBox(
-                  width: _bannerAd!.size.width.toDouble(),
-                  height: _bannerAd!.size.height.toDouble(),
-                  child: AdWidget(ad: _bannerAd!),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              SizedBox(
+                width: _bannerAd!.size.width.toDouble(),
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            ],
           ),
         ),
       ),

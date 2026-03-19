@@ -48,6 +48,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get commonPlan => 'Lộ trình';
 
   @override
+  String get commonMomentum => 'Nhịp độ';
+
+  @override
+  String get commonDailyGoal => 'Mục tiêu ngày';
+
+  @override
+  String get commonWeeklyRhythm => 'Nhịp tuần';
+
+  @override
   String get commonSeePremium => 'Xem Premium';
 
   @override
@@ -188,7 +197,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get pomodoroAdvancedInsights => 'Phân tích nâng cao';
 
   @override
+  String pomodoroAdvancedInsightsSummary(int todayMinutes, int weeklyMinutes) {
+    return 'Hôm nay: $todayMinutes phút tập trung | Tuần này: $weeklyMinutes phút đã tích lũy';
+  }
+
+  @override
   String get pomodoroAverageFocus => 'TB tập trung';
+
+  @override
+  String get pomodoroCustomModesTitle => 'Chế độ tùy chỉnh';
+
+  @override
+  String get pomodoroPremiumTeaserTitle =>
+      'Premium mở khóa thống kê sâu và chế độ tùy chỉnh';
+
+  @override
+  String get pomodoroPremiumTeaserSubtitle =>
+      'Xem tín hiệu duy trì sâu hơn, mở khóa nhịp dài hơn và lưu ghi chú cho từng phiên tập trung.';
 
   @override
   String get pomodoroFocusNote => 'Ghi chú tập trung';
@@ -228,8 +253,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fastingResumeFast => 'Tiếp tục nhịn';
 
   @override
-  String fastingTodayFastsValue(int count) {
-    return '$count/1 phiên';
+  String fastingTodayFastsValue(int count, int goal) {
+    return '$count/$goal phiên';
   }
 
   @override
@@ -254,6 +279,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get fastingLongestFast => 'Phiên dài nhất';
 
   @override
+  String get fastingAdvancedPlansTitle => 'Lộ trình nâng cao';
+
+  @override
+  String fastingWeeklyConsistencySummary(int activeDays, String hours) {
+    return '$activeDays/7 ngày hoạt động | $hours tổng thời gian nhịn tuần này';
+  }
+
+  @override
+  String get fastingPremiumTeaserTitle =>
+      'Premium mở khóa lộ trình dài hơn và phân tích sâu hơn';
+
+  @override
+  String get fastingPremiumTeaserSubtitle =>
+      'Mở khóa lộ trình 18:6 và 20:4 cùng góc nhìn rõ hơn về độ đều đặn của bạn trong tuần.';
+
+  @override
   String get fastingPremiumPlansTitle =>
       'Premium mở khóa các lộ trình nhịn mở rộng';
 
@@ -272,7 +313,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Khởi động cân bằng để xây dựng sự ổn định.';
 
   @override
-  String get fastingPlanLean16Description => 'Nhịp nhịn hàng ngày cổ điển.';
+  String get fastingPlanLean16Description => 'Nhịp nhịn hằng ngày cổ điển.';
 
   @override
   String get fastingPlanPerformance18Description =>

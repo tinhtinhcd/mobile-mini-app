@@ -13,6 +13,9 @@
   "commonActiveDays": "Ngày hoạt động",
   "commonMode": "Chế độ",
   "commonPlan": "Lộ trình",
+  "commonMomentum": "Nhịp độ",
+  "commonDailyGoal": "Mục tiêu ngày",
+  "commonWeeklyRhythm": "Nhịp tuần",
   "commonSeePremium": "Xem Premium",
   "shellOpenMenuTooltip": "Mở menu",
   "shellUtilityAppMenu": "Menu tiện ích",
@@ -88,7 +91,21 @@
   "pomodoroResetAction": "Đặt lại",
   "pomodoroSkipAction": "Bỏ qua",
   "pomodoroAdvancedInsights": "Phân tích nâng cao",
+  "pomodoroAdvancedInsightsSummary": "Hôm nay: {todayMinutes} phút tập trung | Tuần này: {weeklyMinutes} phút đã tích lũy",
+  "@pomodoroAdvancedInsightsSummary": {
+    "placeholders": {
+      "todayMinutes": {
+        "type": "int"
+      },
+      "weeklyMinutes": {
+        "type": "int"
+      }
+    }
+  },
   "pomodoroAverageFocus": "TB tập trung",
+  "pomodoroCustomModesTitle": "Chế độ tùy chỉnh",
+  "pomodoroPremiumTeaserTitle": "Premium mở khóa thống kê sâu và chế độ tùy chỉnh",
+  "pomodoroPremiumTeaserSubtitle": "Xem tín hiệu duy trì sâu hơn, mở khóa nhịp dài hơn và lưu ghi chú cho từng phiên tập trung.",
   "pomodoroFocusNote": "Ghi chú tập trung",
   "pomodoroFocusNoteLabel": "Điều gì quan trọng ngay bây giờ?",
   "pomodoroFocusNoteHint": "Viết ra một việc duy nhất cho phiên này.",
@@ -116,10 +133,13 @@
   "fastingStartFast": "Bắt đầu nhịn",
   "fastingPauseFast": "Tạm dừng nhịn",
   "fastingResumeFast": "Tiếp tục nhịn",
-  "fastingTodayFastsValue": "{count}/1 phiên",
+  "fastingTodayFastsValue": "{count}/{goal} phiên",
   "@fastingTodayFastsValue": {
     "placeholders": {
       "count": {
+        "type": "int"
+      },
+      "goal": {
         "type": "int"
       }
     }
@@ -140,6 +160,20 @@
   "fastingPremiumHistoryUnlock": "Premium mở khóa toàn bộ lịch sử nhịn của bạn.",
   "fastingDeeperInsights": "Phân tích sâu hơn",
   "fastingLongestFast": "Phiên dài nhất",
+  "fastingAdvancedPlansTitle": "Lộ trình nâng cao",
+  "fastingWeeklyConsistencySummary": "{activeDays}/7 ngày hoạt động | {hours} tổng thời gian nhịn tuần này",
+  "@fastingWeeklyConsistencySummary": {
+    "placeholders": {
+      "activeDays": {
+        "type": "int"
+      },
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "fastingPremiumTeaserTitle": "Premium mở khóa lộ trình dài hơn và phân tích sâu hơn",
+  "fastingPremiumTeaserSubtitle": "Mở khóa lộ trình 18:6 và 20:4 cùng góc nhìn rõ hơn về độ đều đặn của bạn trong tuần.",
   "fastingPremiumPlansTitle": "Premium mở khóa các lộ trình nhịn mở rộng",
   "fastingPlanSummary": "Lộ trình {plan} | Cửa sổ ăn {window} | {description}",
   "@fastingPlanSummary": {
@@ -173,7 +207,7 @@
     }
   },
   "fastingPlanReset12Description": "Khởi động cân bằng để xây dựng sự ổn định.",
-  "fastingPlanLean16Description": "Nhịp nhịn hàng ngày cổ điển.",
+  "fastingPlanLean16Description": "Nhịp nhịn hằng ngày cổ điển.",
   "fastingPlanPerformance18Description": "Phiên nhịn dài hơn với khoảng ăn ngắn gọn.",
   "fastingPlanDeep20Description": "Phiên nhịn sâu cho thói quen đã quen nhịp.",
   "fastingEatingWindow12": "cửa sổ ăn 12h",

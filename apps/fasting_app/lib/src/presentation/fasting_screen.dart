@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:app_core/app_core.dart';
 import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
@@ -15,9 +17,12 @@ import 'package:ui_kit/ui_kit.dart';
 class FastingScreen extends ConsumerWidget {
   const FastingScreen({super.key});
 
+  static const List<int> _dailyGoalOptions = <int>[1, 2];
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
+    final ThemeData theme = Theme.of(context);
     final TimerState state = ref.watch(fastingControllerProvider);
     final FastingController controller = ref.read(
       fastingControllerProvider.notifier,
@@ -25,23 +30,26 @@ class FastingScreen extends ConsumerWidget {
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(fastingAdServiceProvider);
     final HabitService habits = ref.watch(fastingHabitServiceProvider);
-    final ThemeData theme = Theme.of(context);
     final FastingPlan selectedPlan = controller.selectedPlan;
     final DateTime now = DateTime.now();
     final int todayFasts = habits.todayCount;
+    final int dailyGoal = habits.dailyGoal;
     final int weeklyFasts = habits.weeklyCount;
     final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
     final Duration? lastFastDuration = habits.lastSessionDuration;
-    final bool unlimitedHistoryUnlocked = entitlements.has(
-      Entitlement.unlimitedSessions,
-    );
     final List<HabitSessionRecord> recentEntries = habits.recentRecords(
-      limit: unlimitedHistoryUnlocked ? 3 : 1,
+      limit: entitlements.has(Entitlement.unlimitedSessions) ? 3 : 1,
     );
     final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(
       7,
       referenceDate: now,
+    );
+    final int weeklyActiveDays = _activeDays(weeklyEntries);
+    final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
+      context,
+      habits,
+      now,
     );
     final bool advancedInsightsUnlocked = entitlements.has(
       Entitlement.advancedStats,
@@ -85,36 +93,86 @@ class FastingScreen extends ConsumerWidget {
             icon: Icon(_primaryIcon(state)),
             onPressed: controller.toggleTimer,
           ),
-          const SizedBox(height: AppSpacing.md),
-          CompactStatStrip(
-            items: <CompactStatItem>[
-              CompactStatItem(
-                label: l10n.commonToday,
-                value: l10n.fastingTodayFastsValue(todayFasts),
-              ),
-              CompactStatItem(
-                label: l10n.fastingLastFast,
-                value: _durationLabel(lastFastDuration),
-              ),
-              CompactStatItem(
-                label: l10n.commonStreak,
-                value: '${streakDays}d',
-                highlight: theme.colorScheme.tertiary,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
-            child: Text(
-              l10n.fastingSevenDaySummary(
-                weeklyFasts,
-                _trackedHoursLabel(weeklyMinutes),
-              ),
-              style: theme.textTheme.bodySmall,
+          const SizedBox(height: AppSpacing.lg),
+          SectionCard(
+            title: l10n.commonMomentum,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                CompactStatStrip(
+                  items: <CompactStatItem>[
+                    CompactStatItem(
+                      label: l10n.commonToday,
+                      value: l10n.fastingTodayFastsValue(todayFasts, dailyGoal),
+                    ),
+                    CompactStatItem(
+                      label: l10n.fastingLastFast,
+                      value: _durationLabel(lastFastDuration),
+                    ),
+                    CompactStatItem(
+                      label: l10n.commonStreak,
+                      value: '${streakDays}d',
+                      highlight: theme.colorScheme.tertiary,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.commonDailyGoal,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppRadius.pill),
+                  child: LinearProgressIndicator(
+                    value: habits.goalProgress,
+                    minHeight: 10,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
+                  children:
+                      _dailyGoalOptions.map((int goal) {
+                        return SelectionPill(
+                          label: '$goal',
+                          selected: dailyGoal == goal,
+                          onTap: () {
+                            if (dailyGoal == goal) {
+                              return;
+                            }
+                            unawaited(habits.updateDailyGoal(goal));
+                          },
+                        );
+                      }).toList(),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.commonWeeklyRhythm,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                WeeklyActivityStrip(
+                  entries: weeklyActivity,
+                  maxValue: selectedPlan.fastingDuration.inHours.toDouble(),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  l10n.fastingSevenDaySummary(
+                    weeklyFasts,
+                    _trackedHoursLabel(weeklyMinutes),
+                  ),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             l10n.commonPlan,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -162,59 +220,87 @@ class FastingScreen extends ConsumerWidget {
             onPressed: controller.reset,
           ),
           const SizedBox(height: AppSpacing.lg),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+          SectionCard(
+            title: l10n.fastingAdvancedPlansTitle,
+            subtitle: l10n.fastingPlanSummary(
+              selectedPlan.label,
+              _eatingWindowLabel(l10n, selectedPlan),
+              _planDescription(l10n, selectedPlan),
+            ),
             child: Text(
-              l10n.fastingPlanSummary(
-                selectedPlan.label,
-                _eatingWindowLabel(l10n, selectedPlan),
-                _planDescription(l10n, selectedPlan),
+              l10n.fastingWeeklyConsistencySummary(
+                weeklyActiveDays,
+                _trackedHoursLabel(weeklyMinutes),
               ),
               style: theme.textTheme.bodySmall,
             ),
           ),
           if (recentEntries.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.lg),
-            Text(
-              l10n.commonRecentActivity,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            ...recentEntries.map(
-              (HabitSessionRecord entry) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: Text(
-                  _historyLabel(l10n, entry),
-                  style: theme.textTheme.bodySmall,
-                ),
+            SectionCard(
+              title: l10n.commonRecentActivity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children:
+                    recentEntries.map((HabitSessionRecord entry) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                        child: Text(
+                          _historyLabel(l10n, entry),
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      );
+                    }).toList(),
               ),
             ),
           ],
-          if (advancedInsightsUnlocked) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              l10n.fastingDeeperInsights,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+          const SizedBox(height: AppSpacing.lg),
+          if (advancedInsightsUnlocked)
+            SectionCard(
+              title: l10n.fastingDeeperInsights,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  CompactStatStrip(
+                    items: <CompactStatItem>[
+                      CompactStatItem(
+                        label: l10n.commonActiveDays,
+                        value: '$weeklyActiveDays/7',
+                      ),
+                      CompactStatItem(
+                        label: l10n.fastingLongestFast,
+                        value: _longestFastLabel(weeklyEntries),
+                      ),
+                      CompactStatItem(
+                        label: l10n.commonToday,
+                        value: _durationLabel(lastFastDuration),
+                        highlight: theme.colorScheme.tertiary,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.fastingWeeklyConsistencySummary(
+                      weeklyActiveDays,
+                      _trackedHoursLabel(weeklyMinutes),
+                    ),
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
               ),
+            )
+          else
+            PremiumCalloutCard(
+              title: l10n.fastingPremiumTeaserTitle,
+              subtitle: l10n.fastingPremiumTeaserSubtitle,
+              actionLabel: l10n.commonSeePremium,
+              onPressed:
+                  () => openFastingPaywall(
+                    context: context,
+                    ref: ref,
+                    entryPoint: fastingHeaderButtonEntryPoint,
+                  ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            CompactStatStrip(
-              items: <CompactStatItem>[
-                CompactStatItem(
-                  label: l10n.commonActiveDays,
-                  value:
-                      '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
-                ),
-                CompactStatItem(
-                  label: l10n.fastingLongestFast,
-                  value: _longestFastLabel(weeklyEntries),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
       footer: MonetizationBanner(
@@ -224,6 +310,50 @@ class FastingScreen extends ConsumerWidget {
         adUnitId: fastingBannerAdUnitId,
       ),
     );
+  }
+
+  List<WeeklyActivityEntry> _buildWeeklyActivity(
+    BuildContext context,
+    HabitService habits,
+    DateTime referenceDate,
+  ) {
+    return List<WeeklyActivityEntry>.generate(7, (int index) {
+      final DateTime day = DateTime(
+        referenceDate.year,
+        referenceDate.month,
+        referenceDate.day,
+      ).subtract(Duration(days: 6 - index));
+      return WeeklyActivityEntry(
+        label: _weekdayLabel(context, day),
+        value: habits.minutesForDay(day) / 60,
+        emphasis: _isSameDay(day, referenceDate),
+      );
+    });
+  }
+
+  int _activeDays(List<HabitSessionRecord> entries) {
+    return entries
+        .map(
+          (HabitSessionRecord entry) => DateTime(
+            entry.completedAtLocal.year,
+            entry.completedAtLocal.month,
+            entry.completedAtLocal.day,
+          ),
+        )
+        .toSet()
+        .length;
+  }
+
+  String _weekdayLabel(BuildContext context, DateTime day) {
+    final List<String> labels =
+        MaterialLocalizations.of(context).narrowWeekdays;
+    return labels[day.weekday % 7];
+  }
+
+  bool _isSameDay(DateTime left, DateTime right) {
+    return left.year == right.year &&
+        left.month == right.month &&
+        left.day == right.day;
   }
 
   double _clampProgress(double progress) {

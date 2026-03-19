@@ -48,6 +48,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonPlan => 'Plan';
 
   @override
+  String get commonMomentum => 'Momentum';
+
+  @override
+  String get commonDailyGoal => 'Daily goal';
+
+  @override
+  String get commonWeeklyRhythm => 'Weekly rhythm';
+
+  @override
   String get commonSeePremium => 'See premium';
 
   @override
@@ -188,7 +197,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pomodoroAdvancedInsights => 'Advanced insights';
 
   @override
+  String pomodoroAdvancedInsightsSummary(int todayMinutes, int weeklyMinutes) {
+    return 'Today: $todayMinutes minutes focused | This week: $weeklyMinutes minutes banked';
+  }
+
+  @override
   String get pomodoroAverageFocus => 'Avg focus';
+
+  @override
+  String get pomodoroCustomModesTitle => 'Custom modes';
+
+  @override
+  String get pomodoroPremiumTeaserTitle =>
+      'Premium adds advanced stats and custom modes';
+
+  @override
+  String get pomodoroPremiumTeaserSubtitle =>
+      'See deeper consistency signals, unlock longer presets, and keep notes attached to each focus block.';
 
   @override
   String get pomodoroFocusNote => 'Focus note';
@@ -228,8 +253,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastingResumeFast => 'Resume fast';
 
   @override
-  String fastingTodayFastsValue(int count) {
-    return '$count/1 fast';
+  String fastingTodayFastsValue(int count, int goal) {
+    return '$count/$goal fasts';
   }
 
   @override
@@ -252,6 +277,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get fastingLongestFast => 'Longest fast';
+
+  @override
+  String get fastingAdvancedPlansTitle => 'Advanced plans';
+
+  @override
+  String fastingWeeklyConsistencySummary(int activeDays, String hours) {
+    return '$activeDays/7 active days | $hours total fasting this week';
+  }
+
+  @override
+  String get fastingPremiumTeaserTitle =>
+      'Premium adds extended plans and deeper insights';
+
+  @override
+  String get fastingPremiumTeaserSubtitle =>
+      'Unlock 18:6 and 20:4 plans, plus stronger weekly insight into your fasting consistency.';
 
   @override
   String get fastingPremiumPlansTitle =>

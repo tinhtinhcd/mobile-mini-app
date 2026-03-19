@@ -2,6 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:localization/localization.dart';
 
+import '../navigation/app_menu.dart';
 import 'app_shell.dart';
 
 class FactoryScaffold extends StatelessWidget {
@@ -16,6 +17,7 @@ class FactoryScaffold extends StatelessWidget {
     this.footer,
     this.drawerItems = const <AppDrawerItem>[],
     this.onSubscriptionTap,
+    this.appMenuSpec,
   });
 
   final String title;
@@ -27,16 +29,19 @@ class FactoryScaffold extends StatelessWidget {
   final Widget? footer;
   final List<AppDrawerItem> drawerItems;
   final VoidCallback? onSubscriptionTap;
+  final AppMenuSpec? appMenuSpec;
 
   @override
   Widget build(BuildContext context) {
     final List<AppDrawerItem> resolvedDrawerItems =
         drawerItems.isEmpty
-            ? _buildDefaultDrawerItems(
-              context,
-              title: title,
-              onSubscriptionTap: onSubscriptionTap,
-            )
+            ? appMenuSpec != null
+                ? buildAppMenuDrawerItems(context, spec: appMenuSpec!)
+                : _buildDefaultDrawerItems(
+                  context,
+                  title: title,
+                  onSubscriptionTap: onSubscriptionTap,
+                )
             : drawerItems;
     final Widget content = _ScaffoldContent(
       subtitle: subtitle,

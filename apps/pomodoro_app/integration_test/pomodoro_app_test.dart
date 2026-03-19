@@ -151,11 +151,60 @@ void main() {
       await openDrawer(tester);
       await tapDrawerItem(tester, 'Subscription Plan');
       await tester.pumpAndSettle();
+      expect(find.text('View subscription options'), findsOneWidget);
+
+      await tapFilledButton(tester, 'View subscription options');
+      await tester.pumpAndSettle();
       expect(find.text('Upgrade Focus Flow'), findsOneWidget);
 
       await tapTextButton(tester, 'Maybe later');
       await tester.pumpAndSettle();
       expect(find.text('Upgrade Focus Flow'), findsNothing);
+    });
+
+    testWidgets('opens real drawer destinations', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        app.createPomodoroApp(
+          analyticsService: TestAnalyticsService(),
+          notificationService: TestNotificationService(),
+          monetizationService: TestMonetizationService(),
+          adService: TestAdService(),
+          snapshotStore: InMemoryTimerSnapshotStore(),
+        ),
+      );
+
+      await pumpUntilVisible(tester, find.text('Focus Flow'));
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'About App');
+      expect(find.text('Pomodoro App'), findsOneWidget);
+      expect(find.text('Version'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Focus Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Settings / Config');
+      expect(find.text('Configuration'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Focus Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Subscription Plan');
+      expect(find.text('View subscription options'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Focus Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Privacy');
+      expect(find.text('Data handling'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Focus Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Feedback');
+      expect(find.text('Support'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Focus Flow'), findsOneWidget);
     });
   });
 }
@@ -193,8 +242,8 @@ Future<void> tapSelectionPill(WidgetTester tester, String label) async {
 
 Future<void> openDrawer(WidgetTester tester) async {
   final Finder menuButton = find.byIcon(Icons.menu_rounded);
-  expect(menuButton, findsOneWidget);
-  await tester.tap(menuButton);
+  expect(menuButton, findsWidgets);
+  await tester.tap(menuButton.first);
   await tester.pumpAndSettle();
 }
 
@@ -202,5 +251,13 @@ Future<void> tapDrawerItem(WidgetTester tester, String label) async {
   final Finder item = find.text(label);
   expect(item, findsWidgets);
   await tester.tap(item.last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> popRoute(WidgetTester tester) async {
+  final NavigatorState navigator = tester.state<NavigatorState>(
+    find.byType(Navigator).first,
+  );
+  navigator.pop();
   await tester.pumpAndSettle();
 }

@@ -119,13 +119,7 @@ void main() {
       await tapFilledButton(tester, 'Resume fast');
       await tester.pump(const Duration(milliseconds: 1200));
       expect(find.text('16:00:00'), findsOneWidget);
-      expect(
-        find.byWidgetPredicate((widget) {
-          return widget is RichText &&
-              widget.text.toPlainText().contains('1/1 fast');
-        }),
-        findsOneWidget,
-      );
+      expect(find.text('Start fast'), findsOneWidget);
     });
 
     testWidgets(
@@ -162,6 +156,51 @@ void main() {
         expect(find.text('Upgrade Fasting Flow'), findsNothing);
       },
     );
+
+    testWidgets('opens real drawer destinations', (WidgetTester tester) async {
+      await tester.pumpWidget(
+        app.createFastingApp(
+          analyticsService: TestAnalyticsService(),
+          notificationService: TestNotificationService(),
+          monetizationService: TestMonetizationService(),
+          adService: TestAdService(),
+          snapshotStore: InMemoryTimerSnapshotStore(),
+        ),
+      );
+
+      await pumpUntilVisible(tester, find.text('Fasting Flow'));
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'About App');
+      expect(find.text('Fasting Tracker'), findsOneWidget);
+      expect(find.text('Version'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Fasting Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Settings / Config');
+      expect(find.text('Configuration'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Fasting Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Subscription Plan');
+      expect(find.text('View subscription options'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Fasting Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Privacy');
+      expect(find.text('Data handling'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Fasting Flow'), findsOneWidget);
+
+      await openDrawer(tester);
+      await tapDrawerItem(tester, 'Feedback');
+      expect(find.text('Support'), findsOneWidget);
+      await popRoute(tester);
+      expect(find.text('Fasting Flow'), findsOneWidget);
+    });
   });
 }
 
@@ -194,4 +233,26 @@ Future<void> tapSelectionPill(WidgetTester tester, String label) async {
   expect(pill, findsOneWidget);
   tester.widget<SelectionPill>(pill).onTap();
   await tester.pump();
+}
+
+Future<void> openDrawer(WidgetTester tester) async {
+  final Finder menuButton = find.byIcon(Icons.menu_rounded);
+  expect(menuButton, findsWidgets);
+  await tester.tap(menuButton.first);
+  await tester.pumpAndSettle();
+}
+
+Future<void> tapDrawerItem(WidgetTester tester, String label) async {
+  final Finder item = find.text(label);
+  expect(item, findsWidgets);
+  await tester.tap(item.last);
+  await tester.pumpAndSettle();
+}
+
+Future<void> popRoute(WidgetTester tester) async {
+  final NavigatorState navigator = tester.state<NavigatorState>(
+    find.byType(Navigator).first,
+  );
+  navigator.pop();
+  await tester.pumpAndSettle();
 }

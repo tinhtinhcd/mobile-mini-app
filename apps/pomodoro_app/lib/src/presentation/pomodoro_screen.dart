@@ -7,6 +7,7 @@ import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
 import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
+import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -68,12 +69,7 @@ class PomodoroScreen extends ConsumerWidget {
 
     return FactoryScaffold(
       title: l10n.pomodoroTitle,
-      onSubscriptionTap:
-          () => openPomodoroPaywall(
-            context: context,
-            ref: ref,
-            entryPoint: pomodoroHeaderButtonEntryPoint,
-          ),
+      appMenuSpec: pomodoroAppMenuSpec,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

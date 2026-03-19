@@ -4,6 +4,7 @@ import 'package:fasting_app/src/application/fasting_controller.dart';
 import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
+import 'package:fasting_app/src/presentation/fasting_app_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habit_engine/habit_engine.dart';
@@ -48,12 +49,7 @@ class FastingScreen extends ConsumerWidget {
 
     return FactoryScaffold(
       title: l10n.fastingTitle,
-      onSubscriptionTap:
-          () => openFastingPaywall(
-            context: context,
-            ref: ref,
-            entryPoint: fastingHeaderButtonEntryPoint,
-          ),
+      appMenuSpec: fastingAppMenuSpec,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[

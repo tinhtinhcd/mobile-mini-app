@@ -5,6 +5,7 @@ export 'package:localization/localization.dart';
 export 'src/app_definition.dart';
 export 'src/bootstrap/factory_launch_screen.dart';
 export 'src/factory_app.dart';
+export 'src/navigation/app_menu.dart';
 export 'src/navigation/app_router.dart';
 export 'src/scaffold/app_shell.dart';
 export 'src/scaffold/factory_scaffold.dart';

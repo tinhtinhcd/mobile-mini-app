@@ -1,5 +1,6 @@
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
+import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
 import 'package:pomodoro_app/src/presentation/pomodoro_screen.dart';
 
 AppDefinition buildPomodoroAppDefinition() {
@@ -11,6 +12,12 @@ AppDefinition buildPomodoroAppDefinition() {
       builder: (BuildContext _, __) {
         return const PomodoroScreen();
       },
+      routes: buildAppMenuRoutes(
+        spec: pomodoroAppMenuSpec,
+        premiumScreenBuilder: (BuildContext context) {
+          return const PomodoroPremiumScreen();
+        },
+      ),
     ),
   );
 }

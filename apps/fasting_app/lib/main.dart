@@ -5,10 +5,12 @@ import 'package:app_core/app_core.dart';
 import 'package:fasting_app/app_config.dart';
 import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
+import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:notifications/notifications.dart';
 import 'package:storage/storage.dart';
@@ -29,6 +31,7 @@ Widget createFastingApp({
   StoreMonetizationService? monetizationService,
   AdService? adService,
   TimerSnapshotStore? snapshotStore,
+  HabitService? habitService,
 }) {
   return _FastingBootstrap(
     analyticsService: analyticsService ?? DebugLoggerAnalyticsService(),
@@ -54,6 +57,7 @@ Widget createFastingApp({
     snapshotStore:
         snapshotStore ??
         _DeferredTimerSnapshotStore(storageKey: 'fasting_app.timer_snapshot'),
+    habitService: habitService ?? buildFastingHabitService(),
   );
 }
 
@@ -64,6 +68,7 @@ class _FastingBootstrap extends StatefulWidget {
     required this.monetizationService,
     required this.adService,
     required this.snapshotStore,
+    required this.habitService,
   });
 
   final AnalyticsService analyticsService;
@@ -71,6 +76,7 @@ class _FastingBootstrap extends StatefulWidget {
   final StoreMonetizationService monetizationService;
   final AdService adService;
   final TimerSnapshotStore snapshotStore;
+  final HabitService habitService;
 
   @override
   State<_FastingBootstrap> createState() => _FastingBootstrapState();
@@ -95,6 +101,7 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startupTiming.mark('first_frame');
+      unawaited(_initializeHabits());
       unawaited(_runTierB());
       unawaited(_runTierC());
     });
@@ -159,6 +166,12 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
     _startupTiming.mark('bootstrap_finish');
   }
 
+  Future<void> _initializeHabits() async {
+    try {
+      await widget.habitService.initialize();
+    } catch (_) {}
+  }
+
   Future<void> _initializeAnalytics() async {
     try {
       _startupTiming.mark('analytics_init_start');
@@ -221,6 +234,7 @@ class _FastingBootstrapState extends State<_FastingBootstrap> {
           return widget.notificationService;
         }),
         fastingSnapshotStoreProvider.overrideWith((_) => widget.snapshotStore),
+        fastingHabitServiceProvider.overrideWith((_) => widget.habitService),
         fastingRestoredSnapshotProvider.overrideWith((_) {
           return _restoredSnapshot;
         }),

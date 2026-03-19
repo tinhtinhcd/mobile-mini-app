@@ -10,9 +10,7 @@ class TimerState {
     required this.stats,
   });
 
-  factory TimerState.initial({
-    required TimerSession session,
-  }) {
+  factory TimerState.initial({required TimerSession session}) {
     return TimerState(
       activeSession: session,
       remaining: session.duration,
@@ -41,6 +39,7 @@ class TimerState {
       stats: TimerStats(
         completedTrackedSessions: snapshot.completedTrackedSessions,
         trackedMinutes: snapshot.trackedMinutes,
+        history: snapshot.history,
       ),
     );
   }
@@ -55,7 +54,8 @@ class TimerState {
       return 0;
     }
 
-    final completedSeconds = activeSession.duration.inSeconds - remaining.inSeconds;
+    final completedSeconds =
+        activeSession.duration.inSeconds - remaining.inSeconds;
     return completedSeconds / activeSession.duration.inSeconds;
   }
 
@@ -80,6 +80,7 @@ class TimerState {
       wasRunning: isRunning,
       completedTrackedSessions: stats.completedTrackedSessions,
       trackedMinutes: stats.trackedMinutes,
+      history: stats.history,
     );
   }
 }

@@ -5,19 +5,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:monetization/src/ads/ad_service.dart';
-import 'package:monetization/src/models/entitlement_state.dart';
+import 'package:monetization/src/models/entitlement.dart';
+import 'package:monetization/src/services/entitlement_service.dart';
 
 class MonetizationBanner extends StatefulWidget {
   const MonetizationBanner({
     super.key,
     required this.adService,
-    required this.entitlementState,
+    required this.entitlementService,
     required this.adUnitId,
     this.startupAppId,
   });
 
   final AdService adService;
-  final EntitlementState entitlementState;
+  final EntitlementService entitlementService;
   final String adUnitId;
   final String? startupAppId;
 
@@ -46,15 +47,16 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
     if (kDebugMode) {
       return;
     }
-    if (widget.entitlementState.isPremium &&
-        !oldWidget.entitlementState.isPremium) {
+    final bool hidesAds = widget.entitlementService.has(Entitlement.noAds);
+    final bool oldHidesAds = oldWidget.entitlementService.has(
+      Entitlement.noAds,
+    );
+    if (hidesAds && !oldHidesAds) {
       _disposeBanner();
       return;
     }
 
-    if (!widget.entitlementState.isPremium &&
-        (oldWidget.entitlementState.isPremium ||
-            oldWidget.adUnitId != widget.adUnitId)) {
+    if (!hidesAds && (oldHidesAds || oldWidget.adUnitId != widget.adUnitId)) {
       _disposeBanner();
       _scheduleLoadAdIfNeeded();
     }
@@ -82,7 +84,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
   }
 
   Future<void> _loadAdIfNeeded() async {
-    if (widget.entitlementState.isPremium ||
+    if (widget.entitlementService.has(Entitlement.noAds) ||
         widget.adUnitId.isEmpty ||
         _bannerAd != null) {
       return;
@@ -147,7 +149,9 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
       return const SizedBox.shrink();
     }
 
-    if (widget.entitlementState.isPremium || !_isLoaded || _bannerAd == null) {
+    if (widget.entitlementService.has(Entitlement.noAds) ||
+        !_isLoaded ||
+        _bannerAd == null) {
       return const SizedBox.shrink();
     }
 

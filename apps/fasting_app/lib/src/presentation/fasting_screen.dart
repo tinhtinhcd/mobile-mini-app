@@ -1,10 +1,12 @@
 import 'package:app_core/app_core.dart';
 import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
+import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
@@ -21,9 +23,30 @@ class FastingScreen extends ConsumerWidget {
     final StoreMonetizationService monetization = ref.watch(
       fastingMonetizationServiceProvider,
     );
+    final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(fastingAdServiceProvider);
+    final HabitService habits = ref.watch(fastingHabitServiceProvider);
     final ThemeData theme = Theme.of(context);
     final FastingPlan selectedPlan = controller.selectedPlan;
+    final DateTime now = DateTime.now();
+    final int todayFasts = habits.todayCount;
+    final int weeklyFasts = habits.weeklyCount;
+    final int weeklyMinutes = habits.weeklyMinutes;
+    final int streakDays = habits.currentStreak;
+    final Duration? lastFastDuration = habits.lastSessionDuration;
+    final bool unlimitedHistoryUnlocked = entitlements.has(
+      Entitlement.unlimitedSessions,
+    );
+    final List<HabitSessionRecord> recentEntries = habits.recentRecords(
+      limit: unlimitedHistoryUnlocked ? 3 : 1,
+    );
+    final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(
+      7,
+      referenceDate: now,
+    );
+    final bool advancedInsightsUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
 
     return FactoryScaffold(
       title: 'Fasting Flow',
@@ -71,105 +94,152 @@ class FastingScreen extends ConsumerWidget {
             icon: Icon(_primaryIcon(state)),
             onPressed: controller.toggleTimer,
           ),
+          const SizedBox(height: AppSpacing.md),
+          CompactStatStrip(
+            items: <CompactStatItem>[
+              CompactStatItem(label: 'today', value: '$todayFasts/1 fast'),
+              CompactStatItem(
+                label: 'last fast',
+                value: _durationLabel(lastFastDuration),
+              ),
+              CompactStatItem(
+                label: 'streak',
+                value: '${streakDays}d',
+                highlight: theme.colorScheme.tertiary,
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.sm),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            child: Text(
+              '7-day summary: $weeklyFasts fasts | ${_trackedHoursLabel(weeklyMinutes)} total fasting',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Plan',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children:
+                FastingPlan.values.asMap().entries.map((
+                  MapEntry<int, FastingPlan> entry,
+                ) {
+                  final UsageLimitResult access = fastingPlanPolicy
+                      .evaluateWithEntitlements(
+                        entitlementService: entitlements,
+                        premiumEntitlement: Entitlement.advancedPlans,
+                        usageCount: entry.key + 1,
+                      );
+
+                  return SelectionPill(
+                    label: entry.value.label,
+                    selected: entry.value == selectedPlan && access.allowed,
+                    locked: !access.allowed,
+                    onTap: () {
+                      if (access.allowed) {
+                        controller.selectPlan(entry.value);
+                        return;
+                      }
+
+                      openFastingPaywall(
+                        context: context,
+                        ref: ref,
+                        entryPoint: fastingLockedPlanEntryPoint,
+                      );
+                    },
+                  );
+                }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.md),
           AppSecondaryButton(
             label: 'Reset fast',
             icon: const Icon(Icons.refresh_rounded),
             onPressed: controller.reset,
           ),
           const SizedBox(height: AppSpacing.lg),
-          CompactSection(
-            title: 'Plans',
-            subtitle: 'Choose the fasting rhythm you want to follow today.',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children:
-                      FastingPlan.values.asMap().entries.map((
-                        MapEntry<int, FastingPlan> entry,
-                      ) {
-                        final UsageLimitResult access = fastingPlanPolicy
-                            .evaluate(
-                              entitlement: monetization.entitlementState,
-                              usageCount: entry.key + 1,
-                            );
-
-                        return SelectionPill(
-                          label: entry.value.label,
-                          selected:
-                              entry.value == selectedPlan && access.allowed,
-                          locked: !access.allowed,
-                          onTap: () {
-                            if (access.allowed) {
-                              controller.selectPlan(entry.value);
-                              return;
-                            }
-
-                            openFastingPaywall(
-                              context: context,
-                              ref: ref,
-                              entryPoint: fastingLockedPlanEntryPoint,
-                            );
-                          },
-                        );
-                      }).toList(),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            child: Text(
+              '${selectedPlan.label} plan | Eating window ${selectedPlan.eatingWindowLabel} | ${selectedPlan.description}',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          if (recentEntries.isNotEmpty) ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Recent activity',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...recentEntries.map(
+              (HabitSessionRecord entry) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                child: Text(
+                  _historyLabel(entry),
+                  style: theme.textTheme.bodySmall,
                 ),
-                if (!monetization.isPremium) ...<Widget>[
-                  const SizedBox(height: AppSpacing.md),
-                  PremiumCalloutCard(
-                    title: 'Premium unlocks extended fasting plans',
-                    subtitle: fastingPlanPolicy.upgradeMessage,
-                    actionLabel: 'See premium',
-                    onPressed:
-                        () => openFastingPaywall(
-                          context: context,
-                          ref: ref,
-                          entryPoint: fastingHeaderButtonEntryPoint,
-                        ),
+              ),
+            ),
+          ],
+          if (!unlimitedHistoryUnlocked &&
+              weeklyEntries.length > 1) ...<Widget>[
+            const SizedBox(height: AppSpacing.md),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+              child: Text(
+                'Premium unlocks your full fasting history.',
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
+          ],
+          if (advancedInsightsUnlocked) ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Deeper insights',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            CompactStatStrip(
+              items: <CompactStatItem>[
+                CompactStatItem(
+                  label: 'active days',
+                  value:
+                      '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
+                ),
+                CompactStatItem(
+                  label: 'longest fast',
+                  value: _longestFastLabel(weeklyEntries),
+                ),
+              ],
+            ),
+          ],
+          if (!advancedInsightsUnlocked ||
+              !entitlements.has(Entitlement.advancedPlans)) ...<Widget>[
+            const SizedBox(height: AppSpacing.lg),
+            PremiumCalloutCard(
+              title: 'Premium unlocks extended fasting plans',
+              subtitle: fastingPlanPolicy.upgradeMessage,
+              actionLabel: 'See premium',
+              onPressed:
+                  () => openFastingPaywall(
+                    context: context,
+                    ref: ref,
+                    entryPoint: fastingHeaderButtonEntryPoint,
                   ),
-                ],
-                const SizedBox(height: AppSpacing.sm),
-                SettingsTile(
-                  title: 'Eating window',
-                  subtitle: selectedPlan.description,
-                  leading: const Icon(Icons.restaurant_rounded),
-                  trailing: _PlanBadge(label: selectedPlan.eatingWindowLabel),
-                ),
-              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          CompactSection(
-            title: 'Progress',
-            subtitle: 'A compact summary of your fasting streak so far.',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                CompactStatStrip(
-                  items: <CompactStatItem>[
-                    CompactStatItem(
-                      label: 'completed fasts',
-                      value: '${state.stats.completedTrackedSessions}',
-                    ),
-                    CompactStatItem(
-                      label: 'tracked hours',
-                      value: _trackedHoursLabel(state.stats.trackedMinutes),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                SettingsTile(
-                  title: 'Current plan',
-                  subtitle: selectedPlan.description,
-                  leading: const Icon(Icons.schedule_rounded),
-                  trailing: _PlanBadge(label: selectedPlan.label),
-                ),
-              ],
-            ),
-          ),
+          ],
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
@@ -183,7 +253,7 @@ class FastingScreen extends ConsumerWidget {
       footer: MonetizationBanner(
         startupAppId: 'fasting_app',
         adService: adService,
-        entitlementState: monetization.entitlementState,
+        entitlementService: entitlements,
         adUnitId: fastingBannerAdUnitId,
       ),
     );
@@ -236,6 +306,30 @@ class FastingScreen extends ConsumerWidget {
   String _trackedHoursLabel(int trackedMinutes) {
     final double trackedHours = trackedMinutes / 60;
     return '${trackedHours.toStringAsFixed(1)}h';
+  }
+
+  String _durationLabel(Duration? duration) {
+    if (duration == null) {
+      return '0h';
+    }
+    return _trackedHoursLabel(duration.inMinutes);
+  }
+
+  String _longestFastLabel(List<HabitSessionRecord> entries) {
+    if (entries.isEmpty) {
+      return '0h';
+    }
+    final int longestMinutes = entries
+        .map((HabitSessionRecord entry) => entry.durationMinutes)
+        .reduce((int a, int b) => a > b ? a : b);
+    return _trackedHoursLabel(longestMinutes);
+  }
+
+  String _historyLabel(HabitSessionRecord entry) {
+    final DateTime completedAt = entry.completedAtLocal;
+    final String hours = completedAt.hour.toString().padLeft(2, '0');
+    final String minutes = completedAt.minute.toString().padLeft(2, '0');
+    return '${_trackedHoursLabel(entry.durationMinutes)} fast | ${completedAt.month}/${completedAt.day} at $hours:$minutes';
   }
 }
 

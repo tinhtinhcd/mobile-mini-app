@@ -1,9 +1,11 @@
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
+import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
@@ -20,13 +22,51 @@ class PomodoroScreen extends ConsumerWidget {
     final StoreMonetizationService monetization = ref.watch(
       pomodoroMonetizationServiceProvider,
     );
+    final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(pomodoroAdServiceProvider);
+    final HabitService habits = ref.watch(pomodoroHabitServiceProvider);
     final ThemeData theme = Theme.of(context);
     final PomodoroMode currentMode = pomodoroModeFromSession(
       state.activeSession,
     );
+    final PomodoroDurationPreset durationPreset = ref.watch(
+      pomodoroDurationPresetProvider,
+    );
+    final DateTime now = DateTime.now();
+    final int todaySessions = habits.todayCount;
+    final int todayMinutes = habits.todayMinutes;
+    final int weeklySessions = habits.weeklyCount;
+    final int weeklyMinutes = habits.weeklyMinutes;
+    final int streakDays = habits.currentStreak;
+    final int dailyGoal = habits.dailyGoal;
+    final List<HabitSessionRecord> recentEntries = habits.recentRecords(
+      limit: 3,
+    );
+    final bool isFreshFocusStart =
+        !state.isRunning &&
+        currentMode == PomodoroMode.focus &&
+        state.remaining == state.activeSession.duration;
+    final UsageLimitResult unlimitedSessionsAccess =
+        pomodoroUnlimitedSessionsPolicy.evaluateWithEntitlements(
+          entitlementService: entitlements,
+          premiumEntitlement: Entitlement.unlimitedSessions,
+          usageCount: isFreshFocusStart ? todaySessions + 1 : todaySessions,
+        );
     final UsageLimitResult sessionNotesAccess = pomodoroSessionNotesPolicy
-        .evaluate(entitlement: monetization.entitlementState, usageCount: 1);
+        .evaluateWithEntitlements(
+          entitlementService: entitlements,
+          premiumEntitlement: Entitlement.advancedStats,
+          usageCount: 1,
+        );
+    final UsageLimitResult customDurationsAccess = pomodoroCustomDurationsPolicy
+        .evaluateWithEntitlements(
+          entitlementService: entitlements,
+          premiumEntitlement: Entitlement.customModes,
+          usageCount: 1,
+        );
+    final bool advancedStatsUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
 
     return FactoryScaffold(
       title: 'Focus Flow',
@@ -73,27 +113,115 @@ class PomodoroScreen extends ConsumerWidget {
           AppPrimaryButton(
             label: _primaryLabel(state, currentMode),
             icon: Icon(_primaryIcon(state)),
-            onPressed: controller.toggleTimer,
+            onPressed: () {
+              if (!unlimitedSessionsAccess.allowed) {
+                openPomodoroPaywall(
+                  context: context,
+                  ref: ref,
+                  entryPoint: pomodoroHeaderButtonEntryPoint,
+                );
+                return;
+              }
+              controller.toggleTimer();
+            },
           ),
+          const SizedBox(height: AppSpacing.lg),
+          CompactStatStrip(
+            items: <CompactStatItem>[
+              CompactStatItem(
+                label: 'today',
+                value: '$todaySessions/$dailyGoal sessions',
+              ),
+              CompactStatItem(label: 'focus time', value: '${todayMinutes}m'),
+              CompactStatItem(
+                label: 'streak',
+                value: '${streakDays}d',
+                highlight: theme.colorScheme.tertiary,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
+            child: Text(
+              '7-day summary: $weeklySessions sessions | $weeklyMinutes minutes deep work',
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          if (!entitlements.has(Entitlement.unlimitedSessions))
+            Padding(
+              padding: const EdgeInsets.only(
+                top: AppSpacing.xs,
+                left: AppSpacing.xs,
+                right: AppSpacing.xs,
+              ),
+              child: Text(
+                unlimitedSessionsAccess.allowed
+                    ? '${unlimitedSessionsAccess.remainingFreeUses} free focus sessions left today.'
+                    : pomodoroUnlimitedSessionsPolicy.upgradeMessage,
+                style: theme.textTheme.bodySmall,
+              ),
+            ),
           const SizedBox(height: AppSpacing.md),
-          CompactSection(
-            title: 'Mode',
-            inset: false,
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children:
-                  PomodoroMode.values.map((PomodoroMode mode) {
-                    return SelectionPill(
-                      label: mode.label,
-                      selected: currentMode == mode,
-                      leading: Icon(_modeIcon(mode)),
-                      onTap: () => controller.selectMode(mode),
-                    );
-                  }).toList(),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Mode',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children:
+                PomodoroMode.values.map((PomodoroMode mode) {
+                  return SelectionPill(
+                    label: mode.label,
+                    selected: currentMode == mode,
+                    leading: Icon(_modeIcon(mode)),
+                    onTap: () => controller.selectMode(mode),
+                  );
+                }).toList(),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          if (currentMode == PomodoroMode.focus) ...<Widget>[
+            Text(
+              'Focus length',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            if (customDurationsAccess.allowed)
+              Wrap(
+                spacing: AppSpacing.sm,
+                runSpacing: AppSpacing.sm,
+                children:
+                    PomodoroDurationPreset.values.map((
+                      PomodoroDurationPreset preset,
+                    ) {
+                      return SelectionPill(
+                        label: preset.shortLabel,
+                        selected: durationPreset == preset,
+                        onTap: () => controller.selectDurationPreset(preset),
+                      );
+                    }).toList(),
+              )
+            else
+              PremiumCalloutCard(
+                title: 'Custom focus lengths are Premium',
+                subtitle: customDurationsAccess.message,
+                actionLabel: 'Unlock premium',
+                onPressed:
+                    () => openPomodoroPaywall(
+                      context: context,
+                      ref: ref,
+                      entryPoint: pomodoroHeaderButtonEntryPoint,
+                    ),
+              ),
+            const SizedBox(height: AppSpacing.md),
+          ],
           _ResponsiveButtonRow(
             leading: AppSecondaryButton(
               label: 'Reset',
@@ -107,62 +235,73 @@ class PomodoroScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          CompactSection(
-            title: 'Today',
-            subtitle: 'Your current rhythm at a glance.',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                CompactStatStrip(
-                  items: <CompactStatItem>[
-                    CompactStatItem(
-                      label: 'focus sessions',
-                      value: '${state.stats.completedTrackedSessions}',
-                    ),
-                    CompactStatItem(
-                      label: 'minutes deep work',
-                      value: '${state.stats.trackedMinutes}',
-                    ),
-                  ],
+          if (recentEntries.isNotEmpty) ...<Widget>[
+            Text(
+              'Recent activity',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ...recentEntries.map(
+              (HabitSessionRecord entry) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                child: Text(
+                  _historyLabel(entry),
+                  style: theme.textTheme.bodySmall,
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                SettingsTile(
-                  title: 'Current rhythm',
-                  subtitle:
-                      currentMode == PomodoroMode.focus
-                          ? 'Stay on task until the bell.'
-                          : 'Use the break to reset before the next focus block.',
-                  leading: Icon(_modeIcon(currentMode)),
-                  trailing: _ModeStatusBadge(
-                    label: _buildRhythmLabel(currentMode),
-                  ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (advancedStatsUnlocked) ...<Widget>[
+            Text(
+              'Advanced insights',
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            CompactStatStrip(
+              items: <CompactStatItem>[
+                CompactStatItem(
+                  label: 'active days',
+                  value:
+                      '${state.stats.activeDaysLastDays(7, referenceDate: now)}/7',
+                ),
+                CompactStatItem(
+                  label: 'avg focus',
+                  value: _averageMinutesLabel(weeklySessions, weeklyMinutes),
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          Text(
+            'Focus note',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
-          const SizedBox(height: AppSpacing.lg),
-          CompactSection(
-            title: 'Focus note',
-            subtitle: 'Keep a short prompt for the task in front of you.',
-            child:
-                sessionNotesAccess.allowed
-                    ? const AppTextField(
-                      label: 'What matters right now?',
-                      hintText: 'Write the one thing this session is for.',
-                      maxLines: 3,
-                    )
-                    : PremiumCalloutCard(
-                      title: 'Session notes are part of Premium',
-                      subtitle: sessionNotesAccess.message,
-                      actionLabel: 'Unlock premium',
-                      onPressed:
-                          () => openPomodoroPaywall(
-                            context: context,
-                            ref: ref,
-                            entryPoint: pomodoroSessionNotesGateEntryPoint,
-                          ),
-                    ),
-          ),
+          const SizedBox(height: AppSpacing.sm),
+          if (sessionNotesAccess.allowed)
+            const AppTextField(
+              label: 'What matters right now?',
+              hintText: 'Write the one thing this session is for.',
+              maxLines: 3,
+            )
+          else
+            PremiumCalloutCard(
+              title: 'Session notes are part of Premium',
+              subtitle: sessionNotesAccess.message,
+              actionLabel: 'Unlock premium',
+              onPressed:
+                  () => openPomodoroPaywall(
+                    context: context,
+                    ref: ref,
+                    entryPoint: pomodoroSessionNotesGateEntryPoint,
+                  ),
+            ),
           if (monetization.entitlementState.message case final String message
               when message.isNotEmpty) ...<Widget>[
             const SizedBox(height: AppSpacing.md),
@@ -176,18 +315,10 @@ class PomodoroScreen extends ConsumerWidget {
       footer: MonetizationBanner(
         startupAppId: 'pomodoro_app',
         adService: adService,
-        entitlementState: monetization.entitlementState,
+        entitlementService: entitlements,
         adUnitId: pomodoroBannerAdUnitId,
       ),
     );
-  }
-
-  String _buildRhythmLabel(PomodoroMode mode) {
-    return switch (mode) {
-      PomodoroMode.focus => '25 / 5 cadence',
-      PomodoroMode.shortBreak => 'Quick recharge',
-      PomodoroMode.longBreak => 'Extended reset',
-    };
   }
 
   String _formatDuration(Duration duration) {
@@ -252,6 +383,20 @@ class PomodoroScreen extends ConsumerWidget {
       PomodoroMode.shortBreak => Icons.coffee_rounded,
       PomodoroMode.longBreak => Icons.hotel_rounded,
     };
+  }
+
+  String _averageMinutesLabel(int weeklySessions, int weeklyMinutes) {
+    if (weeklySessions == 0) {
+      return '0m';
+    }
+    return '${(weeklyMinutes / weeklySessions).round()}m';
+  }
+
+  String _historyLabel(HabitSessionRecord entry) {
+    final DateTime completedAt = entry.completedAtLocal;
+    final String hours = completedAt.hour.toString().padLeft(2, '0');
+    final String minutes = completedAt.minute.toString().padLeft(2, '0');
+    return '${entry.durationMinutes}m focus | ${completedAt.month}/${completedAt.day} at $hours:$minutes';
   }
 }
 

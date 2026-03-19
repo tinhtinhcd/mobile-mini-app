@@ -1,9 +1,4 @@
-enum EntitlementSource {
-  free,
-  cachedPurchase,
-  storePurchase,
-  restoredPurchase,
-}
+enum EntitlementSource { free, cachedPurchase, storePurchase, restoredPurchase }
 
 class EntitlementState {
   const EntitlementState({

@@ -122,7 +122,7 @@ void main() {
       expect(
         find.byWidgetPredicate((widget) {
           return widget is RichText &&
-              widget.text.toPlainText().contains('completed fasts');
+              widget.text.toPlainText().contains('1/1 fast');
         }),
         findsOneWidget,
       );

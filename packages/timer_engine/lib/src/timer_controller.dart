@@ -148,14 +148,7 @@ abstract class TimerController extends Notifier<TimerState> {
   }
 
   TimerStats _updatedStats(TimerSession session, TimerStats stats) {
-    if (!session.isTracked) {
-      return stats;
-    }
-
-    return stats.copyWith(
-      completedTrackedSessions: stats.completedTrackedSessions + 1,
-      trackedMinutes: stats.trackedMinutes + session.duration.inMinutes,
-    );
+    return stats.recordCompletion(session);
   }
 
   void _setState(TimerState nextState) {

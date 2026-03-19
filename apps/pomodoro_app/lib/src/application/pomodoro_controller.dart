@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:analytics/analytics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:notifications/notifications.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
+import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
 
@@ -20,6 +22,9 @@ final pomodoroSnapshotStoreProvider = Provider<TimerSnapshotStore>((_) {
   throw UnimplementedError('pomodoroSnapshotStoreProvider must be overridden.');
 });
 final pomodoroRestoredSnapshotProvider = Provider<TimerSnapshot?>((_) => null);
+final pomodoroDurationPresetProvider = StateProvider<PomodoroDurationPreset>(
+  (_) => PomodoroDurationPreset.classic,
+);
 
 enum PomodoroMode {
   focus('Focus'),
@@ -59,6 +64,44 @@ extension PomodoroModeSession on PomodoroMode {
   }
 }
 
+enum PomodoroDurationPreset {
+  classic(
+    label: 'Classic',
+    shortLabel: '25 min',
+    focusDuration: Duration(minutes: 25),
+    shortBreakDuration: Duration(minutes: 5),
+    longBreakDuration: Duration(minutes: 15),
+  ),
+  deep(
+    label: 'Deep',
+    shortLabel: '35 min',
+    focusDuration: Duration(minutes: 35),
+    shortBreakDuration: Duration(minutes: 7),
+    longBreakDuration: Duration(minutes: 20),
+  ),
+  marathon(
+    label: 'Marathon',
+    shortLabel: '50 min',
+    focusDuration: Duration(minutes: 50),
+    shortBreakDuration: Duration(minutes: 10),
+    longBreakDuration: Duration(minutes: 25),
+  );
+
+  const PomodoroDurationPreset({
+    required this.label,
+    required this.shortLabel,
+    required this.focusDuration,
+    required this.shortBreakDuration,
+    required this.longBreakDuration,
+  });
+
+  final String label;
+  final String shortLabel;
+  final Duration focusDuration;
+  final Duration shortBreakDuration;
+  final Duration longBreakDuration;
+}
+
 PomodoroMode pomodoroModeFromSession(TimerSession session) {
   return pomodoroModeFromSessionId(session.id);
 }
@@ -77,15 +120,13 @@ PomodoroMode pomodoroModeFromSessionId(String sessionId) {
 
 class PomodoroController extends TimerController {
   @override
-  TimerSession get initialSession => PomodoroMode.focus.session;
+  TimerSession get initialSession => _sessionForMode(PomodoroMode.focus);
 
   @override
-  TimerSnapshot? get restoredSnapshot => ref.read(
-        pomodoroRestoredSnapshotProvider,
-      );
+  TimerSnapshot? get restoredSnapshot =>
+      ref.read(pomodoroRestoredSnapshotProvider);
 
-  AnalyticsService get _analytics =>
-      ref.read(pomodoroAnalyticsServiceProvider);
+  AnalyticsService get _analytics => ref.read(pomodoroAnalyticsServiceProvider);
 
   NotificationService get _notificationService =>
       ref.read(pomodoroNotificationServiceProvider);
@@ -97,43 +138,96 @@ class PomodoroController extends TimerController {
 
   @override
   TimerSession restoreSession(String sessionId) {
-    return pomodoroModeFromSessionId(sessionId).session;
+    return _sessionForMode(pomodoroModeFromSessionId(sessionId));
   }
 
   void selectMode(PomodoroMode mode) {
-    selectSession(mode.session);
-    unawaited(_logEventSafely(
-      pomodoroSessionChangedEvent(
-        session: mode.session,
-        changeSource: 'mode_selected',
+    selectSession(_sessionForMode(mode));
+    unawaited(
+      _logEventSafely(
+        pomodoroSessionChangedEvent(
+          session: _sessionForMode(mode),
+          changeSource: 'mode_selected',
+        ),
       ),
-    ));
+    );
+  }
+
+  void selectDurationPreset(PomodoroDurationPreset preset) {
+    ref.read(pomodoroDurationPresetProvider.notifier).state = preset;
+
+    if (!state.isRunning) {
+      selectSession(
+        _sessionForMode(pomodoroModeFromSession(state.activeSession)),
+      );
+    }
+
+    unawaited(
+      _logEventSafely(
+        AnalyticsEvent(
+          name: 'pomodoro_duration_preset_changed',
+          parameters: <String, Object?>{'preset': preset.label},
+        ),
+      ),
+    );
   }
 
   void skipToNextMode() {
     final TimerSession nextSession = resolveNextSession(state);
     skipToNextSession();
-    unawaited(_logEventSafely(
-      pomodoroSessionChangedEvent(
-        session: nextSession,
-        changeSource: 'skip_to_next_mode',
+    unawaited(
+      _logEventSafely(
+        pomodoroSessionChangedEvent(
+          session: nextSession,
+          changeSource: 'skip_to_next_mode',
+        ),
       ),
-    ));
+    );
   }
 
   @override
   TimerSession resolveNextSession(TimerState completedState) {
     final currentMode = pomodoroModeFromSession(completedState.activeSession);
-    final completedFocusSessions = completedState.stats.completedTrackedSessions;
+    final completedFocusSessions =
+        completedState.stats.completedTrackedSessions;
 
     switch (currentMode) {
       case PomodoroMode.focus:
         return completedFocusSessions % 4 == 0
-            ? PomodoroMode.longBreak.session
-            : PomodoroMode.shortBreak.session;
+            ? _sessionForMode(PomodoroMode.longBreak)
+            : _sessionForMode(PomodoroMode.shortBreak);
       case PomodoroMode.shortBreak:
       case PomodoroMode.longBreak:
-        return PomodoroMode.focus.session;
+        return _sessionForMode(PomodoroMode.focus);
+    }
+  }
+
+  TimerSession _sessionForMode(PomodoroMode mode) {
+    final PomodoroDurationPreset preset = ref.read(
+      pomodoroDurationPresetProvider,
+    );
+    switch (mode) {
+      case PomodoroMode.focus:
+        return TimerSession(
+          id: 'focus',
+          label: 'Focus',
+          duration: preset.focusDuration,
+          isTracked: true,
+        );
+      case PomodoroMode.shortBreak:
+        return TimerSession(
+          id: 'shortBreak',
+          label: 'Short break',
+          duration: preset.shortBreakDuration,
+          isTracked: false,
+        );
+      case PomodoroMode.longBreak:
+        return TimerSession(
+          id: 'longBreak',
+          label: 'Long break',
+          duration: preset.longBreakDuration,
+          isTracked: false,
+        );
     }
   }
 
@@ -178,6 +272,9 @@ class PomodoroController extends TimerController {
   ) async {
     await _logEventSafely(pomodoroSessionCompletedEvent(completedState));
     await _cancelScheduledNotification();
+    await ref
+        .read(pomodoroHabitTrackerProvider)
+        .trackCompletedSession(completedState);
   }
 
   Future<void> _cancelScheduledNotification() {

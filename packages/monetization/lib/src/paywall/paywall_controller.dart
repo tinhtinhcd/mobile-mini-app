@@ -4,10 +4,7 @@ import 'package:monetization/src/models/subscription_product.dart';
 import 'package:monetization/src/services/monetization_service.dart';
 
 class PaywallController extends ChangeNotifier {
-  PaywallController({
-    required this.service,
-    required this.content,
-  }) {
+  PaywallController({required this.service, required this.content}) {
     service.addListener(_onServiceChanged);
   }
 

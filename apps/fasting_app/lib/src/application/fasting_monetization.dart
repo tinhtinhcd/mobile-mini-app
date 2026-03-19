@@ -23,7 +23,7 @@ const PaywallContent fastingPaywallContent = PaywallContent(
   benefits: <String>[
     'Remove the light banner ads',
     'Unlock extended 18:6 and 20:4 fasting plans',
-    'Access deeper premium progress tools',
+    'Access deeper fasting insights and weekly progress tools',
   ],
   monthlyProductId: fastingMonthlyProductId,
   yearlyProductId: fastingYearlyProductId,
@@ -40,6 +40,21 @@ final fastingMonetizationServiceProvider =
 
 final fastingAdServiceProvider = Provider<AdService>((_) {
   throw UnimplementedError('fastingAdServiceProvider must be overridden.');
+});
+
+final entitlementProvider = ChangeNotifierProvider<EntitlementService>((ref) {
+  final StoreMonetizationService monetization = ref.watch(
+    fastingMonetizationServiceProvider,
+  );
+  return MonetizationEntitlementService(
+    monetizationService: monetization,
+    premiumEntitlements: const <Entitlement>{
+      Entitlement.unlimitedSessions,
+      Entitlement.advancedStats,
+      Entitlement.advancedPlans,
+      Entitlement.noAds,
+    },
+  );
 });
 
 Future<void> showFastingPaywall(BuildContext context, WidgetRef ref) {

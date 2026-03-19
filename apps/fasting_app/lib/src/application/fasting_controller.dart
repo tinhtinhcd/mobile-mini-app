@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:analytics/analytics.dart';
 import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
+import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:notifications/notifications.dart';
 import 'package:storage/storage.dart';
@@ -27,12 +28,10 @@ class FastingController extends TimerController {
   TimerSession get initialSession => FastingPlan.lean16.session;
 
   @override
-  TimerSnapshot? get restoredSnapshot => ref.read(
-        fastingRestoredSnapshotProvider,
-      );
+  TimerSnapshot? get restoredSnapshot =>
+      ref.read(fastingRestoredSnapshotProvider);
 
-  AnalyticsService get _analytics =>
-      ref.read(fastingAnalyticsServiceProvider);
+  AnalyticsService get _analytics => ref.read(fastingAnalyticsServiceProvider);
 
   NotificationService get _notificationService =>
       ref.read(fastingNotificationServiceProvider);
@@ -98,6 +97,9 @@ class FastingController extends TimerController {
   ) async {
     await _logEventSafely(fastingSessionCompletedEvent(completedState));
     await _cancelScheduledNotification();
+    await ref
+        .read(fastingHabitTrackerProvider)
+        .trackCompletedSession(completedState);
   }
 
   Future<void> _cancelScheduledNotification() {

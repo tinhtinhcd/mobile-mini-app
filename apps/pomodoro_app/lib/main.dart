@@ -5,11 +5,13 @@ import 'package:app_core/app_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:notifications/notifications.dart';
 import 'package:pomodoro_app/app_config.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
+import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:storage/storage.dart';
 import 'package:timer_engine/timer_engine.dart';
@@ -29,6 +31,7 @@ Widget createPomodoroApp({
   StoreMonetizationService? monetizationService,
   AdService? adService,
   TimerSnapshotStore? snapshotStore,
+  HabitService? habitService,
 }) {
   return _PomodoroBootstrap(
     analyticsService: analyticsService ?? DebugLoggerAnalyticsService(),
@@ -54,6 +57,7 @@ Widget createPomodoroApp({
     snapshotStore:
         snapshotStore ??
         _DeferredTimerSnapshotStore(storageKey: 'pomodoro_app.timer_snapshot'),
+    habitService: habitService ?? buildPomodoroHabitService(),
   );
 }
 
@@ -64,6 +68,7 @@ class _PomodoroBootstrap extends StatefulWidget {
     required this.monetizationService,
     required this.adService,
     required this.snapshotStore,
+    required this.habitService,
   });
 
   final AnalyticsService analyticsService;
@@ -71,6 +76,7 @@ class _PomodoroBootstrap extends StatefulWidget {
   final StoreMonetizationService monetizationService;
   final AdService adService;
   final TimerSnapshotStore snapshotStore;
+  final HabitService habitService;
 
   @override
   State<_PomodoroBootstrap> createState() => _PomodoroBootstrapState();
@@ -97,6 +103,7 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
     _analyticsBinding.attach();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _startupTiming.mark('first_frame');
+      unawaited(_initializeHabits());
       unawaited(_runTierB());
       unawaited(_runTierC());
     });
@@ -161,6 +168,12 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
     _startupTiming.mark('bootstrap_finish');
   }
 
+  Future<void> _initializeHabits() async {
+    try {
+      await widget.habitService.initialize();
+    } catch (_) {}
+  }
+
   Future<void> _initializeAnalytics() async {
     try {
       _startupTiming.mark('analytics_init_start');
@@ -223,6 +236,7 @@ class _PomodoroBootstrapState extends State<_PomodoroBootstrap> {
           return widget.notificationService;
         }),
         pomodoroSnapshotStoreProvider.overrideWith((_) => widget.snapshotStore),
+        pomodoroHabitServiceProvider.overrideWith((_) => widget.habitService),
         pomodoroRestoredSnapshotProvider.overrideWith((_) {
           return _restoredSnapshot;
         }),

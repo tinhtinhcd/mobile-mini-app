@@ -1,5 +1,3 @@
-library ui_kit;
-
 export 'src/buttons/app_buttons.dart';
 export 'src/cards/section_card.dart';
 export 'src/dialogs/confirm_dialog.dart';
@@ -13,4 +11,5 @@ export 'src/settings/settings_tile.dart';
 export 'src/stats/stat_tile.dart';
 export 'src/stats/compact_stat_strip.dart';
 export 'src/stats/weekly_activity_strip.dart';
+export 'src/stats/weekly_breakdown_list.dart';
 export 'src/timer/timer_display_card.dart';

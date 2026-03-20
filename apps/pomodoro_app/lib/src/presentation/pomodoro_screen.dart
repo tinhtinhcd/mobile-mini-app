@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
@@ -10,6 +11,7 @@ import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
 import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
+import 'package:pomodoro_app/src/presentation/pomodoro_weekly_summary_screen.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -35,9 +37,16 @@ class PomodoroScreen extends ConsumerWidget {
     final PomodoroDurationPreset durationPreset = ref.watch(
       pomodoroDurationPresetProvider,
     );
+    final HabitCoachingReport coaching = const HabitCoachingEngine().build(
+      habits: habits,
+    );
+    final bool premiumCoachingUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
     final DateTime now = DateTime.now();
     final int todaySessions = habits.todayCount;
-    final int todayMinutes = habits.todayMinutes;
+    final int weeklySessions = habits.weeklyCount;
+    final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
     final int dailyGoal = habits.dailyGoal;
     final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
@@ -210,18 +219,12 @@ class PomodoroScreen extends ConsumerWidget {
                 compact: true,
                 items: <CompactStatItem>[
                   CompactStatItem(
-                    label: l10n.commonToday,
-                    value: l10n.pomodoroTodaySessionsValue(
-                      todaySessions,
-                      dailyGoal,
-                    ),
+                    label: 'Today',
+                    value: '$todaySessions/$dailyGoal',
                   ),
+                  CompactStatItem(label: 'Week', value: '$weeklySessions'),
                   CompactStatItem(
-                    label: l10n.pomodoroFocusTime,
-                    value: '${todayMinutes}m',
-                  ),
-                  CompactStatItem(
-                    label: l10n.commonStreak,
+                    label: 'Streak',
                     value: '${streakDays}d',
                     highlight: theme.colorScheme.tertiary,
                   ),
@@ -255,6 +258,76 @@ class PomodoroScreen extends ConsumerWidget {
                     }).toList(),
               ),
               const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _CoachingStatusPill(
+                      label: coaching.progressLabel,
+                      status: coaching.progressStatus,
+                    ),
+                  ),
+                  if (premiumCoachingUnlocked &&
+                      coaching.suggestedDailyGoal != dailyGoal) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'Suggested ${coaching.suggestedDailyGoal}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                premiumCoachingUnlocked
+                    ? _premiumCoachMessage(coaching)
+                    : coaching.progressMessage,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: _coachMessageColor(theme, coaching.progressStatus),
+                  fontWeight:
+                      coaching.progressStatus == HabitProgressStatus.behind
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                ),
+              ),
+              if (premiumCoachingUnlocked &&
+                  coaching.streakMessage != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  coaching.streakMessage!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xxs),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '$weeklyMinutes min this week',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed:
+                        () => context.push('/$pomodoroWeeklySummaryPath'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                    ),
+                    child: const Text('Weekly summary'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxs),
               WeeklyActivityStrip(entries: weeklyActivity, compact: true),
             ],
           ),
@@ -367,6 +440,31 @@ class PomodoroScreen extends ConsumerWidget {
       PomodoroMode.longBreak => l10n.pomodoroModeLongBreak,
     };
   }
+
+  String _premiumCoachMessage(HabitCoachingReport coaching) {
+    if (coaching.progressStatus == HabitProgressStatus.behind) {
+      final String noun = coaching.remainingToday == 1 ? 'session' : 'sessions';
+      return 'Recovery: do ${coaching.remainingToday} focus $noun now to stay on track.';
+    }
+    if (coaching.progressStatus == HabitProgressStatus.completed) {
+      return 'Goal complete. Suggested goal tomorrow: ${coaching.suggestedDailyGoal}.';
+    }
+    if (coaching.suggestedDailyGoal != coaching.dailyGoal) {
+      return 'Suggested goal today: ${coaching.suggestedDailyGoal}.';
+    }
+    return 'You are pacing well. Keep the next focus block close to the same time.';
+  }
+
+  Color _coachMessageColor(
+    ThemeData theme,
+    HabitProgressStatus progressStatus,
+  ) {
+    return switch (progressStatus) {
+      HabitProgressStatus.behind => theme.colorScheme.error,
+      HabitProgressStatus.completed => theme.colorScheme.tertiary,
+      HabitProgressStatus.onTrack => theme.colorScheme.onSurfaceVariant,
+    };
+  }
 }
 
 class _ModeStatusBadge extends StatelessWidget {
@@ -395,6 +493,47 @@ class _ModeStatusBadge extends StatelessWidget {
         child: Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachingStatusPill extends StatelessWidget {
+  const _CoachingStatusPill({required this.label, required this.status});
+
+  final String label;
+  final HabitProgressStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Color tone = switch (status) {
+      HabitProgressStatus.behind => theme.colorScheme.error,
+      HabitProgressStatus.completed => theme.colorScheme.tertiary,
+      HabitProgressStatus.onTrack => theme.colorScheme.primary,
+    };
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          tone.withValues(alpha: 0.14),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: tone.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: tone,
             fontWeight: FontWeight.w700,
           ),
         ),

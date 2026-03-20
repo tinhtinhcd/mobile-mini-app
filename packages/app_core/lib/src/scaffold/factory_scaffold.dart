@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../navigation/app_menu.dart';
 import 'app_drawer_destination.dart';
-import 'default_drawer_destinations.dart';
 import 'app_shell.dart';
+import 'drawer_destination_resolver.dart';
 
 class FactoryScaffold extends StatelessWidget {
   const FactoryScaffold({
@@ -39,15 +39,13 @@ class FactoryScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<AppDrawerDestination> resolvedDrawerDestinations =
-        drawerDestinations.isEmpty
-            ? appMenuSpec != null
-                ? buildAppMenuDrawerDestinations(context)
-                : buildDefaultDrawerDestinations(
-                  context,
-                  appTitle: title,
-                  onSubscriptionTap: onSubscriptionTap,
-                )
-            : drawerDestinations;
+        resolveDrawerDestinations(
+          context,
+          drawerDestinations: drawerDestinations,
+          appTitle: title,
+          appMenuSpec: appMenuSpec,
+          onSubscriptionTap: onSubscriptionTap,
+        );
     final Widget content = _ScaffoldContent(
       subtitle: subtitle,
       action: action,

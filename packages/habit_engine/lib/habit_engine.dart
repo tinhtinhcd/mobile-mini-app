@@ -1,4 +1,5 @@
 export 'src/models/daily_summary.dart';
+export 'src/models/habit_coaching_report.dart';
 export 'src/models/habit_goal.dart';
 export 'src/models/habit_session.dart';
 export 'src/models/habit_session_record.dart';
@@ -6,6 +7,7 @@ export 'src/models/habit_snapshot.dart';
 export 'src/models/habit_streak.dart';
 export 'src/repositories/habit_repository.dart';
 export 'src/repositories/snapshot_habit_repository.dart';
+export 'src/services/habit_coaching_engine.dart';
 export 'src/services/habit_service.dart';
 export 'src/stores/habit_snapshot_store.dart';
 export 'src/stores/json_habit_snapshot_store.dart';

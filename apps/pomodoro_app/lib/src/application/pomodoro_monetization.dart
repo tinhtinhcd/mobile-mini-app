@@ -35,17 +35,18 @@ pomodoroCustomDurationsPolicy = UsageLimitPolicy.premiumOnly(
 const PaywallContent pomodoroPaywallContent = PaywallContent(
   title: 'Upgrade Focus Flow',
   subtitle:
-      'Go premium for an ad-free experience and the advanced focus tools around your core Pomodoro flow.',
+      'Go premium for an ad-free experience, a weekly focus score, and lightweight coaching around your core Pomodoro flow.',
   benefits: <String>[
     'Remove the light banner ads',
-    'Unlock custom focus durations and advanced session notes',
-    'See deeper weekly focus insights and consistency progress',
+    'Unlock custom focus durations and a suggested session target for today',
+    'See a weekly consistency score, trend insight, and best focus window',
+    'Get simple recommendations on when to push harder or hold steady',
     'Keep your core timer flow calm and distraction-free',
   ],
   monthlyProductId: pomodoroMonthlyProductId,
   yearlyProductId: pomodoroYearlyProductId,
   freeTierNote:
-      'Focus, pause, resume, reset, and notifications stay free. Premium is for ad-free sessions and advanced focus tools.',
+      'Focus, pause, resume, reset, and notifications stay free. Premium is for ad-free sessions, deeper insight, and simple focus coaching.',
 );
 
 final pomodoroMonetizationServiceProvider =

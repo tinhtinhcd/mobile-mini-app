@@ -1,5 +1,3 @@
-library app_core;
-
 export 'package:localization/localization.dart';
 
 export 'src/app_definition.dart';

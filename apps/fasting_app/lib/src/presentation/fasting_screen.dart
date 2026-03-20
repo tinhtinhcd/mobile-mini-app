@@ -9,10 +9,12 @@ import 'package:fasting_app/src/domain/fasting_plan.dart';
 import 'package:fasting_app/src/presentation/fasting_app_menu.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:timer_engine/timer_engine.dart';
 import 'package:ui_kit/ui_kit.dart';
+import 'package:fasting_app/src/presentation/fasting_weekly_summary_screen.dart';
 
 class FastingScreen extends ConsumerWidget {
   const FastingScreen({super.key});
@@ -30,12 +32,20 @@ class FastingScreen extends ConsumerWidget {
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(fastingAdServiceProvider);
     final HabitService habits = ref.watch(fastingHabitServiceProvider);
+    final HabitCoachingReport coaching = const HabitCoachingEngine().build(
+      habits: habits,
+    );
+    final bool premiumCoachingUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
     final FastingPlan selectedPlan = controller.selectedPlan;
+    final FastingPlan suggestedPlan = _suggestedPlan(coaching);
     final DateTime now = DateTime.now();
     final int todayFasts = habits.todayCount;
     final int dailyGoal = habits.dailyGoal;
+    final int weeklyFasts = habits.weeklyCount;
+    final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
-    final Duration? lastFastDuration = habits.lastSessionDuration;
     final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
       context,
       habits,
@@ -156,15 +166,12 @@ class FastingScreen extends ConsumerWidget {
                 compact: true,
                 items: <CompactStatItem>[
                   CompactStatItem(
-                    label: l10n.commonToday,
-                    value: l10n.fastingTodayFastsValue(todayFasts, dailyGoal),
+                    label: 'Today',
+                    value: '$todayFasts/$dailyGoal',
                   ),
+                  CompactStatItem(label: 'Week', value: '$weeklyFasts'),
                   CompactStatItem(
-                    label: l10n.fastingLastFast,
-                    value: _durationLabel(lastFastDuration),
-                  ),
-                  CompactStatItem(
-                    label: l10n.commonStreak,
+                    label: 'Streak',
                     value: '${streakDays}d',
                     highlight: theme.colorScheme.tertiary,
                   ),
@@ -198,6 +205,78 @@ class FastingScreen extends ConsumerWidget {
                     }).toList(),
               ),
               const SizedBox(height: AppSpacing.xs),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _CoachingStatusPill(
+                      label: coaching.progressLabel,
+                      status: coaching.progressStatus,
+                    ),
+                  ),
+                  if (premiumCoachingUnlocked &&
+                      coaching.suggestedDailyGoal != dailyGoal) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'Suggested ${coaching.suggestedDailyGoal}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(
+                premiumCoachingUnlocked
+                    ? _premiumCoachMessage(
+                      coaching: coaching,
+                      suggestedPlan: suggestedPlan,
+                    )
+                    : coaching.progressMessage,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: _coachMessageColor(theme, coaching.progressStatus),
+                  fontWeight:
+                      coaching.progressStatus == HabitProgressStatus.behind
+                          ? FontWeight.w600
+                          : FontWeight.w500,
+                ),
+              ),
+              if (premiumCoachingUnlocked &&
+                  coaching.streakMessage != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.xxs),
+                Text(
+                  coaching.streakMessage!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.xxs),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      '${_trackedHoursLabel(weeklyMinutes)} this week',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => context.push('/$fastingWeeklySummaryPath'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.xs,
+                      ),
+                    ),
+                    child: const Text('Weekly summary'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xxs),
               WeeklyActivityStrip(
                 entries: weeklyActivity,
                 maxValue: selectedPlan.fastingDuration.inHours.toDouble(),
@@ -291,16 +370,50 @@ class FastingScreen extends ConsumerWidget {
     return Icons.play_arrow_rounded;
   }
 
-  String _durationLabel(Duration? duration) {
-    if (duration == null) {
-      return '0h';
-    }
-    return _trackedHoursLabel(duration.inMinutes);
-  }
-
   String _trackedHoursLabel(int trackedMinutes) {
     final double trackedHours = trackedMinutes / 60;
     return '${trackedHours.toStringAsFixed(1)}h';
+  }
+
+  FastingPlan _suggestedPlan(HabitCoachingReport coaching) {
+    if (coaching.todayCount == 0 &&
+        coaching.progressStatus == HabitProgressStatus.behind) {
+      return FastingPlan.reset12;
+    }
+    if (coaching.weeklyConsistencyScore >= 90) {
+      return FastingPlan.performance18;
+    }
+    if (coaching.weeklyConsistencyScore < 55) {
+      return FastingPlan.reset12;
+    }
+    return FastingPlan.lean16;
+  }
+
+  String _premiumCoachMessage({
+    required HabitCoachingReport coaching,
+    required FastingPlan suggestedPlan,
+  }) {
+    if (coaching.progressStatus == HabitProgressStatus.behind) {
+      return 'Recovery: start a ${suggestedPlan.label} fast now to stop the slide.';
+    }
+    if (coaching.progressStatus == HabitProgressStatus.completed) {
+      return 'Goal complete. Suggested plan tomorrow: ${suggestedPlan.label}.';
+    }
+    if (coaching.suggestedDailyGoal != coaching.dailyGoal) {
+      return 'Suggested goal today: ${coaching.suggestedDailyGoal}.';
+    }
+    return 'You are pacing well. Keep the next fast close to the same plan.';
+  }
+
+  Color _coachMessageColor(
+    ThemeData theme,
+    HabitProgressStatus progressStatus,
+  ) {
+    return switch (progressStatus) {
+      HabitProgressStatus.behind => theme.colorScheme.error,
+      HabitProgressStatus.completed => theme.colorScheme.tertiary,
+      HabitProgressStatus.onTrack => theme.colorScheme.onSurfaceVariant,
+    };
   }
 
   String _planDescription(AppLocalizations l10n, FastingPlan plan) {
@@ -339,6 +452,47 @@ class _PlanBadge extends StatelessWidget {
         child: Text(
           label,
           style: theme.textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachingStatusPill extends StatelessWidget {
+  const _CoachingStatusPill({required this.label, required this.status});
+
+  final String label;
+  final HabitProgressStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final Color tone = switch (status) {
+      HabitProgressStatus.behind => theme.colorScheme.error,
+      HabitProgressStatus.completed => theme.colorScheme.tertiary,
+      HabitProgressStatus.onTrack => theme.colorScheme.primary,
+    };
+
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          tone.withValues(alpha: 0.14),
+          theme.colorScheme.surface,
+        ),
+        borderRadius: BorderRadius.circular(AppRadius.pill),
+        border: Border.all(color: tone.withValues(alpha: 0.35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.sm,
+          vertical: AppSpacing.xs,
+        ),
+        child: Text(
+          label,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: tone,
             fontWeight: FontWeight.w700,
           ),
         ),

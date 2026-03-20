@@ -1,5 +1,3 @@
-library timer_engine;
-
 export 'src/timer_controller.dart';
 export 'src/timer_snapshot.dart';
 export 'src/timer_session.dart';

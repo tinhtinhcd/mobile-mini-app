@@ -7,6 +7,7 @@ import 'package:fasting_app/src/domain/fasting_plan.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habit_engine/habit_engine.dart';
+import 'package:monetization/monetization.dart';
 import 'package:ui_kit/ui_kit.dart';
 
 Future<bool> _requestFastingNotifications(BuildContext context) {
@@ -36,9 +37,27 @@ class FastingPremiumScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AppLocalizations l10n = context.l10n;
     final HabitService habits = ref.watch(fastingHabitServiceProvider);
-    final int weeklyMinutes = habits.weeklyMinutes;
-    final int weeklyCount = habits.weeklyCount;
+    final EntitlementService entitlements = ref.watch(entitlementProvider);
+    final bool advancedInsightsUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
+    final bool advancedPlansUnlocked = entitlements.has(
+      Entitlement.advancedPlans,
+    );
+    final HabitCoachingReport coaching = const HabitCoachingEngine().build(
+      habits: habits,
+    );
+    final int weeklyMinutes = coaching.weeklyMinutes;
+    final int weeklyCount = coaching.weeklyCount;
     final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(7);
+    final List<HabitSessionRecord> recentEntries = habits.recordsForLastDays(
+      21,
+    );
+    final FastingPlan suggestedPlan = _suggestedPlan(
+      coaching: coaching,
+      weeklyCount: weeklyCount,
+      weeklyMinutes: weeklyMinutes,
+    );
 
     return FactoryScaffold(
       title: context.l10n.shellSubscriptionPlan,
@@ -55,61 +74,93 @@ class FastingPremiumScreen extends ConsumerWidget {
             title: l10n.fastingAdvancedPlansTitle,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children:
-                  <FastingPlan>[
-                    FastingPlan.performance18,
-                    FastingPlan.deep20,
-                  ].map((FastingPlan plan) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          const Icon(Icons.schedule_rounded, size: 18),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              '${plan.label} • ${plan.eatingWindowLabel} • ${plan.description}',
-                            ),
+              children: <Widget>[
+                Text(
+                  advancedPlansUnlocked
+                      ? 'Suggested today: ${coaching.suggestedDailyGoal} fast with the ${suggestedPlan.label} plan.'
+                      : 'Premium recommends the right plan and daily fasting target from your recent rhythm.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                ...<FastingPlan>[
+                  FastingPlan.performance18,
+                  FastingPlan.deep20,
+                ].map((FastingPlan plan) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const Icon(Icons.schedule_rounded, size: 18),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            '${plan.label} • ${plan.eatingWindowLabel} • ${plan.description}',
                           ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
           SectionCard(
             title: l10n.fastingDeeperInsights,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                CompactStatStrip(
-                  items: <CompactStatItem>[
-                    CompactStatItem(
-                      label: l10n.commonToday,
-                      value: '${habits.todayCount}/${habits.dailyGoal}',
+            child:
+                advancedInsightsUnlocked
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        CompactStatStrip(
+                          items: <CompactStatItem>[
+                            CompactStatItem(
+                              label: 'Longest fast',
+                              value: _longestFastLabel(weeklyEntries),
+                            ),
+                            CompactStatItem(
+                              label: 'Consistency',
+                              value: '${coaching.weeklyConsistencyScore}%',
+                            ),
+                            CompactStatItem(
+                              label: 'Pattern',
+                              value: _dominantPatternLabel(recentEntries),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(
+                          coaching.trendInsight,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          coaching.patternInsight,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          coaching.goalInsight,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          _fastingRecommendation(
+                            coaching: coaching,
+                            suggestedPlan: suggestedPlan,
+                          ),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    )
+                    : PremiumCalloutCard(
+                      title: 'Unlock your fasting coach',
+                      subtitle: _premiumPreviewSubtitle(
+                        coaching: coaching,
+                        suggestedPlan: suggestedPlan,
+                      ),
                     ),
-                    CompactStatItem(
-                      label: l10n.fastingLongestFast,
-                      value: _longestFastLabel(weeklyEntries),
-                    ),
-                    CompactStatItem(
-                      label: l10n.commonStreak,
-                      value: '${habits.currentStreak}d',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.fastingWeeklyConsistencySummary(
-                    _activeDays(weeklyEntries),
-                    _trackedHoursLabel(weeklyMinutes),
-                  ),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: AppSpacing.lg),
           ...fastingPaywallContent.benefits.map(
@@ -130,17 +181,20 @@ class FastingPremiumScreen extends ConsumerWidget {
           ),
           const SizedBox(height: AppSpacing.lg),
           Text(
-            weeklyCount == 0
-                ? fastingPaywallContent.freeTierNote
-                : l10n.fastingWeeklyConsistencySummary(
-                  _activeDays(weeklyEntries),
+            advancedInsightsUnlocked
+                ? l10n.fastingWeeklyConsistencySummary(
+                  coaching.activeDays,
                   _trackedHoursLabel(weeklyMinutes),
-                ),
+                )
+                : fastingPaywallContent.freeTierNote,
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: AppSpacing.lg),
           AppPrimaryButton(
-            label: 'View subscription options',
+            label:
+                advancedInsightsUnlocked
+                    ? 'Manage subscription'
+                    : 'View subscription options',
             onPressed:
                 () => openFastingPaywall(
                   context: context,
@@ -151,19 +205,6 @@ class FastingPremiumScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  int _activeDays(List<HabitSessionRecord> entries) {
-    return entries
-        .map(
-          (HabitSessionRecord entry) => DateTime(
-            entry.completedAtLocal.year,
-            entry.completedAtLocal.month,
-            entry.completedAtLocal.day,
-          ),
-        )
-        .toSet()
-        .length;
   }
 
   String _trackedHoursLabel(int trackedMinutes) {
@@ -179,5 +220,69 @@ class FastingPremiumScreen extends ConsumerWidget {
         .map((HabitSessionRecord entry) => entry.durationMinutes)
         .reduce((int a, int b) => a > b ? a : b);
     return _trackedHoursLabel(longestMinutes);
+  }
+
+  FastingPlan _suggestedPlan({
+    required HabitCoachingReport coaching,
+    required int weeklyCount,
+    required int weeklyMinutes,
+  }) {
+    if (weeklyCount == 0) {
+      return FastingPlan.reset12;
+    }
+
+    final double averageHours = (weeklyMinutes / weeklyCount) / 60;
+    if (coaching.weeklyConsistencyScore >= 92 && averageHours >= 19) {
+      return FastingPlan.deep20;
+    }
+    if (coaching.weeklyConsistencyScore >= 78 && averageHours >= 17) {
+      return FastingPlan.performance18;
+    }
+    if (coaching.weeklyConsistencyScore < 55) {
+      return FastingPlan.reset12;
+    }
+    return FastingPlan.lean16;
+  }
+
+  String _dominantPatternLabel(List<HabitSessionRecord> entries) {
+    if (entries.isEmpty) {
+      return 'Not enough data';
+    }
+
+    final Map<String, int> plans = <String, int>{
+      '12:12': 0,
+      '16:8': 0,
+      '18:6': 0,
+      '20:4': 0,
+    };
+
+    for (final HabitSessionRecord entry in entries) {
+      final double hours = entry.durationMinutes / 60;
+      if (hours < 14) {
+        plans['12:12'] = plans['12:12']! + 1;
+      } else if (hours < 17) {
+        plans['16:8'] = plans['16:8']! + 1;
+      } else if (hours < 19) {
+        plans['18:6'] = plans['18:6']! + 1;
+      } else {
+        plans['20:4'] = plans['20:4']! + 1;
+      }
+    }
+
+    return plans.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+  }
+
+  String _premiumPreviewSubtitle({
+    required HabitCoachingReport coaching,
+    required FastingPlan suggestedPlan,
+  }) {
+    return 'Premium turns your history into a weekly consistency score, a suggested goal of ${coaching.suggestedDailyGoal}, and a ${suggestedPlan.label} plan recommendation.';
+  }
+
+  String _fastingRecommendation({
+    required HabitCoachingReport coaching,
+    required FastingPlan suggestedPlan,
+  }) {
+    return 'Recommended today: ${coaching.suggestedDailyGoal} fast with ${suggestedPlan.label}. Keep the plan steady before stretching longer.';
   }
 }

@@ -19,17 +19,18 @@ const UsageLimitPolicy fastingPlanPolicy = UsageLimitPolicy(
 const PaywallContent fastingPaywallContent = PaywallContent(
   title: 'Upgrade Fasting Flow',
   subtitle:
-      'Go premium for an ad-free experience, a weekly consistency score, and lightweight fasting guidance.',
+      'Go premium for an ad-free experience and a fasting coach that tells you when you are behind, how to recover, and what your week is teaching you.',
   benefits: <String>[
     'Remove the light banner ads',
     'Unlock extended 18:6 and 20:4 fasting plans',
-    'Access a weekly consistency score, pattern insight, and trend guidance',
-    'Get a suggested daily fasting goal and plan recommendation',
+    'Access on-track or behind status with recovery guidance',
+    'See a weekly consistency score, pattern review, and trend guidance',
+    'Get a suggested fasting goal and plan when consistency slips',
   ],
   monthlyProductId: fastingMonthlyProductId,
   yearlyProductId: fastingYearlyProductId,
   freeTierNote:
-      'Starting, pausing, resuming, resetting, and core fasting plans stay free. Premium is for advanced plans, deeper insight, and simple fasting coaching.',
+      'Starting, pausing, resuming, resetting, and core fasting plans stay free. Premium is for accountability, recovery guidance, weekly review, and advanced plans.',
 );
 
 final fastingMonetizationServiceProvider =

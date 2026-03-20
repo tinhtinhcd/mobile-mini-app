@@ -1,0 +1,19 @@
+name: discipline_engine
+description: Reusable rule-based discipline layer built on top of habit tracking.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+  flutter: '>=3.29.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  habit_engine: ^0.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter

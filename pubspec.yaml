@@ -10,6 +10,7 @@ workspace:
   - packages/app_core
   - packages/ui_kit
   - packages/analytics
+  - packages/discipline_engine
   - packages/habit_engine
   - packages/monetization
   - packages/notifications

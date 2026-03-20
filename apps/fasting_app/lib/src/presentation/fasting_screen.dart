@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:app_core/app_core.dart';
+import 'package:discipline_engine/discipline_engine.dart';
 import 'package:fasting_app/src/application/fasting_analytics.dart';
 import 'package:fasting_app/src/application/fasting_controller.dart';
+import 'package:fasting_app/src/application/fasting_discipline_rules.dart';
 import 'package:fasting_app/src/application/fasting_habits.dart';
 import 'package:fasting_app/src/application/fasting_monetization.dart';
 import 'package:fasting_app/src/domain/fasting_plan.dart';
@@ -20,6 +22,9 @@ class FastingScreen extends ConsumerWidget {
   const FastingScreen({super.key});
 
   static const List<int> _dailyGoalOptions = <int>[1, 2];
+  static const DisciplineService _disciplineService = DisciplineService();
+  static const FastingDisciplineRules _disciplineRules =
+      FastingDisciplineRules();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -32,6 +37,28 @@ class FastingScreen extends ConsumerWidget {
     final EntitlementService entitlements = ref.watch(entitlementProvider);
     final AdService adService = ref.read(fastingAdServiceProvider);
     final HabitService habits = ref.watch(fastingHabitServiceProvider);
+    final DisciplineGoal disciplineGoal = _disciplineService.readGoal(
+      habits: habits,
+      rules: _disciplineRules,
+      suggestedTarget: habits.dailyGoal,
+    );
+    final DisciplineStatus disciplineStatus = _disciplineService.computeStatus(
+      goal: disciplineGoal,
+      rules: _disciplineRules,
+    );
+    final DisciplinePressure disciplinePressure = _disciplineService
+        .computePressure(
+          habits: habits,
+          goal: disciplineGoal,
+          status: disciplineStatus,
+        );
+    final RecoverySuggestion? recoverySuggestion = _disciplineService
+        .computeRecoverySuggestion(
+          goal: disciplineGoal,
+          status: disciplineStatus,
+          pressure: disciplinePressure,
+          rules: _disciplineRules,
+        );
     final HabitCoachingReport coaching = const HabitCoachingEngine().build(
       habits: habits,
     );
@@ -39,7 +66,11 @@ class FastingScreen extends ConsumerWidget {
       Entitlement.advancedStats,
     );
     final FastingPlan selectedPlan = controller.selectedPlan;
-    final FastingPlan suggestedPlan = _suggestedPlan(coaching);
+    final FastingPlan suggestedPlan = _suggestedPlan(
+      coaching: coaching,
+      disciplineGoal: disciplineGoal,
+      disciplineStatus: disciplineStatus,
+    );
     final DateTime now = DateTime.now();
     final int todayFasts = habits.todayCount;
     final int dailyGoal = habits.dailyGoal;
@@ -209,15 +240,14 @@ class FastingScreen extends ConsumerWidget {
                 children: <Widget>[
                   Expanded(
                     child: _CoachingStatusPill(
-                      label: coaching.progressLabel,
-                      status: coaching.progressStatus,
+                      label: disciplineStatus.label,
+                      status: disciplineStatus.type,
                     ),
                   ),
-                  if (premiumCoachingUnlocked &&
-                      coaching.suggestedDailyGoal != dailyGoal) ...<Widget>[
+                  if (premiumCoachingUnlocked) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      'Suggested ${coaching.suggestedDailyGoal}',
+                      '${coaching.weeklyConsistencyScore}% week',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.primary,
@@ -227,26 +257,44 @@ class FastingScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.xxs),
+              if (premiumCoachingUnlocked &&
+                  disciplinePressure.warningMessage != null) ...<Widget>[
+                Text(
+                  '${disciplinePressure.warningMessage!} Gap: ${disciplinePressure.gapToGoal}.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+              ],
               Text(
                 premiumCoachingUnlocked
                     ? _premiumCoachMessage(
-                      coaching: coaching,
+                      disciplineGoal: disciplineGoal,
+                      disciplineStatus: disciplineStatus,
+                      recoverySuggestion: recoverySuggestion,
                       suggestedPlan: suggestedPlan,
                     )
-                    : coaching.progressMessage,
+                    : _basicGoalMessage(disciplineGoal, disciplineStatus),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: _coachMessageColor(theme, coaching.progressStatus),
+                  color:
+                      premiumCoachingUnlocked
+                          ? _coachMessageColor(theme, disciplineStatus.type)
+                          : theme.colorScheme.onSurfaceVariant,
                   fontWeight:
-                      coaching.progressStatus == HabitProgressStatus.behind
+                      premiumCoachingUnlocked &&
+                              disciplineStatus.type ==
+                                  DisciplineStatusType.behind
                           ? FontWeight.w600
                           : FontWeight.w500,
                 ),
               ),
               if (premiumCoachingUnlocked &&
-                  coaching.streakMessage != null) ...<Widget>[
+                  disciplinePressure.streakMessage != null) ...<Widget>[
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  coaching.streakMessage!,
+                  disciplinePressure.streakMessage!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
@@ -375,9 +423,13 @@ class FastingScreen extends ConsumerWidget {
     return '${trackedHours.toStringAsFixed(1)}h';
   }
 
-  FastingPlan _suggestedPlan(HabitCoachingReport coaching) {
-    if (coaching.todayCount == 0 &&
-        coaching.progressStatus == HabitProgressStatus.behind) {
+  FastingPlan _suggestedPlan({
+    required HabitCoachingReport coaching,
+    required DisciplineGoal disciplineGoal,
+    required DisciplineStatus disciplineStatus,
+  }) {
+    if (disciplineGoal.completed == 0 &&
+        disciplineStatus.type == DisciplineStatusType.behind) {
       return FastingPlan.reset12;
     }
     if (coaching.weeklyConsistencyScore >= 90) {
@@ -390,29 +442,43 @@ class FastingScreen extends ConsumerWidget {
   }
 
   String _premiumCoachMessage({
-    required HabitCoachingReport coaching,
+    required DisciplineGoal disciplineGoal,
+    required DisciplineStatus disciplineStatus,
+    required RecoverySuggestion? recoverySuggestion,
     required FastingPlan suggestedPlan,
   }) {
-    if (coaching.progressStatus == HabitProgressStatus.behind) {
-      return 'Recovery: start a ${suggestedPlan.label} fast now to stop the slide.';
+    if (disciplineStatus.type == DisciplineStatusType.behind &&
+        recoverySuggestion != null) {
+      return 'Recovery: ${recoverySuggestion.message}';
     }
-    if (coaching.progressStatus == HabitProgressStatus.completed) {
+    if (disciplineStatus.type == DisciplineStatusType.completed) {
       return 'Goal complete. Suggested plan tomorrow: ${suggestedPlan.label}.';
     }
-    if (coaching.suggestedDailyGoal != coaching.dailyGoal) {
-      return 'Suggested goal today: ${coaching.suggestedDailyGoal}.';
+    if (disciplineGoal.suggestedTarget != disciplineGoal.target) {
+      return 'Suggested goal today: ${disciplineGoal.suggestedTarget}.';
     }
     return 'You are pacing well. Keep the next fast close to the same plan.';
   }
 
+  String _basicGoalMessage(
+    DisciplineGoal disciplineGoal,
+    DisciplineStatus disciplineStatus,
+  ) {
+    if (disciplineStatus.type == DisciplineStatusType.completed) {
+      return 'Daily goal reached. Keep the streak moving tomorrow.';
+    }
+    return 'Finish your daily goal to keep progress moving.';
+  }
+
   Color _coachMessageColor(
     ThemeData theme,
-    HabitProgressStatus progressStatus,
+    DisciplineStatusType progressStatus,
   ) {
     return switch (progressStatus) {
-      HabitProgressStatus.behind => theme.colorScheme.error,
-      HabitProgressStatus.completed => theme.colorScheme.tertiary,
-      HabitProgressStatus.onTrack => theme.colorScheme.onSurfaceVariant,
+      DisciplineStatusType.behind => theme.colorScheme.error,
+      DisciplineStatusType.completed => theme.colorScheme.tertiary,
+      DisciplineStatusType.notStarted => theme.colorScheme.onSurfaceVariant,
+      DisciplineStatusType.onTrack => theme.colorScheme.onSurfaceVariant,
     };
   }
 
@@ -464,15 +530,16 @@ class _CoachingStatusPill extends StatelessWidget {
   const _CoachingStatusPill({required this.label, required this.status});
 
   final String label;
-  final HabitProgressStatus status;
+  final DisciplineStatusType status;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color tone = switch (status) {
-      HabitProgressStatus.behind => theme.colorScheme.error,
-      HabitProgressStatus.completed => theme.colorScheme.tertiary,
-      HabitProgressStatus.onTrack => theme.colorScheme.primary,
+      DisciplineStatusType.behind => theme.colorScheme.error,
+      DisciplineStatusType.completed => theme.colorScheme.tertiary,
+      DisciplineStatusType.notStarted => theme.colorScheme.outline,
+      DisciplineStatusType.onTrack => theme.colorScheme.primary,
     };
 
     return DecoratedBox(

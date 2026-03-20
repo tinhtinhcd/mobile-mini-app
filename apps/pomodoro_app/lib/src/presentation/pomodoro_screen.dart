@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_core/app_core.dart';
+import 'package:discipline_engine/discipline_engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
+import 'package:pomodoro_app/src/application/pomodoro_discipline_rules.dart';
 import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
@@ -19,6 +21,9 @@ class PomodoroScreen extends ConsumerWidget {
   const PomodoroScreen({super.key});
 
   static const List<int> _dailyGoalOptions = <int>[2, 4, 6];
+  static const DisciplineService _disciplineService = DisciplineService();
+  static const PomodoroDisciplineRules _disciplineRules =
+      PomodoroDisciplineRules();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,6 +42,28 @@ class PomodoroScreen extends ConsumerWidget {
     final PomodoroDurationPreset durationPreset = ref.watch(
       pomodoroDurationPresetProvider,
     );
+    final DisciplineGoal disciplineGoal = _disciplineService.readGoal(
+      habits: habits,
+      rules: _disciplineRules,
+      suggestedTarget: habits.dailyGoal,
+    );
+    final DisciplineStatus disciplineStatus = _disciplineService.computeStatus(
+      goal: disciplineGoal,
+      rules: _disciplineRules,
+    );
+    final DisciplinePressure disciplinePressure = _disciplineService
+        .computePressure(
+          habits: habits,
+          goal: disciplineGoal,
+          status: disciplineStatus,
+        );
+    final RecoverySuggestion? recoverySuggestion = _disciplineService
+        .computeRecoverySuggestion(
+          goal: disciplineGoal,
+          status: disciplineStatus,
+          pressure: disciplinePressure,
+          rules: _disciplineRules,
+        );
     final HabitCoachingReport coaching = const HabitCoachingEngine().build(
       habits: habits,
     );
@@ -262,15 +289,14 @@ class PomodoroScreen extends ConsumerWidget {
                 children: <Widget>[
                   Expanded(
                     child: _CoachingStatusPill(
-                      label: coaching.progressLabel,
-                      status: coaching.progressStatus,
+                      label: disciplineStatus.label,
+                      status: disciplineStatus.type,
                     ),
                   ),
-                  if (premiumCoachingUnlocked &&
-                      coaching.suggestedDailyGoal != dailyGoal) ...<Widget>[
+                  if (premiumCoachingUnlocked) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      'Suggested ${coaching.suggestedDailyGoal}',
+                      '${coaching.weeklyConsistencyScore}% week',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.primary,
@@ -280,23 +306,43 @@ class PomodoroScreen extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.xxs),
+              if (premiumCoachingUnlocked &&
+                  disciplinePressure.warningMessage != null) ...<Widget>[
+                Text(
+                  '${disciplinePressure.warningMessage!} Gap: ${disciplinePressure.gapToGoal}.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+              ],
               Text(
                 premiumCoachingUnlocked
-                    ? _premiumCoachMessage(coaching)
-                    : coaching.progressMessage,
+                    ? _premiumCoachMessage(
+                      disciplineGoal: disciplineGoal,
+                      disciplineStatus: disciplineStatus,
+                      recoverySuggestion: recoverySuggestion,
+                    )
+                    : _basicGoalMessage(disciplineGoal, disciplineStatus),
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: _coachMessageColor(theme, coaching.progressStatus),
+                  color:
+                      premiumCoachingUnlocked
+                          ? _coachMessageColor(theme, disciplineStatus.type)
+                          : theme.colorScheme.onSurfaceVariant,
                   fontWeight:
-                      coaching.progressStatus == HabitProgressStatus.behind
+                      premiumCoachingUnlocked &&
+                              disciplineStatus.type ==
+                                  DisciplineStatusType.behind
                           ? FontWeight.w600
                           : FontWeight.w500,
                 ),
               ),
               if (premiumCoachingUnlocked &&
-                  coaching.streakMessage != null) ...<Widget>[
+                  disciplinePressure.streakMessage != null) ...<Widget>[
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  coaching.streakMessage!,
+                  disciplinePressure.streakMessage!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
@@ -441,28 +487,43 @@ class PomodoroScreen extends ConsumerWidget {
     };
   }
 
-  String _premiumCoachMessage(HabitCoachingReport coaching) {
-    if (coaching.progressStatus == HabitProgressStatus.behind) {
-      final String noun = coaching.remainingToday == 1 ? 'session' : 'sessions';
-      return 'Recovery: do ${coaching.remainingToday} focus $noun now to stay on track.';
+  String _premiumCoachMessage({
+    required DisciplineGoal disciplineGoal,
+    required DisciplineStatus disciplineStatus,
+    required RecoverySuggestion? recoverySuggestion,
+  }) {
+    if (disciplineStatus.type == DisciplineStatusType.behind &&
+        recoverySuggestion != null) {
+      return 'Recovery: ${recoverySuggestion.message}';
     }
-    if (coaching.progressStatus == HabitProgressStatus.completed) {
-      return 'Goal complete. Suggested goal tomorrow: ${coaching.suggestedDailyGoal}.';
+    if (disciplineStatus.type == DisciplineStatusType.completed) {
+      return 'Goal complete. Suggested goal tomorrow: ${disciplineGoal.suggestedTarget}.';
     }
-    if (coaching.suggestedDailyGoal != coaching.dailyGoal) {
-      return 'Suggested goal today: ${coaching.suggestedDailyGoal}.';
+    if (disciplineGoal.suggestedTarget != disciplineGoal.target) {
+      return 'Suggested goal today: ${disciplineGoal.suggestedTarget}.';
     }
     return 'You are pacing well. Keep the next focus block close to the same time.';
   }
 
+  String _basicGoalMessage(
+    DisciplineGoal disciplineGoal,
+    DisciplineStatus disciplineStatus,
+  ) {
+    if (disciplineStatus.type == DisciplineStatusType.completed) {
+      return 'Daily goal reached. Keep the streak moving tomorrow.';
+    }
+    return 'Finish your daily goal to keep progress moving.';
+  }
+
   Color _coachMessageColor(
     ThemeData theme,
-    HabitProgressStatus progressStatus,
+    DisciplineStatusType progressStatus,
   ) {
     return switch (progressStatus) {
-      HabitProgressStatus.behind => theme.colorScheme.error,
-      HabitProgressStatus.completed => theme.colorScheme.tertiary,
-      HabitProgressStatus.onTrack => theme.colorScheme.onSurfaceVariant,
+      DisciplineStatusType.behind => theme.colorScheme.error,
+      DisciplineStatusType.completed => theme.colorScheme.tertiary,
+      DisciplineStatusType.notStarted => theme.colorScheme.onSurfaceVariant,
+      DisciplineStatusType.onTrack => theme.colorScheme.onSurfaceVariant,
     };
   }
 }
@@ -505,15 +566,16 @@ class _CoachingStatusPill extends StatelessWidget {
   const _CoachingStatusPill({required this.label, required this.status});
 
   final String label;
-  final HabitProgressStatus status;
+  final DisciplineStatusType status;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color tone = switch (status) {
-      HabitProgressStatus.behind => theme.colorScheme.error,
-      HabitProgressStatus.completed => theme.colorScheme.tertiary,
-      HabitProgressStatus.onTrack => theme.colorScheme.primary,
+      DisciplineStatusType.behind => theme.colorScheme.error,
+      DisciplineStatusType.completed => theme.colorScheme.tertiary,
+      DisciplineStatusType.notStarted => theme.colorScheme.outline,
+      DisciplineStatusType.onTrack => theme.colorScheme.primary,
     };
 
     return DecoratedBox(

@@ -16,6 +16,7 @@ dependencies:
   go_router: ^17.1.0
   app_core: ^0.1.0
   analytics: ^0.1.0
+  discipline_engine: ^0.1.0
   habit_engine: ^0.1.0
   monetization: ^0.1.0
   notifications: ^0.1.0

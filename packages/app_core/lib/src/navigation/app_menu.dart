@@ -1,4 +1,4 @@
-import 'package:app_core/src/scaffold/app_shell.dart';
+import 'package:app_core/src/scaffold/app_drawer_destination.dart';
 import 'package:app_core/src/scaffold/factory_scaffold.dart';
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
@@ -75,37 +75,36 @@ List<RouteBase> buildAppMenuRoutes({
   ];
 }
 
-List<AppDrawerItem> buildAppMenuDrawerItems(
-  BuildContext context, {
-  required AppMenuSpec spec,
-}) {
+List<AppDrawerDestination> buildAppMenuDrawerDestinations(
+  BuildContext context,
+) {
   final AppLocalizations l10n = context.l10n;
 
-  return <AppDrawerItem>[
-    AppDrawerItem(
+  return <AppDrawerDestination>[
+    AppDrawerDestination.action(
       label: l10n.shellAboutApp,
       icon: Icons.info_outline_rounded,
-      onTap: () => context.go('/$appMenuAboutPath'),
+      onSelected: (_) => context.go('/$appMenuAboutPath'),
     ),
-    AppDrawerItem(
+    AppDrawerDestination.action(
       label: l10n.shellSettingsConfig,
       icon: Icons.settings_outlined,
-      onTap: () => context.go('/$appMenuSettingsPath'),
+      onSelected: (_) => context.go('/$appMenuSettingsPath'),
     ),
-    AppDrawerItem(
+    AppDrawerDestination.action(
       label: l10n.shellSubscriptionPlan,
       icon: Icons.workspace_premium_outlined,
-      onTap: () => context.go('/$appMenuPremiumPath'),
+      onSelected: (_) => context.go('/$appMenuPremiumPath'),
     ),
-    AppDrawerItem(
+    AppDrawerDestination.action(
       label: l10n.shellPrivacy,
       icon: Icons.privacy_tip_outlined,
-      onTap: () => context.go('/$appMenuPrivacyPath'),
+      onSelected: (_) => context.go('/$appMenuPrivacyPath'),
     ),
-    AppDrawerItem(
+    AppDrawerDestination.action(
       label: l10n.shellFeedback,
       icon: Icons.feedback_outlined,
-      onTap: () => context.go('/$appMenuFeedbackPath'),
+      onSelected: (_) => context.go('/$appMenuFeedbackPath'),
     ),
   ];
 }

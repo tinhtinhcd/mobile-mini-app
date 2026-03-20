@@ -1,8 +1,9 @@
 import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
-import 'package:localization/localization.dart';
 
 import '../navigation/app_menu.dart';
+import 'app_drawer_destination.dart';
+import 'default_drawer_destinations.dart';
 import 'app_shell.dart';
 
 class FactoryScaffold extends StatelessWidget {
@@ -15,7 +16,7 @@ class FactoryScaffold extends StatelessWidget {
     this.headerTrailing,
     this.scrollable = true,
     this.footer,
-    this.drawerItems = const <AppDrawerItem>[],
+    this.drawerDestinations = const <AppDrawerDestination>[],
     this.onSubscriptionTap,
     this.appMenuSpec,
     this.expandBody = false,
@@ -29,7 +30,7 @@ class FactoryScaffold extends StatelessWidget {
   final Widget? headerTrailing;
   final bool scrollable;
   final Widget? footer;
-  final List<AppDrawerItem> drawerItems;
+  final List<AppDrawerDestination> drawerDestinations;
   final VoidCallback? onSubscriptionTap;
   final AppMenuSpec? appMenuSpec;
   final bool expandBody;
@@ -37,16 +38,16 @@ class FactoryScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<AppDrawerItem> resolvedDrawerItems =
-        drawerItems.isEmpty
+    final List<AppDrawerDestination> resolvedDrawerDestinations =
+        drawerDestinations.isEmpty
             ? appMenuSpec != null
-                ? buildAppMenuDrawerItems(context, spec: appMenuSpec!)
-                : _buildDefaultDrawerItems(
+                ? buildAppMenuDrawerDestinations(context)
+                : buildDefaultDrawerDestinations(
                   context,
-                  title: title,
+                  appTitle: title,
                   onSubscriptionTap: onSubscriptionTap,
                 )
-            : drawerItems;
+            : drawerDestinations;
     final Widget content = _ScaffoldContent(
       subtitle: subtitle,
       action: action,
@@ -58,106 +59,10 @@ class FactoryScaffold extends StatelessWidget {
       title: title,
       headerTrailing: headerTrailing,
       footer: footer,
-      drawerItems: resolvedDrawerItems,
+      drawerDestinations: resolvedDrawerDestinations,
       scrollable: scrollable,
       contentPadding: contentPadding,
       body: content,
-    );
-  }
-
-  List<AppDrawerItem> _buildDefaultDrawerItems(
-    BuildContext context, {
-    required String title,
-    VoidCallback? onSubscriptionTap,
-  }) {
-    final AppLocalizations l10n = context.l10n;
-
-    return <AppDrawerItem>[
-      AppDrawerItem(
-        label: l10n.shellAboutApp,
-        icon: Icons.info_outline_rounded,
-        onTap:
-            () => _showPlaceholderSheet(
-              context,
-              title: l10n.shellAboutTitle(title),
-              description: l10n.shellAboutDescription,
-            ),
-      ),
-      AppDrawerItem(
-        label: l10n.shellSettingsConfig,
-        icon: Icons.settings_outlined,
-        onTap:
-            () => _showPlaceholderSheet(
-              context,
-              title: l10n.shellSettingsTitle,
-              description: l10n.shellSettingsDescription,
-            ),
-      ),
-      AppDrawerItem(
-        label: l10n.shellSubscriptionPlan,
-        icon: Icons.workspace_premium_outlined,
-        onTap:
-            onSubscriptionTap ??
-            () => _showPlaceholderSheet(
-              context,
-              title: l10n.shellSubscriptionPlan,
-              description: l10n.shellSubscriptionDescription,
-            ),
-      ),
-      AppDrawerItem(
-        label: l10n.shellPrivacy,
-        icon: Icons.privacy_tip_outlined,
-        onTap:
-            () => _showPlaceholderSheet(
-              context,
-              title: l10n.shellPrivacy,
-              description: l10n.shellPrivacyDescription,
-            ),
-      ),
-      AppDrawerItem(
-        label: l10n.shellFeedback,
-        icon: Icons.feedback_outlined,
-        onTap:
-            () => _showPlaceholderSheet(
-              context,
-              title: l10n.shellFeedback,
-              description: l10n.shellFeedbackDescription,
-            ),
-      ),
-    ];
-  }
-
-  void _showPlaceholderSheet(
-    BuildContext context, {
-    required String title,
-    required String description,
-  }) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (BuildContext context) {
-        final ThemeData theme = Theme.of(context);
-        return SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.lg,
-              AppSpacing.sm,
-              AppSpacing.lg,
-              AppSpacing.lg,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(title, style: theme.textTheme.titleLarge),
-                const SizedBox(height: AppSpacing.sm),
-                Text(description, style: theme.textTheme.bodyMedium),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

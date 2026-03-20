@@ -2,17 +2,7 @@ import 'package:design_system/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:localization/localization.dart';
 
-class AppDrawerItem {
-  const AppDrawerItem({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-}
+import 'app_drawer_destination.dart';
 
 class AppHeader extends StatelessWidget {
   const AppHeader({
@@ -84,7 +74,7 @@ class AppShell extends StatelessWidget {
     required this.body,
     this.headerTrailing,
     this.footer,
-    this.drawerItems = const <AppDrawerItem>[],
+    this.drawerDestinations = const <AppDrawerDestination>[],
     this.scrollable = true,
     this.contentMaxWidth = 720,
     this.contentPadding,
@@ -94,7 +84,7 @@ class AppShell extends StatelessWidget {
   final Widget body;
   final Widget? headerTrailing;
   final Widget? footer;
-  final List<AppDrawerItem> drawerItems;
+  final List<AppDrawerDestination> drawerDestinations;
   final bool scrollable;
   final double contentMaxWidth;
   final EdgeInsetsGeometry? contentPadding;
@@ -102,11 +92,14 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
-    final bool hasDrawer = drawerItems.isNotEmpty;
+    final bool hasDrawer = drawerDestinations.isNotEmpty;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
-      drawer: hasDrawer ? AppDrawer(title: title, items: drawerItems) : null,
+      drawer:
+          hasDrawer
+              ? AppDrawer(title: title, destinations: drawerDestinations)
+              : null,
       body: Column(
         children: <Widget>[
           SafeArea(
@@ -135,10 +128,10 @@ class AppShell extends StatelessWidget {
 }
 
 class AppDrawer extends StatelessWidget {
-  const AppDrawer({super.key, required this.title, required this.items});
+  const AppDrawer({super.key, required this.title, required this.destinations});
 
   final String title;
-  final List<AppDrawerItem> items;
+  final List<AppDrawerDestination> destinations;
 
   @override
   Widget build(BuildContext context) {
@@ -170,7 +163,8 @@ class AppDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            for (final AppDrawerItem item in items) ...<Widget>[
+            for (final AppDrawerDestination destination
+                in destinations) ...<Widget>[
               ListTile(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppRadius.medium),
@@ -179,11 +173,11 @@ class AppDrawer extends StatelessWidget {
                   horizontal: AppSpacing.sm,
                   vertical: AppSpacing.xxs,
                 ),
-                leading: Icon(item.icon, size: AppIconSize.large),
-                title: Text(item.label),
+                leading: Icon(destination.icon, size: AppIconSize.large),
+                title: Text(destination.label),
                 onTap: () {
                   Navigator.of(context).pop();
-                  item.onTap();
+                  destination.select(context);
                 },
               ),
               const SizedBox(height: AppSpacing.xs),

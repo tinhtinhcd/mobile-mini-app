@@ -9,6 +9,7 @@ class SelectionPill extends StatelessWidget {
     required this.onTap,
     this.locked = false,
     this.leading,
+    this.compact = false,
   });
 
   final String label;
@@ -16,6 +17,7 @@ class SelectionPill extends StatelessWidget {
   final bool locked;
   final Widget? leading;
   final VoidCallback onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -35,9 +37,9 @@ class SelectionPill extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(
+        padding: EdgeInsets.symmetric(
           horizontal: AppSpacing.sm,
-          vertical: AppSpacing.sm,
+          vertical: compact ? AppSpacing.xs : AppSpacing.sm,
         ),
         decoration: BoxDecoration(
           color: background,
@@ -71,10 +73,14 @@ class SelectionPill extends StatelessWidget {
             ],
             Text(
               label,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: selected ? Colors.white : theme.colorScheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+              style: (compact
+                      ? theme.textTheme.bodySmall
+                      : theme.textTheme.bodyMedium)
+                  ?.copyWith(
+                    color:
+                        selected ? Colors.white : theme.colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
             ),
             if (locked) ...<Widget>[
               const SizedBox(width: AppSpacing.xs),

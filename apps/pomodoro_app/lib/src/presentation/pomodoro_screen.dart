@@ -38,19 +38,8 @@ class PomodoroScreen extends ConsumerWidget {
     final DateTime now = DateTime.now();
     final int todaySessions = habits.todayCount;
     final int todayMinutes = habits.todayMinutes;
-    final int weeklySessions = habits.weeklyCount;
-    final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
-    final int longestStreak = habits.longestStreak;
     final int dailyGoal = habits.dailyGoal;
-    final List<HabitSessionRecord> recentEntries = habits.recentRecords(
-      limit: 3,
-    );
-    final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(
-      7,
-      referenceDate: now,
-    );
-    final int weeklyActiveDays = _activeDays(weeklyEntries);
     final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
       context,
       habits,
@@ -66,181 +55,124 @@ class PomodoroScreen extends ConsumerWidget {
           premiumEntitlement: Entitlement.unlimitedSessions,
           usageCount: isFreshFocusStart ? todaySessions + 1 : todaySessions,
         );
-    final UsageLimitResult sessionNotesAccess = pomodoroSessionNotesPolicy
-        .evaluateWithEntitlements(
-          entitlementService: entitlements,
-          premiumEntitlement: Entitlement.advancedStats,
-          usageCount: 1,
-        );
     final UsageLimitResult customDurationsAccess = pomodoroCustomDurationsPolicy
         .evaluateWithEntitlements(
           entitlementService: entitlements,
           premiumEntitlement: Entitlement.customModes,
           usageCount: 1,
         );
-    final bool advancedStatsUnlocked = entitlements.has(
-      Entitlement.advancedStats,
-    );
 
     return FactoryScaffold(
       title: l10n.pomodoroTitle,
       appMenuSpec: pomodoroAppMenuSpec,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  l10n.pomodoroCurrentCycle,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              _ModeStatusBadge(label: _modeLabel(l10n, currentMode)),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            child: TimerDisplayCard(
-              key: ValueKey<String>(state.activeSession.id),
-              label: _modeLabel(l10n, currentMode),
-              timeText: _formatDuration(state.remaining),
-              progress: state.progress,
-              statusText: _sessionStatusText(l10n, state, currentMode),
-              footnote: _timerFootnote(l10n, currentMode),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppPrimaryButton(
-            label: _primaryLabel(l10n, state, currentMode),
-            icon: Icon(_primaryIcon(state)),
-            onPressed: () {
-              if (!unlimitedSessionsAccess.allowed) {
-                openPomodoroPaywall(
-                  context: context,
-                  ref: ref,
-                  entryPoint: pomodoroHeaderButtonEntryPoint,
-                );
-                return;
-              }
-              controller.toggleTimer();
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          SectionCard(
-            title: l10n.commonMomentum,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      scrollable: false,
+      expandBody: true,
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      body: FixedUtilityScreenLayout(
+        hero: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
               children: <Widget>[
-                CompactStatStrip(
-                  items: <CompactStatItem>[
-                    CompactStatItem(
-                      label: l10n.commonToday,
-                      value: l10n.pomodoroTodaySessionsValue(
-                        todaySessions,
-                        dailyGoal,
-                      ),
+                Expanded(
+                  child: Text(
+                    l10n.pomodoroCurrentCycle,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    CompactStatItem(
-                      label: l10n.commonActiveDays,
-                      value: '$weeklyActiveDays/7',
-                    ),
-                    CompactStatItem(
-                      label: l10n.commonStreak,
-                      value: '${streakDays}d',
-                      highlight: theme.colorScheme.tertiary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.commonDailyGoal,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: LinearProgressIndicator(
-                    value: habits.goalProgress,
-                    minHeight: 10,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children:
-                      _dailyGoalOptions.map((int goal) {
-                        return SelectionPill(
-                          label: '$goal',
-                          selected: dailyGoal == goal,
-                          onTap: () {
-                            if (dailyGoal == goal) {
-                              return;
-                            }
-                            unawaited(habits.updateDailyGoal(goal));
-                          },
-                        );
-                      }).toList(),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.commonWeeklyRhythm,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                WeeklyActivityStrip(entries: weeklyActivity),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.pomodoroSevenDaySummary(weeklySessions, weeklyMinutes),
-                  style: theme.textTheme.bodySmall,
-                ),
+                _ModeStatusBadge(label: _modeLabel(l10n, currentMode)),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            l10n.commonMode,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children:
-                PomodoroMode.values.map((PomodoroMode mode) {
-                  return SelectionPill(
-                    label: _modeLabel(l10n, mode),
-                    selected: currentMode == mode,
-                    leading: Icon(_modeIcon(mode)),
-                    onTap: () => controller.selectMode(mode),
-                  );
-                }).toList(),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          if (currentMode == PomodoroMode.focus) ...<Widget>[
-            Text(
-              l10n.pomodoroCustomModesTitle,
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
+            const SizedBox(height: AppSpacing.xs),
+            Expanded(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: TimerDisplayCard(
+                    key: ValueKey<String>(state.activeSession.id),
+                    label: _modeLabel(l10n, currentMode),
+                    timeText: _formatDuration(state.remaining),
+                    progress: state.progress,
+                    statusText: _sessionStatusText(l10n, state, currentMode),
+                    compact: true,
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            if (customDurationsAccess.allowed)
+          ],
+        ),
+        primaryAction: AppPrimaryButton(
+          label: _primaryLabel(l10n, state, currentMode),
+          icon: Icon(_primaryIcon(state)),
+          onPressed: () {
+            if (!unlimitedSessionsAccess.allowed) {
+              openPomodoroPaywall(
+                context: context,
+                ref: ref,
+                entryPoint: pomodoroHeaderButtonEntryPoint,
+              );
+              return;
+            }
+            controller.toggleTimer();
+          },
+        ),
+        secondaryAction: Row(
+          children: <Widget>[
+            Expanded(
+              child: AppSecondaryButton(
+                label: l10n.pomodoroResetAction,
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: controller.reset,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: AppSecondaryButton(
+                label: l10n.pomodoroSkipAction,
+                icon: const Icon(Icons.skip_next_rounded),
+                onPressed: controller.skipToNextMode,
+              ),
+            ),
+          ],
+        ),
+        selector: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.commonMode,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children:
+                  PomodoroMode.values.map((PomodoroMode mode) {
+                    return SelectionPill(
+                      label: _modeLabel(l10n, mode),
+                      selected: currentMode == mode,
+                      compact: true,
+                      onTap: () => controller.selectMode(mode),
+                    );
+                  }).toList(),
+            ),
+            if (currentMode == PomodoroMode.focus) ...<Widget>[
+              const SizedBox(height: AppSpacing.sm),
               Wrap(
-                spacing: AppSpacing.sm,
-                runSpacing: AppSpacing.sm,
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
                 children:
                     PomodoroDurationPreset.values.map((
                       PomodoroDurationPreset preset,
@@ -248,133 +180,85 @@ class PomodoroScreen extends ConsumerWidget {
                       return SelectionPill(
                         label: preset.shortLabel,
                         selected: durationPreset == preset,
-                        onTap: () => controller.selectDurationPreset(preset),
+                        compact: true,
+                        locked:
+                            !customDurationsAccess.allowed &&
+                            durationPreset != preset,
+                        onTap: () {
+                          if (customDurationsAccess.allowed) {
+                            controller.selectDurationPreset(preset);
+                            return;
+                          }
+                          openPomodoroPaywall(
+                            context: context,
+                            ref: ref,
+                            entryPoint: pomodoroHeaderButtonEntryPoint,
+                          );
+                        },
                       );
                     }).toList(),
-              )
-            else
-              SelectionPill(
-                label: durationPreset.shortLabel,
-                selected: true,
-                locked: true,
-                onTap:
-                    () => openPomodoroPaywall(
-                      context: context,
-                      ref: ref,
-                      entryPoint: pomodoroHeaderButtonEntryPoint,
+              ),
+            ],
+          ],
+        ),
+        compactPanel: SectionCard(
+          compact: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CompactStatStrip(
+                compact: true,
+                items: <CompactStatItem>[
+                  CompactStatItem(
+                    label: l10n.commonToday,
+                    value: l10n.pomodoroTodaySessionsValue(
+                      todaySessions,
+                      dailyGoal,
                     ),
-              ),
-            const SizedBox(height: AppSpacing.md),
-          ],
-          _ResponsiveButtonRow(
-            leading: AppSecondaryButton(
-              label: l10n.pomodoroResetAction,
-              icon: const Icon(Icons.refresh_rounded),
-              onPressed: controller.reset,
-            ),
-            trailing: AppSecondaryButton(
-              label: l10n.pomodoroSkipAction,
-              icon: const Icon(Icons.skip_next_rounded),
-              onPressed: controller.skipToNextMode,
-            ),
-          ),
-          if (recentEntries.isNotEmpty) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            SectionCard(
-              title: l10n.commonRecentActivity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    recentEntries.map((HabitSessionRecord entry) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                        child: Text(
-                          _historyLabel(l10n, entry),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.lg),
-          if (advancedStatsUnlocked)
-            SectionCard(
-              title: l10n.pomodoroAdvancedInsights,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  CompactStatStrip(
-                    items: <CompactStatItem>[
-                      CompactStatItem(
-                        label: l10n.commonActiveDays,
-                        value: '$weeklyActiveDays/7',
-                      ),
-                      CompactStatItem(
-                        label: l10n.pomodoroAverageFocus,
-                        value: _averageMinutesLabel(
-                          weeklySessions,
-                          weeklyMinutes,
-                        ),
-                      ),
-                      CompactStatItem(
-                        label: l10n.commonStreak,
-                        value: '${longestStreak}d',
-                        highlight: theme.colorScheme.tertiary,
-                      ),
-                    ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    l10n.pomodoroAdvancedInsightsSummary(
-                      todayMinutes,
-                      weeklyMinutes,
-                    ),
-                    style: theme.textTheme.bodySmall,
+                  CompactStatItem(
+                    label: l10n.pomodoroFocusTime,
+                    value: '${todayMinutes}m',
+                  ),
+                  CompactStatItem(
+                    label: l10n.commonStreak,
+                    value: '${streakDays}d',
+                    highlight: theme.colorScheme.tertiary,
                   ),
                 ],
               ),
-            )
-          else
-            PremiumCalloutCard(
-              title: l10n.pomodoroPremiumTeaserTitle,
-              subtitle: l10n.pomodoroPremiumTeaserSubtitle,
-              actionLabel: l10n.commonSeePremium,
-              onPressed:
-                  () => openPomodoroPaywall(
-                    context: context,
-                    ref: ref,
-                    entryPoint: pomodoroHeaderButtonEntryPoint,
-                  ),
-            ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            l10n.pomodoroFocusNote,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+              const SizedBox(height: AppSpacing.xs),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                child: LinearProgressIndicator(
+                  value: habits.goalProgress,
+                  minHeight: 8,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children:
+                    _dailyGoalOptions.map((int goal) {
+                      return SelectionPill(
+                        label: '$goal',
+                        selected: dailyGoal == goal,
+                        compact: true,
+                        onTap: () {
+                          if (dailyGoal == goal) {
+                            return;
+                          }
+                          unawaited(habits.updateDailyGoal(goal));
+                        },
+                      );
+                    }).toList(),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              WeeklyActivityStrip(entries: weeklyActivity, compact: true),
+            ],
           ),
-          const SizedBox(height: AppSpacing.sm),
-          if (sessionNotesAccess.allowed)
-            AppTextField(
-              label: l10n.pomodoroFocusNoteLabel,
-              hintText: l10n.pomodoroFocusNoteHint,
-              maxLines: 3,
-            )
-          else
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.lock_outline_rounded),
-              title: Text(l10n.pomodoroFocusNoteLabel),
-              subtitle: Text(sessionNotesAccess.message),
-              onTap:
-                  () => openPomodoroPaywall(
-                    context: context,
-                    ref: ref,
-                    entryPoint: pomodoroSessionNotesGateEntryPoint,
-                  ),
-            ),
-        ],
+        ),
       ),
       footer: MonetizationBanner(
         startupAppId: 'pomodoro_app',
@@ -402,19 +286,6 @@ class PomodoroScreen extends ConsumerWidget {
         emphasis: _isSameDay(day, referenceDate),
       );
     });
-  }
-
-  int _activeDays(List<HabitSessionRecord> entries) {
-    return entries
-        .map(
-          (HabitSessionRecord entry) => DateTime(
-            entry.completedAtLocal.year,
-            entry.completedAtLocal.month,
-            entry.completedAtLocal.day,
-          ),
-        )
-        .toSet()
-        .length;
   }
 
   String _weekdayLabel(BuildContext context, DateTime day) {
@@ -459,14 +330,6 @@ class PomodoroScreen extends ConsumerWidget {
     return l10n.commonPaused;
   }
 
-  String _timerFootnote(AppLocalizations l10n, PomodoroMode mode) {
-    return switch (mode) {
-      PomodoroMode.focus => l10n.pomodoroFocusFootnote,
-      PomodoroMode.shortBreak => l10n.pomodoroShortBreakFootnote,
-      PomodoroMode.longBreak => l10n.pomodoroLongBreakFootnote,
-    };
-  }
-
   String _primaryLabel(
     AppLocalizations l10n,
     TimerState state,
@@ -497,39 +360,12 @@ class PomodoroScreen extends ConsumerWidget {
     return Icons.play_arrow_rounded;
   }
 
-  IconData _modeIcon(PomodoroMode mode) {
-    return switch (mode) {
-      PomodoroMode.focus => Icons.bolt_rounded,
-      PomodoroMode.shortBreak => Icons.coffee_rounded,
-      PomodoroMode.longBreak => Icons.hotel_rounded,
-    };
-  }
-
-  String _averageMinutesLabel(int weeklySessions, int weeklyMinutes) {
-    if (weeklySessions == 0) {
-      return '0m';
-    }
-    return '${(weeklyMinutes / weeklySessions).round()}m';
-  }
-
   String _modeLabel(AppLocalizations l10n, PomodoroMode mode) {
     return switch (mode) {
       PomodoroMode.focus => l10n.pomodoroModeFocus,
       PomodoroMode.shortBreak => l10n.pomodoroModeShortBreak,
       PomodoroMode.longBreak => l10n.pomodoroModeLongBreak,
     };
-  }
-
-  String _historyLabel(AppLocalizations l10n, HabitSessionRecord entry) {
-    final DateTime completedAt = entry.completedAtLocal;
-    final String hours = completedAt.hour.toString().padLeft(2, '0');
-    final String minutes = completedAt.minute.toString().padLeft(2, '0');
-    return l10n.pomodoroHistoryItem(
-      entry.durationMinutes,
-      completedAt.month,
-      completedAt.day,
-      '$hours:$minutes',
-    );
   }
 }
 
@@ -563,38 +399,6 @@ class _ModeStatusBadge extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _ResponsiveButtonRow extends StatelessWidget {
-  const _ResponsiveButtonRow({required this.leading, required this.trailing});
-
-  final Widget leading;
-  final Widget trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        if (constraints.maxWidth < 420) {
-          return Column(
-            children: <Widget>[
-              leading,
-              const SizedBox(height: AppSpacing.md),
-              trailing,
-            ],
-          );
-        }
-
-        return Row(
-          children: <Widget>[
-            Expanded(child: leading),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(child: trailing),
-          ],
-        );
-      },
     );
   }
 }

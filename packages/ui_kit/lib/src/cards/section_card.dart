@@ -8,12 +8,14 @@ class SectionCard extends StatelessWidget {
     this.subtitle,
     this.trailing,
     required this.child,
+    this.compact = false,
   });
 
   final String? title;
   final String? subtitle;
   final Widget? trailing;
   final Widget child;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class SectionCard extends StatelessWidget {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: EdgeInsets.all(compact ? AppSpacing.sm : AppSpacing.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -46,21 +48,29 @@ class SectionCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
                         if (title != null)
-                          Text(title!, style: theme.textTheme.titleMedium),
+                          Text(
+                            title!,
+                            style:
+                                compact
+                                    ? theme.textTheme.titleSmall
+                                    : theme.textTheme.titleMedium,
+                          ),
                         if (subtitle != null) ...<Widget>[
-                          const SizedBox(height: AppSpacing.xs),
+                          SizedBox(
+                            height: compact ? AppSpacing.xxs : AppSpacing.xs,
+                          ),
                           Text(subtitle!, style: theme.textTheme.bodySmall),
                         ],
                       ],
                     ),
                   ),
                   if (trailing != null) ...<Widget>[
-                    const SizedBox(width: AppSpacing.md),
+                    SizedBox(width: compact ? AppSpacing.sm : AppSpacing.md),
                     trailing!,
                   ],
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              SizedBox(height: compact ? AppSpacing.sm : AppSpacing.md),
             ],
             child,
           ],

@@ -87,6 +87,7 @@ class AppShell extends StatelessWidget {
     this.drawerItems = const <AppDrawerItem>[],
     this.scrollable = true,
     this.contentMaxWidth = 720,
+    this.contentPadding,
   });
 
   final String title;
@@ -96,6 +97,7 @@ class AppShell extends StatelessWidget {
   final List<AppDrawerItem> drawerItems;
   final bool scrollable;
   final double contentMaxWidth;
+  final EdgeInsetsGeometry? contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -121,6 +123,7 @@ class AppShell extends StatelessWidget {
               scrollable: scrollable,
               includeTopSafeArea: false,
               includeBottomSafeArea: false,
+              contentPadding: contentPadding,
               child: body,
             ),
           ),

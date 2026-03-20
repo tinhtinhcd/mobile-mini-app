@@ -10,6 +10,7 @@ class TimerDisplayCard extends StatelessWidget {
     required this.progress,
     this.statusText,
     this.footnote,
+    this.compact = false,
   });
 
   final String label;
@@ -17,12 +18,28 @@ class TimerDisplayCard extends StatelessWidget {
   final double progress;
   final String? statusText;
   final String? footnote;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color primary = theme.colorScheme.primary;
     final double clampedProgress = progress.clamp(0, 1).toDouble();
+    final double padding = compact ? AppSpacing.sm : AppSpacing.lg;
+    final double largeGap = compact ? AppSpacing.sm : AppSpacing.lg;
+    final double smallGap = compact ? AppSpacing.xxs : AppSpacing.sm;
+    final TextStyle? timeStyle =
+        compact
+            ? theme.textTheme.displaySmall?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              color: theme.colorScheme.onSurface,
+            )
+            : theme.textTheme.displayLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
+              color: theme.colorScheme.onSurface,
+            );
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -44,13 +61,13 @@ class TimerDisplayCard extends StatelessWidget {
         border: Border.all(color: primary.withValues(alpha: 0.16)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(padding),
         child: Column(
           children: <Widget>[
             Container(
-              padding: const EdgeInsets.symmetric(
+              padding: EdgeInsets.symmetric(
                 horizontal: AppSpacing.sm,
-                vertical: AppSpacing.xs,
+                vertical: compact ? AppSpacing.xxs : AppSpacing.xs,
               ),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface.withValues(alpha: 0.72),
@@ -64,17 +81,10 @@ class TimerDisplayCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              timeText,
-              style: theme.textTheme.displayLarge?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
-                color: theme.colorScheme.onSurface,
-              ),
-            ),
+            SizedBox(height: largeGap),
+            Text(timeText, style: timeStyle),
             if (statusText != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: smallGap),
               AnimatedSwitcher(
                 duration: 180.ms,
                 switchInCurve: Curves.easeOutCubic,
@@ -88,13 +98,13 @@ class TimerDisplayCard extends StatelessWidget {
                     .slideX(begin: 0.08, end: 0, duration: 180.ms),
               ),
             ],
-            const SizedBox(height: AppSpacing.lg),
+            SizedBox(height: largeGap),
             ClipRRect(
               borderRadius: BorderRadius.circular(AppRadius.small),
               child: LinearProgressIndicator(value: clampedProgress),
             ),
             if (footnote != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.sm),
+              SizedBox(height: smallGap),
               Text(
                 footnote!,
                 textAlign: TextAlign.center,

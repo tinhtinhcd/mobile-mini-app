@@ -36,6 +36,7 @@ class AppContentFrame extends StatelessWidget {
     this.scrollable = true,
     this.includeTopSafeArea = true,
     this.includeBottomSafeArea = true,
+    this.contentPadding,
   });
 
   final Widget child;
@@ -43,6 +44,7 @@ class AppContentFrame extends StatelessWidget {
   final bool scrollable;
   final bool includeTopSafeArea;
   final bool includeBottomSafeArea;
+  final EdgeInsetsGeometry? contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -85,23 +87,27 @@ class AppContentFrame extends StatelessWidget {
             if (scrollable) {
               return SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(
-                  AppShellMetrics.contentHorizontalPadding,
-                  AppShellMetrics.contentHorizontalPadding,
-                  AppShellMetrics.contentHorizontalPadding,
-                  AppSpacing.xl,
-                ),
+                padding:
+                    contentPadding ??
+                    const EdgeInsets.fromLTRB(
+                      AppShellMetrics.contentHorizontalPadding,
+                      AppShellMetrics.contentHorizontalPadding,
+                      AppShellMetrics.contentHorizontalPadding,
+                      AppSpacing.xl,
+                    ),
                 child: alignedChild,
               );
             }
 
             return Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppShellMetrics.contentHorizontalPadding,
-                AppShellMetrics.contentHorizontalPadding,
-                AppShellMetrics.contentHorizontalPadding,
-                AppSpacing.xl,
-              ),
+              padding:
+                  contentPadding ??
+                  const EdgeInsets.fromLTRB(
+                    AppShellMetrics.contentHorizontalPadding,
+                    AppShellMetrics.contentHorizontalPadding,
+                    AppShellMetrics.contentHorizontalPadding,
+                    AppSpacing.xl,
+                  ),
               child: alignedChild,
             );
           },

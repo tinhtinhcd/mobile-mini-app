@@ -18,6 +18,8 @@ class FactoryScaffold extends StatelessWidget {
     this.drawerItems = const <AppDrawerItem>[],
     this.onSubscriptionTap,
     this.appMenuSpec,
+    this.expandBody = false,
+    this.contentPadding,
   });
 
   final String title;
@@ -30,6 +32,8 @@ class FactoryScaffold extends StatelessWidget {
   final List<AppDrawerItem> drawerItems;
   final VoidCallback? onSubscriptionTap;
   final AppMenuSpec? appMenuSpec;
+  final bool expandBody;
+  final EdgeInsetsGeometry? contentPadding;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +51,7 @@ class FactoryScaffold extends StatelessWidget {
       subtitle: subtitle,
       action: action,
       body: body,
+      expandBody: expandBody,
     );
 
     return AppShell(
@@ -55,6 +60,7 @@ class FactoryScaffold extends StatelessWidget {
       footer: footer,
       drawerItems: resolvedDrawerItems,
       scrollable: scrollable,
+      contentPadding: contentPadding,
       body: content,
     );
   }
@@ -161,11 +167,13 @@ class _ScaffoldContent extends StatelessWidget {
     required this.subtitle,
     required this.action,
     required this.body,
+    required this.expandBody,
   });
 
   final String? subtitle;
   final Widget? action;
   final Widget body;
+  final bool expandBody;
 
   @override
   Widget build(BuildContext context) {
@@ -186,7 +194,10 @@ class _ScaffoldContent extends StatelessWidget {
           action!,
           const SizedBox(height: AppSpacing.lg),
         ],
-        SizedBox(width: double.infinity, child: body),
+        if (expandBody)
+          Expanded(child: SizedBox(width: double.infinity, child: body))
+        else
+          SizedBox(width: double.infinity, child: body),
       ],
     );
   }

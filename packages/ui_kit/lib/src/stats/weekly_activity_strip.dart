@@ -21,16 +21,19 @@ class WeeklyActivityStrip extends StatelessWidget {
     required this.entries,
     this.maxValue,
     this.barColor,
+    this.compact = false,
   });
 
   final List<WeeklyActivityEntry> entries;
   final double? maxValue;
   final Color? barColor;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     final Color accent = barColor ?? theme.colorScheme.primary;
+    final double barHeight = compact ? 28 : 44;
     final double resolvedMax = math.max(
       maxValue ??
           entries.fold<double>(0, (double max, WeeklyActivityEntry entry) {
@@ -58,7 +61,7 @@ class WeeklyActivityStrip extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: <Widget>[
                     Container(
-                      height: 44,
+                      height: barHeight,
                       decoration: BoxDecoration(
                         color: Color.alphaBlend(
                           resolvedAccent.withValues(alpha: 0.06),
@@ -88,7 +91,7 @@ class WeeklyActivityStrip extends StatelessWidget {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    SizedBox(height: compact ? AppSpacing.xxs : AppSpacing.xs),
                     Text(
                       entry.label,
                       style: theme.textTheme.labelSmall?.copyWith(

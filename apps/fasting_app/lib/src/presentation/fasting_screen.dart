@@ -34,274 +34,178 @@ class FastingScreen extends ConsumerWidget {
     final DateTime now = DateTime.now();
     final int todayFasts = habits.todayCount;
     final int dailyGoal = habits.dailyGoal;
-    final int weeklyFasts = habits.weeklyCount;
-    final int weeklyMinutes = habits.weeklyMinutes;
     final int streakDays = habits.currentStreak;
     final Duration? lastFastDuration = habits.lastSessionDuration;
-    final List<HabitSessionRecord> recentEntries = habits.recentRecords(
-      limit: entitlements.has(Entitlement.unlimitedSessions) ? 3 : 1,
-    );
-    final List<HabitSessionRecord> weeklyEntries = habits.recordsForLastDays(
-      7,
-      referenceDate: now,
-    );
-    final int weeklyActiveDays = _activeDays(weeklyEntries);
     final List<WeeklyActivityEntry> weeklyActivity = _buildWeeklyActivity(
       context,
       habits,
       now,
     );
-    final bool advancedInsightsUnlocked = entitlements.has(
-      Entitlement.advancedStats,
-    );
 
     return FactoryScaffold(
       title: l10n.fastingTitle,
       appMenuSpec: fastingAppMenuSpec,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  l10n.fastingCurrentFast,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              _PlanBadge(label: selectedPlan.label),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          TimerDisplayCard(
-            label: selectedPlan.label,
-            timeText: _formatDuration(state.remaining),
-            progress: _clampProgress(state.progress),
-            statusText:
-                state.isRunning
-                    ? l10n.fastingFastInProgress
-                    : state.remaining == state.activeSession.duration
-                    ? l10n.commonReadyToBegin
-                    : l10n.commonPaused,
-            footnote: _planDescription(l10n, selectedPlan),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppPrimaryButton(
-            label: _primaryLabel(l10n, state),
-            icon: Icon(_primaryIcon(state)),
-            onPressed: controller.toggleTimer,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          SectionCard(
-            title: l10n.commonMomentum,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      scrollable: false,
+      expandBody: true,
+      contentPadding: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      body: FixedUtilityScreenLayout(
+        hero: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
               children: <Widget>[
-                CompactStatStrip(
-                  items: <CompactStatItem>[
-                    CompactStatItem(
-                      label: l10n.commonToday,
-                      value: l10n.fastingTodayFastsValue(todayFasts, dailyGoal),
+                Expanded(
+                  child: Text(
+                    l10n.fastingCurrentFast,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    CompactStatItem(
-                      label: l10n.fastingLastFast,
-                      value: _durationLabel(lastFastDuration),
-                    ),
-                    CompactStatItem(
-                      label: l10n.commonStreak,
-                      value: '${streakDays}d',
-                      highlight: theme.colorScheme.tertiary,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.commonDailyGoal,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.xs),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppRadius.pill),
-                  child: LinearProgressIndicator(
-                    value: habits.goalProgress,
-                    minHeight: 10,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children:
-                      _dailyGoalOptions.map((int goal) {
-                        return SelectionPill(
-                          label: '$goal',
-                          selected: dailyGoal == goal,
-                          onTap: () {
-                            if (dailyGoal == goal) {
-                              return;
-                            }
-                            unawaited(habits.updateDailyGoal(goal));
-                          },
-                        );
-                      }).toList(),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  l10n.commonWeeklyRhythm,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                WeeklyActivityStrip(
-                  entries: weeklyActivity,
-                  maxValue: selectedPlan.fastingDuration.inHours.toDouble(),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  l10n.fastingSevenDaySummary(
-                    weeklyFasts,
-                    _trackedHoursLabel(weeklyMinutes),
-                  ),
-                  style: theme.textTheme.bodySmall,
-                ),
+                _PlanBadge(label: selectedPlan.label),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            l10n.commonPlan,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children:
-                FastingPlan.values.asMap().entries.map((
-                  MapEntry<int, FastingPlan> entry,
-                ) {
-                  final UsageLimitResult access = fastingPlanPolicy
-                      .evaluateWithEntitlements(
-                        entitlementService: entitlements,
-                        premiumEntitlement: Entitlement.advancedPlans,
-                        usageCount: entry.key + 1,
-                      );
-
-                  return SelectionPill(
-                    label: entry.value.label,
-                    selected: entry.value == selectedPlan && access.allowed,
-                    locked: !access.allowed,
-                    onTap: () {
-                      if (access.allowed) {
-                        controller.selectPlan(entry.value);
-                        return;
-                      }
-
-                      openFastingPaywall(
-                        context: context,
-                        ref: ref,
-                        entryPoint: fastingLockedPlanEntryPoint,
-                      );
-                    },
-                  );
-                }).toList(),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          AppSecondaryButton(
-            label: l10n.fastingResetFast,
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: controller.reset,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          SectionCard(
-            title: l10n.fastingAdvancedPlansTitle,
-            subtitle: l10n.fastingPlanSummary(
-              selectedPlan.label,
-              _eatingWindowLabel(l10n, selectedPlan),
-              _planDescription(l10n, selectedPlan),
-            ),
-            child: Text(
-              l10n.fastingWeeklyConsistencySummary(
-                weeklyActiveDays,
-                _trackedHoursLabel(weeklyMinutes),
-              ),
-              style: theme.textTheme.bodySmall,
-            ),
-          ),
-          if (recentEntries.isNotEmpty) ...<Widget>[
-            const SizedBox(height: AppSpacing.lg),
-            SectionCard(
-              title: l10n.commonRecentActivity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children:
-                    recentEntries.map((HabitSessionRecord entry) {
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                        child: Text(
-                          _historyLabel(l10n, entry),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      );
-                    }).toList(),
+            const SizedBox(height: AppSpacing.xs),
+            Expanded(
+              child: Center(
+                child: TimerDisplayCard(
+                  label: selectedPlan.label,
+                  timeText: _formatDuration(state.remaining),
+                  progress: _clampProgress(state.progress),
+                  statusText:
+                      state.isRunning
+                          ? l10n.fastingFastInProgress
+                          : state.remaining == state.activeSession.duration
+                          ? l10n.commonReadyToBegin
+                          : l10n.commonPaused,
+                  footnote: _planDescription(l10n, selectedPlan),
+                  compact: true,
+                ),
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.lg),
-          if (advancedInsightsUnlocked)
-            SectionCard(
-              title: l10n.fastingDeeperInsights,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  CompactStatStrip(
-                    items: <CompactStatItem>[
-                      CompactStatItem(
-                        label: l10n.commonActiveDays,
-                        value: '$weeklyActiveDays/7',
-                      ),
-                      CompactStatItem(
-                        label: l10n.fastingLongestFast,
-                        value: _longestFastLabel(weeklyEntries),
-                      ),
-                      CompactStatItem(
-                        label: l10n.commonToday,
-                        value: _durationLabel(lastFastDuration),
-                        highlight: theme.colorScheme.tertiary,
-                      ),
-                    ],
+        ),
+        primaryAction: AppPrimaryButton(
+          label: _primaryLabel(l10n, state),
+          icon: Icon(_primaryIcon(state)),
+          onPressed: controller.toggleTimer,
+        ),
+        secondaryAction: AppSecondaryButton(
+          label: l10n.fastingResetFast,
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: controller.reset,
+        ),
+        selector: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.commonPlan,
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Wrap(
+              spacing: AppSpacing.xs,
+              runSpacing: AppSpacing.xs,
+              children:
+                  FastingPlan.values.asMap().entries.map((
+                    MapEntry<int, FastingPlan> entry,
+                  ) {
+                    final UsageLimitResult access = fastingPlanPolicy
+                        .evaluateWithEntitlements(
+                          entitlementService: entitlements,
+                          premiumEntitlement: Entitlement.advancedPlans,
+                          usageCount: entry.key + 1,
+                        );
+
+                    return SelectionPill(
+                      label: entry.value.label,
+                      selected: entry.value == selectedPlan && access.allowed,
+                      locked: !access.allowed,
+                      compact: true,
+                      onTap: () {
+                        if (access.allowed) {
+                          controller.selectPlan(entry.value);
+                          return;
+                        }
+
+                        openFastingPaywall(
+                          context: context,
+                          ref: ref,
+                          entryPoint: fastingLockedPlanEntryPoint,
+                        );
+                      },
+                    );
+                  }).toList(),
+            ),
+          ],
+        ),
+        compactPanel: SectionCard(
+          compact: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CompactStatStrip(
+                compact: true,
+                items: <CompactStatItem>[
+                  CompactStatItem(
+                    label: l10n.commonToday,
+                    value: l10n.fastingTodayFastsValue(todayFasts, dailyGoal),
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    l10n.fastingWeeklyConsistencySummary(
-                      weeklyActiveDays,
-                      _trackedHoursLabel(weeklyMinutes),
-                    ),
-                    style: theme.textTheme.bodySmall,
+                  CompactStatItem(
+                    label: l10n.fastingLastFast,
+                    value: _durationLabel(lastFastDuration),
+                  ),
+                  CompactStatItem(
+                    label: l10n.commonStreak,
+                    value: '${streakDays}d',
+                    highlight: theme.colorScheme.tertiary,
                   ),
                 ],
               ),
-            )
-          else
-            PremiumCalloutCard(
-              title: l10n.fastingPremiumTeaserTitle,
-              subtitle: l10n.fastingPremiumTeaserSubtitle,
-              actionLabel: l10n.commonSeePremium,
-              onPressed:
-                  () => openFastingPaywall(
-                    context: context,
-                    ref: ref,
-                    entryPoint: fastingHeaderButtonEntryPoint,
-                  ),
-            ),
-        ],
+              const SizedBox(height: AppSpacing.xs),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppRadius.pill),
+                child: LinearProgressIndicator(
+                  value: habits.goalProgress,
+                  minHeight: 8,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Wrap(
+                spacing: AppSpacing.xs,
+                runSpacing: AppSpacing.xs,
+                children:
+                    _dailyGoalOptions.map((int goal) {
+                      return SelectionPill(
+                        label: '$goal',
+                        selected: dailyGoal == goal,
+                        compact: true,
+                        onTap: () {
+                          if (dailyGoal == goal) {
+                            return;
+                          }
+                          unawaited(habits.updateDailyGoal(goal));
+                        },
+                      );
+                    }).toList(),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              WeeklyActivityStrip(
+                entries: weeklyActivity,
+                maxValue: selectedPlan.fastingDuration.inHours.toDouble(),
+                compact: true,
+              ),
+            ],
+          ),
+        ),
       ),
       footer: MonetizationBanner(
         startupAppId: 'fasting_app',
@@ -329,19 +233,6 @@ class FastingScreen extends ConsumerWidget {
         emphasis: _isSameDay(day, referenceDate),
       );
     });
-  }
-
-  int _activeDays(List<HabitSessionRecord> entries) {
-    return entries
-        .map(
-          (HabitSessionRecord entry) => DateTime(
-            entry.completedAtLocal.year,
-            entry.completedAtLocal.month,
-            entry.completedAtLocal.day,
-          ),
-        )
-        .toSet()
-        .length;
   }
 
   String _weekdayLabel(BuildContext context, DateTime day) {
@@ -400,11 +291,6 @@ class FastingScreen extends ConsumerWidget {
     return Icons.play_arrow_rounded;
   }
 
-  String _trackedHoursLabel(int trackedMinutes) {
-    final double trackedHours = trackedMinutes / 60;
-    return '${trackedHours.toStringAsFixed(1)}h';
-  }
-
   String _durationLabel(Duration? duration) {
     if (duration == null) {
       return '0h';
@@ -412,14 +298,9 @@ class FastingScreen extends ConsumerWidget {
     return _trackedHoursLabel(duration.inMinutes);
   }
 
-  String _longestFastLabel(List<HabitSessionRecord> entries) {
-    if (entries.isEmpty) {
-      return '0h';
-    }
-    final int longestMinutes = entries
-        .map((HabitSessionRecord entry) => entry.durationMinutes)
-        .reduce((int a, int b) => a > b ? a : b);
-    return _trackedHoursLabel(longestMinutes);
+  String _trackedHoursLabel(int trackedMinutes) {
+    final double trackedHours = trackedMinutes / 60;
+    return '${trackedHours.toStringAsFixed(1)}h';
   }
 
   String _planDescription(AppLocalizations l10n, FastingPlan plan) {
@@ -429,27 +310,6 @@ class FastingScreen extends ConsumerWidget {
       FastingPlan.performance18 => l10n.fastingPlanPerformance18Description,
       FastingPlan.deep20 => l10n.fastingPlanDeep20Description,
     };
-  }
-
-  String _eatingWindowLabel(AppLocalizations l10n, FastingPlan plan) {
-    return switch (plan) {
-      FastingPlan.reset12 => l10n.fastingEatingWindow12,
-      FastingPlan.lean16 => l10n.fastingEatingWindow8,
-      FastingPlan.performance18 => l10n.fastingEatingWindow6,
-      FastingPlan.deep20 => l10n.fastingEatingWindow4,
-    };
-  }
-
-  String _historyLabel(AppLocalizations l10n, HabitSessionRecord entry) {
-    final DateTime completedAt = entry.completedAtLocal;
-    final String hours = completedAt.hour.toString().padLeft(2, '0');
-    final String minutes = completedAt.minute.toString().padLeft(2, '0');
-    return l10n.fastingHistoryItem(
-      _trackedHoursLabel(entry.durationMinutes),
-      completedAt.month,
-      completedAt.day,
-      '$hours:$minutes',
-    );
   }
 }
 

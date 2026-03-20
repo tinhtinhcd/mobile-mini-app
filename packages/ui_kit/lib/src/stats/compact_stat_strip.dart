@@ -14,9 +14,14 @@ class CompactStatItem {
 }
 
 class CompactStatStrip extends StatelessWidget {
-  const CompactStatStrip({super.key, required this.items});
+  const CompactStatStrip({
+    super.key,
+    required this.items,
+    this.compact = false,
+  });
 
   final List<CompactStatItem> items;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -38,26 +43,32 @@ class CompactStatStrip extends StatelessWidget {
                 border: Border.all(color: accent.withValues(alpha: 0.12)),
               ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
+                padding: EdgeInsets.symmetric(
+                  horizontal: compact ? AppSpacing.sm : AppSpacing.md,
+                  vertical: compact ? AppSpacing.xs : AppSpacing.sm,
                 ),
                 child: RichText(
                   text: TextSpan(
                     children: <InlineSpan>[
                       TextSpan(
                         text: '${item.value}  ',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: accent,
-                          fontWeight: FontWeight.w800,
-                        ),
+                        style: (compact
+                                ? theme.textTheme.titleSmall
+                                : theme.textTheme.titleMedium)
+                            ?.copyWith(
+                              color: accent,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
                       TextSpan(
                         text: item.label,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: (compact
+                                ? theme.textTheme.labelSmall
+                                : theme.textTheme.bodySmall)
+                            ?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
                       ),
                     ],
                   ),

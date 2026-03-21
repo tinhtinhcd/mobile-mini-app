@@ -27,6 +27,9 @@ class MonetizationBanner extends StatefulWidget {
 }
 
 class _MonetizationBannerState extends State<MonetizationBanner> {
+  static const double _reservedAdWidth = 320;
+  static const double _reservedAdHeight = 50;
+
   BannerAd? _bannerAd;
   bool _isLoaded = false;
   bool _loadScheduled = false;
@@ -143,13 +146,46 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData theme = Theme.of(context);
-
     if (widget.entitlementService.has(Entitlement.noAds) ||
-        !_isLoaded ||
-        _bannerAd == null) {
+        widget.adUnitId.isEmpty) {
       return const SizedBox.shrink();
     }
+
+    final double adWidth = _bannerAd?.size.width.toDouble() ?? _reservedAdWidth;
+    final double adHeight =
+        _bannerAd?.size.height.toDouble() ?? _reservedAdHeight;
+
+    return IgnorePointer(
+      ignoring: !_isLoaded,
+      child: AnimatedOpacity(
+        opacity: _isLoaded && _bannerAd != null ? 1 : 0,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: _BannerFrame(
+          adWidth: adWidth,
+          adHeight: adHeight,
+          adChild:
+              _isLoaded && _bannerAd != null ? AdWidget(ad: _bannerAd!) : null,
+        ),
+      ),
+    );
+  }
+}
+
+class _BannerFrame extends StatelessWidget {
+  const _BannerFrame({
+    required this.adWidth,
+    required this.adHeight,
+    this.adChild,
+  });
+
+  final double adWidth;
+  final double adHeight;
+  final Widget? adChild;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
 
     return Center(
       child: DecoratedBox(
@@ -176,11 +212,7 @@ class _MonetizationBannerState extends State<MonetizationBanner> {
                 ),
               ),
               const SizedBox(height: AppSpacing.xxs),
-              SizedBox(
-                width: _bannerAd!.size.width.toDouble(),
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
+              SizedBox(width: adWidth, height: adHeight, child: adChild),
             ],
           ),
         ),

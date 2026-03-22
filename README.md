@@ -1,387 +1,256 @@
 # Mobile App Factory
 
-A **Flutter monorepo** designed to build and maintain many small **utility mobile apps** quickly using reusable packages, a shared design system, and a local‑first architecture.
+A Flutter monorepo for building multiple mobile applications from a shared foundation.
 
-This project focuses on **speed, reuse, and simplicity** so new apps can be created in days instead of weeks.
+The core problem this repository solves is repetition. Small and mid-sized mobile products often re-implement the same shell, routing, theming, persistence, monetization, notifications, and reporting patterns for each new app. That increases delivery time, multiplies maintenance cost, and makes quality uneven across products. This codebase consolidates those concerns into reusable packages so new apps can be assembled quickly without starting from a blank project.
 
----
+This approach is useful when shipping multiple focused applications matters more than building one large product. Startups, small product teams, studios, and solo developers can use the same foundation to launch and iterate on several apps in parallel while keeping the codebase operationally simple.
 
-# 🚀 Vision
+## Architecture Overview
 
-Build a **mobile app factory** where:
+The repository uses a single Flutter workspace with app-specific code at the edge and reusable modules at the center.
 
-* One reusable framework powers many apps
-* Most logic lives in shared packages
-* Each app is lightweight and easy to maintain
-* New apps can be created in **1–3 days**
-
-Target apps are **simple utility apps** that:
-
-* Work offline
-* Have minimal UI
-* Are easy to maintain
-* Monetize through ads + subscription
-
-Examples:
-
-* Pomodoro timer
-* Fasting tracker
-* Resume builder
-* Unit converter
-* Password generator
-* Text utilities
-
----
-
-# 🧱 Architecture Overview
-
-The repository uses a **monorepo structure**.
-
-Active workspace modules that are compile-ready today:
-
-```
-mobile_app_factory/
-
-  packages/
-    analytics/
-    app_core/
-    monetization/
-    notifications/
-    storage/
-    timer_engine/
-    ui_kit/
-
+```text
+mobile-mini-app/
   apps/
     pomodoro_app/
     fasting_app/
-
+    ...additional app seeds and prototypes
+  packages/
+    app_core/
+    design_system/
+    ui_kit/
+    localization/
+    analytics/
+    storage/
+    notifications/
+    monetization/
+    timer_engine/
+    habit_engine/
+    discipline_engine/
+    ...future placeholders
   tools/
     widgetbook/
 ```
 
-Placeholder directories also exist for future work, but they are **not** in the active workspace and are **not compile-ready yet**:
+### Monorepo structure
 
-* `packages/export`
-* `packages/form_engine`
-* `packages/tool_engine`
-* `apps/resume_builder_app`
+- `apps/` contains standalone Flutter applications with branding, app-specific configuration, route wiring, and thin presentation logic.
+- `packages/` contains reusable modules that can be shared by many apps without duplicating implementation.
+- `tools/` contains developer tooling, including Widgetbook for validating shared UI components.
 
-## packages/
+The monorepo keeps dependency changes, package evolution, and app integration in one place. Shared package updates can be tested against active apps immediately instead of being versioned and coordinated across multiple repositories.
 
-Shared reusable modules.
+### Shared packages and modules
 
-These contain **most of the logic**.
+The current workspace is centered around a few clear layers:
 
-## apps/
+- `app_core`: shared application shell, router creation, theme composition, navigation primitives, and startup structure.
+- `design_system`: design tokens, spacing, typography, shell dimensions, and layout primitives.
+- `ui_kit`: reusable widgets built on top of the design system.
+- `storage`: local persistence abstractions and implementations, including timer snapshot storage.
+- `timer_engine`: reusable timer state, sessions, snapshots, statistics, and timer controller boundaries.
+- `habit_engine`: higher-level habit tracking, streaks, summaries, history, and coaching reports.
+- `discipline_engine`: rule-based commitment, status, pressure, and recovery logic layered on top of habit data.
+- `monetization`, `notifications`, `analytics`, `localization`: cross-cutting concerns shared by active apps.
 
-Each folder is a **standalone Flutter app**.
+This separation keeps business rules in focused packages rather than scattering them across app folders.
 
-Apps only contain:
+### Design system reuse
 
-* branding
-* configuration
-* feature wiring
+The design system is intentionally split into two layers:
 
-This keeps each app small and easy to maintain.
+- `design_system` defines stable tokens and layout rules.
+- `ui_kit` provides the concrete widgets apps assemble into screens.
 
----
+That split makes it possible to preserve a consistent interaction model across apps while still allowing each app to express a different accent color, copy, or screen composition. In practice, new apps reuse the same shell, card patterns, compact stats, buttons, selectors, and scaffold behavior rather than re-creating them.
 
-# 📦 Package Responsibilities
+### Local-first architecture
 
-## analytics
+The repository is designed around local execution and local persistence.
 
-Active shared analytics layer for utility apps.
+- Core flows continue to work without a backend dependency.
+- State is persisted on-device for fast startup and offline behavior.
+- Domain engines operate on local models rather than remote APIs.
 
-Includes:
+This matters for utility apps because responsiveness, reliability, and low operational overhead are usually more important than distributed consistency. For focused apps such as timers, trackers, or lightweight planners, local-first design removes backend complexity while still supporting meaningful user value.
 
-* reusable analytics abstraction
-* shared timer-family event names
-* debug logger implementation for early product instrumentation
+## Key Design Principles
 
----
+### Modularity and separation of concerns
 
-## app_core
+Each package has a narrow responsibility. Timer state does not live in the shell. Monetization policy does not live in the app UI. Drawer and routing primitives are shared in `app_core`, while app-specific routes stay in each application. This makes change impact easier to reason about and reduces accidental coupling.
 
-Application foundation used by every app.
+### Reusability across applications
 
-Includes:
+The foundation is optimized for repeated use. New apps should reuse:
 
-* app initialization
-* routing
-* theme setup
-* configuration loading
-* logging
-* error handling
-* base scaffold
+- the app shell
+- routing setup
+- shared design tokens
+- common widgets
+- persistence abstractions
+- monetization and notification infrastructure
+- reusable domain engines such as timer, habit, and discipline logic
 
----
+Only the app-specific domain rules, copy, branding, and thin presentation wiring should be new.
 
-## ui_kit
+### Scalability of the codebase
 
-Reusable **design system and UI components**.
+This architecture scales by adding focused packages and thin apps rather than growing one large application layer. As more apps are added, the goal is not to centralize every decision, but to keep reusable concerns stable and push app-specific behavior to the edges.
 
-Includes:
+### Maintainability and developer productivity
 
-* buttons
-* cards
-* input fields
-* dialogs
-* settings tiles
-* stat widgets
-* empty states
-* layout primitives
-* Widgetbook-previewed shared components
+A monorepo only pays off if it is easy to change safely. Shared packages reduce duplication, workspace-level analysis catches cross-package breakage early, and new apps inherit proven defaults. That lowers the cost of maintenance and improves iteration speed.
 
-All apps must use components from **ui_kit**.
+## How New Apps Are Created in < 3 Days
 
----
+The target workflow is pragmatic, not magical. The speed comes from reusing a stable foundation, not from code generation alone.
 
-## monetization
+1. Choose the closest app shape.
+   Start from an existing thin app layer such as `pomodoro_app` or `fasting_app`, depending on whether the new product is timer-like, tracker-like, or another focused utility.
 
-Active shared monetization layer for utility apps.
+2. Define app identity.
+   Create the new app folder, set the app name, title, accent color, icons, and platform metadata.
 
-Includes:
+3. Wire the shared shell.
+   Reuse `app_core` for application definition, router creation, header, footer, drawer behavior, and scaffold composition.
 
-* ad service abstractions and Google Mobile Ads wiring
-* subscription and entitlement state handling
-* reusable paywall UI foundations
-* usage-limit policies that apps can define locally
+4. Reuse shared UI.
+   Build the main screen from `design_system` and `ui_kit` primitives instead of custom one-off widgets.
 
----
+5. Connect the relevant domain package.
+   Use `timer_engine`, `habit_engine`, `discipline_engine`, or another shared module for core behavior. Only app-specific thresholds or rules should be added locally.
 
-## notifications
+6. Add app-specific presentation and rules.
+   Implement the few pieces that are unique to the app: copy, feature configuration, domain-specific presets, and minimal screen wiring.
 
-Active local notification layer for timer-family apps.
+7. Validate at workspace level.
+   Run analyze, test, and app builds from the shared workspace so regressions across packages are caught early.
 
-Includes:
+### What is typically reused
 
-* permission requests
-* scheduling notifications for timer completion
-* canceling or updating scheduled local notifications
-* immediate local notifications
+- app shell and navigation
+- theming and component library
+- local persistence boundaries
+- monetization and ads wiring
+- notification infrastructure
+- analytics surface
+- reusable domain engines
 
----
+### What is typically new
 
-## storage
+- product framing and branding
+- app-specific presets and rules
+- localized copy
+- thin screen composition
+- store metadata and assets
 
-Active local-first persistence layer for the current timer apps.
+## Trade-offs and Design Decisions
 
-Includes:
+### Why monorepo over multi-repo
 
-* `TimerSnapshotStore` abstraction
-* `SharedPreferencesTimerSnapshotStore` implementation
-* timer snapshot serialization boundary shared by multiple apps
+The main benefit is coordination. Shared packages evolve together with the apps that consume them. A shell change, domain package change, or design system update can be validated across active apps immediately. That is materially simpler than publishing internal packages, updating version ranges, and synchronizing multiple repositories for every cross-cutting change.
 
-Apps wire storage through providers, but persistence implementation stays in `storage`.
+### Limitations of this approach
 
----
+- Workspace changes can affect many apps at once, so discipline around package boundaries matters.
+- Build and analysis scope grows as the workspace grows.
+- Teams need consistent conventions, or the monorepo becomes a collection of loosely related code instead of a coherent platform.
+- Some apps may outgrow the shared assumptions and need more customization than the common foundation initially anticipated.
 
-## timer_engine
+### When this architecture may not be ideal
 
-Active reusable logic for timer-based apps.
+This approach is less suitable when:
 
-Used by:
+- each app has a very different domain and shares little code
+- teams are fully independent and want isolated release cadences
+- backend-driven collaboration, real-time sync, or complex distributed workflows dominate the product
+- a single flagship application deserves all attention instead of a portfolio of focused apps
 
-* Pomodoro
-* fasting tracker
-* future timer-based apps
+## Real-World Use Cases
 
-Includes:
+This architecture is a good fit for:
 
-* timer controller
-* session model
-* snapshot model
-* timer state
-* statistics
+- a startup validating several utility app ideas with a small mobile team
+- a studio shipping multiple niche productivity apps under one portfolio
+- an internal tools team building focused employee apps with shared infrastructure
+- a solo developer maintaining several local-first mobile products without backend overhead
+- a product organization standardizing shell, monetization, and design patterns across small applications
 
----
+## Future Improvements
 
-## Planned Placeholder Modules
+### Scaling to larger teams
 
-These directories exist only as placeholders right now and are not wired into the workspace yet:
+- stronger package ownership boundaries
+- clearer contribution guides per shared module
+- architectural decision records for cross-cutting changes
+- more formal release discipline for shared packages
 
-* `export`
-* `form_engine`
-* `tool_engine`
-* `resume_builder_app`
+### CI/CD improvements
 
----
+- affected-package analysis to avoid rebuilding the full workspace on every change
+- device farm smoke tests for active apps
+- automated screenshot regression checks for shared UI
+- artifact publishing for internal app distributions
 
-# 🎨 Design Principles
+### Plugin ecosystem and extensions
 
-All apps follow a **consistent minimal design system**.
+- more formal app templates for common product types
+- additional shared engines for non-timer use cases
+- optional feature modules that apps can compose without inheriting unnecessary complexity
+- stricter extension points around app menus, premium surfaces, and reporting layers
 
-Principles:
+## Current Workspace
 
-* Minimal UI
-* Card‑based layout
-* Large spacing
-* One primary action per screen
-* Single accent color per app
-* Reusable components only
+Active applications today:
 
-Goals:
+- `apps/pomodoro_app`
+- `apps/fasting_app`
 
-* Simple
-* Clean
-* Easy to use
+The repository also contains additional app directories and package placeholders that can be promoted into the active workspace as they become real, compile-ready modules.
 
----
+## Getting Started
 
-# 💰 Monetization Model
+### Prerequisites
 
-All apps follow the same model.
+- Flutter 3.29+
+- Dart 3.7+
+- Android Studio and/or Xcode
 
-## Free
-
-* Ads enabled
-* Basic features available
-* Light usage limits
-
-## Premium
-
-* No ads
-* Unlimited usage
-* Advanced features
-
-Suggested pricing:
-
-```
-$0.99 / month
-$9.99 / year
-```
-
----
-
-# ⚙️ Tech Stack
-
-* Flutter
-* Riverpod
-* go_router
-* Isar or Drift
-* SharedPreferences
-* google_mobile_ads
-* flutter_local_notifications
-* pdf / printing / share_plus
-
-Architecture goals:
-
-* modular
-* reusable
-* offline‑first
-
----
-
-# 🛠 Development Roadmap
-
-## Phase 1
-
-Foundation implemented
-
-* Setup monorepo
-* Create `app_core`
-* Create `ui_kit`
-* Create demo app `pomodoro_app`
-* Shared theme and scaffold
-
----
-
-## Phase 2
-
-Infrastructure partially implemented
-
-* `storage` implemented
-* `notifications` implemented
-* `monetization` implemented
-* `analytics` implemented
-* `export` planned
-
----
-
-## Phase 3
-
-Feature engines partially implemented
-
-* `timer_engine` implemented
-* `form_engine` planned
-* `tool_engine` planned
-
----
-
-## Phase 4
-
-Production apps partially implemented
-
-Build first apps:
-
-* Pomodoro App implemented
-* Fasting Tracker implemented
-* Resume Builder planned
-
----
-
-# 🧑‍💻 Getting Started
-
-## Prerequisites
-
-Install:
-
-* Flutter
-* Dart
-* Android Studio or Xcode
-
-Check installation:
+### Install dependencies
 
 ```bash
-flutter --version
+flutter pub get
 ```
 
----
-
-# ▶ Running an App
-
-Each app is an independent Flutter project.
-
-Example:
+### Run an active app
 
 ```bash
 cd apps/pomodoro_app
-flutter pub get
 flutter run
 ```
 
----
+or
 
-# 🎯 Current Workspace Scope
+```bash
+cd apps/fasting_app
+flutter run
+```
 
-The active workspace currently validates these modules together:
+### Workspace validation
 
-* `app_core`
-* `analytics`
-* `monetization`
-* `notifications`
-* `storage`
-* `timer_engine`
-* `ui_kit`
-* `apps/pomodoro_app`
-* `apps/fasting_app`
-* `tools/widgetbook`
+```bash
+flutter analyze
+```
 
-The placeholder modules remain outside the workspace until they have real compile-ready code.
+If you use Melos:
 
----
+```bash
+melos run analyze
+melos run test
+```
 
-# 📈 Success Criteria
+## Summary
 
-The project succeeds if:
-
-* Monorepo architecture is stable
-* Shared packages contain most logic
-* Apps remain small and simple
-* New apps can be created in **under 3 days**
-
----
-
-# 🔜 Next Step
-
-Keep the current workspace coherent, then add new modules only when they have real compile-ready code and a clear place in the existing package boundaries.
+This repository is not trying to be a generic Flutter boilerplate. It is a focused app platform for producing multiple small mobile applications from a stable shared foundation. The engineering goal is straightforward: keep apps thin, keep shared modules honest, and make shipping the next app materially faster than building it from scratch.

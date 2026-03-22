@@ -41,6 +41,29 @@ mobile-mini-app/
 
 The monorepo keeps dependency changes, package evolution, and app integration in one place. Shared package updates can be tested against active apps immediately instead of being versioned and coordinated across multiple repositories.
 
+```mermaid
+flowchart TD
+    Repo[mobile-mini-app]
+    Repo --> Apps[apps]
+    Repo --> Packages[packages]
+    Repo --> Tools[tools]
+
+    Apps --> Pomodoro[pomodoro_app]
+    Apps --> Fasting[fasting_app]
+    Apps --> Prototypes[additional app seeds]
+
+    Packages --> AppCore[app_core]
+    Packages --> DesignSystem[design_system]
+    Packages --> UIKit[ui_kit]
+    Packages --> Storage[storage]
+    Packages --> TimerEngine[timer_engine]
+    Packages --> HabitEngine[habit_engine]
+    Packages --> DisciplineEngine[discipline_engine]
+    Packages --> CrossCutting[analytics / notifications / monetization / localization]
+
+    Tools --> Widgetbook[widgetbook]
+```
+
 ### Shared packages and modules
 
 The current workspace is centered around a few clear layers:
@@ -74,6 +97,16 @@ The repository is designed around local execution and local persistence.
 - Domain engines operate on local models rather than remote APIs.
 
 This matters for utility apps because responsiveness, reliability, and low operational overhead are usually more important than distributed consistency. For focused apps such as timers, trackers, or lightweight planners, local-first design removes backend complexity while still supporting meaningful user value.
+
+```mermaid
+flowchart LR
+    User[User interaction] --> App[App screen]
+    App --> Core[app_core shell and routing]
+    App --> UI[ui_kit + design_system]
+    App --> Domain[timer_engine / habit_engine / discipline_engine]
+    Domain --> Storage[local storage]
+    App --> Cross[notifications / analytics / monetization]
+```
 
 ## Key Design Principles
 

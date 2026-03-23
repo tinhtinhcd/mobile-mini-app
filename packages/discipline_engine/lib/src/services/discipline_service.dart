@@ -1,5 +1,6 @@
 import 'package:discipline_engine/src/models/discipline_goal.dart';
 import 'package:discipline_engine/src/models/discipline_pressure.dart';
+import 'package:discipline_engine/src/models/discipline_snapshot.dart';
 import 'package:discipline_engine/src/models/discipline_status.dart';
 import 'package:discipline_engine/src/models/recovery_suggestion.dart';
 import 'package:discipline_engine/src/rules/discipline_rules.dart';
@@ -7,6 +8,50 @@ import 'package:habit_engine/habit_engine.dart';
 
 class DisciplineService {
   const DisciplineService();
+
+  DisciplineSnapshot buildSnapshot({
+    required HabitService habits,
+    required DisciplineRules rules,
+    DateTime? referenceDate,
+    int? suggestedTarget,
+  }) {
+    final DateTime reference = referenceDate ?? DateTime.now();
+    final DisciplineGoal goal = readGoal(
+      habits: habits,
+      rules: rules,
+      referenceDate: reference,
+      suggestedTarget: suggestedTarget,
+    );
+    final int expectedCompleted = rules.expectedCompletedBy(
+      goal: goal,
+      referenceDate: reference,
+    );
+    final DisciplineStatus status = computeStatus(
+      goal: goal,
+      rules: rules,
+      referenceDate: reference,
+    );
+    final DisciplinePressure pressure = computePressure(
+      habits: habits,
+      goal: goal,
+      status: status,
+      referenceDate: reference,
+    );
+    final RecoverySuggestion? recoverySuggestion = computeRecoverySuggestion(
+      goal: goal,
+      status: status,
+      pressure: pressure,
+      rules: rules,
+    );
+
+    return DisciplineSnapshot(
+      goal: goal,
+      status: status,
+      pressure: pressure,
+      expectedCompleted: expectedCompleted,
+      recoverySuggestion: recoverySuggestion,
+    );
+  }
 
   DisciplineGoal readGoal({
     required HabitService habits,
@@ -59,10 +104,12 @@ class DisciplineService {
         message: 'Your pace still supports the goal.',
       );
     }
+    final int paceGap = expectedCompleted - goal.completed;
+    final String actionLabel = paceGap == 1 ? 'step' : 'steps';
     return DisciplineStatus(
       type: DisciplineStatusType.behind,
       label: 'You are behind',
-      message: 'You are $expectedCompleted behind the pace for today.',
+      message: 'You are $paceGap $actionLabel behind the pace for today.',
     );
   }
 

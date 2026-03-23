@@ -2,7 +2,10 @@ import 'package:app_core/app_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:habit_engine/habit_engine.dart';
+import 'package:monetization/monetization.dart';
+import 'package:pomodoro_app/src/application/pomodoro_coaching.dart';
 import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
+import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
 import 'package:ui_kit/ui_kit.dart';
 
@@ -15,12 +18,18 @@ class PomodoroWeeklySummaryScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ThemeData theme = Theme.of(context);
     final HabitService habits = ref.watch(pomodoroHabitServiceProvider);
+    final EntitlementService entitlements = ref.watch(entitlementProvider);
     final DateTime now = DateTime.now();
     final int weeklySessions = habits.weeklyCount;
     final int weeklyMinutes = habits.weeklyMinutes;
     final double averagePerDay = weeklySessions / 7;
     final int lastWeekSessions =
         habits.countForLastDays(14, referenceDate: now) - weeklySessions;
+    final bool premiumCoachingUnlocked = entitlements.has(
+      Entitlement.advancedStats,
+    );
+    final PomodoroCoachingSnapshot coaching = const PomodoroCoachingService()
+        .build(habits: habits, referenceDate: now);
     final List<WeeklyBreakdownItem> breakdown = _buildBreakdown(habits, now);
 
     return FactoryScaffold(
@@ -69,6 +78,42 @@ class PomodoroWeeklySummaryScreen extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          SectionCard(
+            title: 'Coach review',
+            child:
+                premiumCoachingUnlocked
+                    ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        ...coaching.reviewEntries.map((
+                          PomodoroReviewEntry entry,
+                        ) {
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.sm,
+                            ),
+                            child: _ReviewEntryView(
+                              label: entry.label,
+                              value: entry.value,
+                              message: entry.message,
+                            ),
+                          );
+                        }),
+                        Text(
+                          coaching.recommendation,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    )
+                    : PremiumCalloutCard(
+                      title: 'Unlock weekly coaching review',
+                      subtitle:
+                          'Premium adds your best focus window, consistency score, improvement versus last week, and smart daily recommendations.',
+                    ),
           ),
           const SizedBox(height: AppSpacing.lg),
           SectionCard(
@@ -156,5 +201,52 @@ class PomodoroWeeklySummaryScreen extends ConsumerWidget {
     return left.year == right.year &&
         left.month == right.month &&
         left.day == right.day;
+  }
+}
+
+class _ReviewEntryView extends StatelessWidget {
+  const _ReviewEntryView({
+    required this.label,
+    required this.value,
+    required this.message,
+  });
+
+  final String label;
+  final String value;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xxs),
+              Text(message, style: theme.textTheme.bodySmall),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        Text(
+          value,
+          style: theme.textTheme.titleSmall?.copyWith(
+            color: theme.colorScheme.primary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ],
+    );
   }
 }

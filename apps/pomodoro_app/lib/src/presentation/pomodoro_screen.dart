@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import 'package:habit_engine/habit_engine.dart';
 import 'package:monetization/monetization.dart';
 import 'package:pomodoro_app/src/application/pomodoro_analytics.dart';
+import 'package:pomodoro_app/src/application/pomodoro_coaching.dart';
 import 'package:pomodoro_app/src/application/pomodoro_controller.dart';
-import 'package:pomodoro_app/src/application/pomodoro_discipline_rules.dart';
 import 'package:pomodoro_app/src/application/pomodoro_habits.dart';
 import 'package:pomodoro_app/src/application/pomodoro_monetization.dart';
 import 'package:pomodoro_app/src/presentation/pomodoro_app_menu.dart';
@@ -21,9 +21,8 @@ class PomodoroScreen extends ConsumerWidget {
   const PomodoroScreen({super.key});
 
   static const List<int> _dailyGoalOptions = <int>[2, 4, 6];
-  static const DisciplineService _disciplineService = DisciplineService();
-  static const PomodoroDisciplineRules _disciplineRules =
-      PomodoroDisciplineRules();
+  static const PomodoroCoachingService _coachingService =
+      PomodoroCoachingService();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -42,33 +41,11 @@ class PomodoroScreen extends ConsumerWidget {
     final PomodoroDurationPreset durationPreset = ref.watch(
       pomodoroDurationPresetProvider,
     );
-    final DisciplineGoal disciplineGoal = _disciplineService.readGoal(
-      habits: habits,
-      rules: _disciplineRules,
-      suggestedTarget: habits.dailyGoal,
-    );
-    final DisciplineStatus disciplineStatus = _disciplineService.computeStatus(
-      goal: disciplineGoal,
-      rules: _disciplineRules,
-    );
-    final DisciplinePressure disciplinePressure = _disciplineService
-        .computePressure(
-          habits: habits,
-          goal: disciplineGoal,
-          status: disciplineStatus,
-        );
-    final RecoverySuggestion? recoverySuggestion = _disciplineService
-        .computeRecoverySuggestion(
-          goal: disciplineGoal,
-          status: disciplineStatus,
-          pressure: disciplinePressure,
-          rules: _disciplineRules,
-        );
-    final HabitCoachingReport coaching = const HabitCoachingEngine().build(
-      habits: habits,
-    );
     final bool premiumCoachingUnlocked = entitlements.has(
       Entitlement.advancedStats,
+    );
+    final PomodoroCoachingSnapshot coaching = _coachingService.build(
+      habits: habits,
     );
     final DateTime now = DateTime.now();
     final int todaySessions = habits.todayCount;
@@ -285,31 +262,40 @@ class PomodoroScreen extends ConsumerWidget {
                     }).toList(),
               ),
               const SizedBox(height: AppSpacing.xs),
-              Row(
-                children: <Widget>[
-                  Expanded(
-                    child: _CoachingStatusPill(
-                      label: disciplineStatus.label,
-                      status: disciplineStatus.type,
+              if (premiumCoachingUnlocked) ...<Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _CoachingStatusPill(
+                        label: coaching.discipline.status.label,
+                        status: coaching.discipline.status.type,
+                      ),
                     ),
-                  ),
-                  if (premiumCoachingUnlocked) ...<Widget>[
                     const SizedBox(width: AppSpacing.xs),
                     Text(
-                      '${coaching.weeklyConsistencyScore}% week',
+                      '${coaching.review.weeklyConsistencyScore}% week',
                       style: theme.textTheme.labelSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: theme.colorScheme.primary,
                       ),
                     ),
                   ],
-                ],
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+              ],
+              Text(
+                coaching.goalProgressLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppSpacing.xxs),
               if (premiumCoachingUnlocked &&
-                  disciplinePressure.warningMessage != null) ...<Widget>[
+                  coaching.discipline.pressure.warningMessage !=
+                      null) ...<Widget>[
                 Text(
-                  '${disciplinePressure.warningMessage!} Gap: ${disciplinePressure.gapToGoal}.',
+                  coaching.discipline.pressure.warningMessage!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w700,
@@ -319,37 +305,64 @@ class PomodoroScreen extends ConsumerWidget {
               ],
               Text(
                 premiumCoachingUnlocked
-                    ? _premiumCoachMessage(
-                      disciplineGoal: disciplineGoal,
-                      disciplineStatus: disciplineStatus,
-                      recoverySuggestion: recoverySuggestion,
-                    )
-                    : _basicGoalMessage(disciplineGoal, disciplineStatus),
+                    ? coaching.discipline.recoverySuggestion?.message ??
+                        coaching.recommendation
+                    : coaching.goalProgressSummary,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color:
                       premiumCoachingUnlocked
-                          ? _coachMessageColor(theme, disciplineStatus.type)
+                          ? _coachMessageColor(
+                            theme,
+                            coaching.discipline.status.type,
+                          )
                           : theme.colorScheme.onSurfaceVariant,
                   fontWeight:
                       premiumCoachingUnlocked &&
-                              disciplineStatus.type ==
+                              coaching.discipline.status.type ==
                                   DisciplineStatusType.behind
                           ? FontWeight.w600
                           : FontWeight.w500,
                 ),
               ),
               if (premiumCoachingUnlocked &&
-                  disciplinePressure.streakMessage != null) ...<Widget>[
+                  coaching.discipline.pressure.streakMessage !=
+                      null) ...<Widget>[
                 const SizedBox(height: AppSpacing.xxs),
                 Text(
-                  disciplinePressure.streakMessage!,
+                  coaching.discipline.pressure.streakMessage!,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.error,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
+              ] else if (!premiumCoachingUnlocked) ...<Widget>[
+                const SizedBox(height: AppSpacing.xxs),
+                TextButton(
+                  onPressed:
+                      () => openPomodoroPaywall(
+                        context: context,
+                        ref: ref,
+                        entryPoint: pomodoroHeaderButtonEntryPoint,
+                      ),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Unlock coaching'),
+                ),
               ],
               const SizedBox(height: AppSpacing.xxs),
+              if (premiumCoachingUnlocked) ...<Widget>[
+                Text(
+                  coaching.reviewTeaser,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xxs),
+              ],
               Row(
                 children: <Widget>[
                   Expanded(
@@ -485,34 +498,6 @@ class PomodoroScreen extends ConsumerWidget {
       PomodoroMode.shortBreak => l10n.pomodoroModeShortBreak,
       PomodoroMode.longBreak => l10n.pomodoroModeLongBreak,
     };
-  }
-
-  String _premiumCoachMessage({
-    required DisciplineGoal disciplineGoal,
-    required DisciplineStatus disciplineStatus,
-    required RecoverySuggestion? recoverySuggestion,
-  }) {
-    if (disciplineStatus.type == DisciplineStatusType.behind &&
-        recoverySuggestion != null) {
-      return 'Recovery: ${recoverySuggestion.message}';
-    }
-    if (disciplineStatus.type == DisciplineStatusType.completed) {
-      return 'Goal complete. Suggested goal tomorrow: ${disciplineGoal.suggestedTarget}.';
-    }
-    if (disciplineGoal.suggestedTarget != disciplineGoal.target) {
-      return 'Suggested goal today: ${disciplineGoal.suggestedTarget}.';
-    }
-    return 'You are pacing well. Keep the next focus block close to the same time.';
-  }
-
-  String _basicGoalMessage(
-    DisciplineGoal disciplineGoal,
-    DisciplineStatus disciplineStatus,
-  ) {
-    if (disciplineStatus.type == DisciplineStatusType.completed) {
-      return 'Daily goal reached. Keep the streak moving tomorrow.';
-    }
-    return 'Finish your daily goal to keep progress moving.';
   }
 
   Color _coachMessageColor(

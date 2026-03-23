@@ -21,11 +21,11 @@ const PaywallContent fastingPaywallContent = PaywallContent(
   subtitle:
       'Go premium for an ad-free experience and a fasting coach that tells you when you are behind, how to recover, and what your week is teaching you.',
   benefits: <String>[
-    'Remove the light banner ads',
-    'Unlock extended 18:6 and 20:4 fasting plans',
     'Access on-track or behind status with recovery guidance',
     'See a weekly consistency score, pattern review, and trend guidance',
     'Get a suggested fasting goal and plan when consistency slips',
+    'Unlock extended 18:6 and 20:4 fasting plans',
+    'Remove the light banner ads',
   ],
   monthlyProductId: fastingMonthlyProductId,
   yearlyProductId: fastingYearlyProductId,

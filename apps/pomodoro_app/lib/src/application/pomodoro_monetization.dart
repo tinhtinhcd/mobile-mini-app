@@ -37,11 +37,12 @@ const PaywallContent pomodoroPaywallContent = PaywallContent(
   subtitle:
       'Go premium for an ad-free experience and a focus coach that tells you when you are behind, what to do next, and how your week is trending.',
   benefits: <String>[
-    'Remove the light banner ads',
     'Unlock on-track or behind status with recovery actions',
     'See a weekly consistency score, weekly review, and best focus window',
     'Get a suggested session target and what to do next when momentum slips',
-    'Keep your core timer flow calm and distraction-free',
+    'Unlock longer duration presets when your focus rhythm supports them',
+    'Remove the light banner ads',
+    'Keep the core timer flow calm while coaching gets sharper',
   ],
   monthlyProductId: pomodoroMonthlyProductId,
   yearlyProductId: pomodoroYearlyProductId,

@@ -30,7 +30,7 @@ class FactoryScaffold extends StatelessWidget {
   final Widget? headerTrailing;
   final bool scrollable;
   final Widget? footer;
-  final List<AppDrawerDestination> drawerDestinations;
+  final Iterable<AppDrawerDestination> drawerDestinations;
   final VoidCallback? onSubscriptionTap;
   final AppMenuSpec? appMenuSpec;
   final bool expandBody;
@@ -38,10 +38,12 @@ class FactoryScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final List<AppDrawerDestination> explicitDrawerDestinations =
+        List<AppDrawerDestination>.unmodifiable(drawerDestinations);
     final List<AppDrawerDestination> resolvedDrawerDestinations =
         resolveDrawerDestinations(
           context,
-          drawerDestinations: drawerDestinations,
+          drawerDestinations: explicitDrawerDestinations,
           appTitle: title,
           appMenuSpec: appMenuSpec,
           onSubscriptionTap: onSubscriptionTap,

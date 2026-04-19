@@ -1,122 +1,88 @@
 # Design System
 
-Goal:
-simple, clean UI reusable across many apps.
+## Goal
 
----
+Provide a shared visual language for small utility apps built in this monorepo.
 
-## Colors
+The design system is intentionally compact. It should help multiple apps feel
+related without forcing them into the same product identity.
 
-Background
-#F8F9FB
+## Core Principles
 
-Card
-#FFFFFF
+- calm, clear layouts
+- high reuse across apps
+- compact screens that work well on phones
+- one strong primary action per surface
+- app identity expressed mostly through accent color, copy, and product rules
 
-Primary text
-#1A1A1A
+## Token Layer
 
-Secondary text
-#6B7280
+The current token layer lives in `packages/design_system` and includes:
 
-Divider
-#E5E7EB
+- color tokens for background, surface, text, divider, and semantic states
+- spacing tokens
+- radius tokens
+- icon size tokens
+- shell metrics
+- typography helpers
 
-Accent color
-configurable per app.
+Accent color is app-configurable and is injected through shared theme
+construction.
 
----
+## Theme Layer
 
-## Typography
+The shared theme:
 
-Headline
-28 / bold
+- supports light and dark mode
+- builds from a per-app accent color
+- uses Material 3 with shared overrides
+- applies consistent button, card, chip, input, snackbar, and bottom-sheet
+  styling
 
-Title
-20 / semibold
+## Layout Layer
 
-Section title
-16 / semibold
+The design system also defines shared layout primitives for utility-style apps,
+including:
 
-Body
-14 / regular
+- content framing and max-width rules
+- shell header and footer metrics
+- timer-oriented layout primitives
+- tracker-oriented layout primitives
+- section and action zones
 
-Caption
-12 / regular
+## UI Kit Layer
 
----
+Concrete reusable widgets live in `packages/ui_kit`, including:
 
-## Spacing scale
+- primary and secondary buttons
+- section cards
+- timer display cards
+- compact stat strips
+- selection pills
+- settings tiles
+- empty states
+- premium callout cards
+- fixed utility-screen layouts
 
-4
-8
-12
-16
-20
-24
-32
-40
+## Screen Patterns In Use
 
----
+The current active apps use a compact utility pattern:
 
-## Radius
+- short header
+- prominent timer or progress hero
+- primary action
+- small selector controls
+- compact progress or coaching panel
+- light footer area for ads or shell affordances
 
-small
-8
+That pattern is already visible in both active apps and should remain the
+default unless a new product has a concrete reason to diverge.
 
-medium
-12
+## Current Constraints
 
-large
-16
+The design system is tuned for small utility apps first. It is not yet trying
+to be a full generic component system for every possible product category.
 
----
-
-## Components
-
-PrimaryButton
-SecondaryButton
-SectionCard
-StatTile
-AppTextField
-SettingsTile
-EmptyState
-ConfirmDialog
-
----
-
-## Layout rules
-
-Use card based layout.
-Use large spacing.
-Avoid clutter.
-One primary action per screen.
-
----
-
-## Screen patterns
-
-Timer screen
-
-Title
-Timer display
-Primary button
-Stats card
-
-Form screen
-
-Section title
-Input fields
-Save button
-
-Tool screen
-
-Input
-Action
-Output
-
-Dashboard
-
-Stats cards
-History list
-Primary action
+If the repo expands into very different app families later, the design system
+may need additional layouts or token families. Those should be added from real
+usage, not from speculation.

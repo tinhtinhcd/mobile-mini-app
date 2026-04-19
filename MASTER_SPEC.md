@@ -1,144 +1,120 @@
-# Mobile App Factory
+# Platform Spec
 
-Goal: build multiple small utility mobile apps quickly using a reusable Flutter monorepo.
+## Goal
 
-Apps should be:
-- simple
-- minimal UI
-- offline-first
-- reusable architecture
+Build multiple small utility mobile apps quickly from one reusable Flutter
+monorepo.
 
-Monetization model:
-free + ads + limits
-subscription = unlimited + no ads
+The platform is aimed at products where simplicity, local execution, and
+consistent delivery matter more than backend complexity.
 
-Subscription price:
-$0.99/month
-$9.99/year
+## Product Philosophy
 
-No backend server required.
+Apps built on this platform should generally be:
 
----
+- focused
+- local-first
+- operationally simple
+- thin at the app layer
+- built from reused infrastructure instead of duplicated scaffolding
 
-## Architecture
+The primary product shape today is timer and tracker style apps.
 
-Monorepo structure:
+## Engineering Principles
 
-mobile_app_factory/
+### Shared infrastructure first
 
-packages/
-app_core
-ui_kit
-monetization
-storage
-notifications
-export
-timer_engine
-form_engine
-tool_engine
+If a concern is repeated across multiple apps, it belongs in `packages/`, not
+in app folders.
 
-apps/
-pomodoro_app
-fasting_app
-resume_builder_app
+Examples:
 
-Each app is an independent Flutter project.
+- shell and routing
+- design tokens and reusable widgets
+- timer lifecycle
+- local persistence helpers
+- notifications
+- monetization
 
-Shared logic lives in packages.
+### Thin apps at the edge
 
----
+App folders should mostly own:
 
-## App types
+- branding
+- copy
+- presets and rules
+- presentation composition
 
-3 reusable feature families:
+Apps should not duplicate:
 
-Timer apps
-Pomodoro
-Fasting
-Countdown
-Workout timer
+- shell setup
+- reusable domain engines
+- common notification or monetization plumbing
 
-Form apps
-Resume builder
-Receipt organizer
-Invoice generator
+### Reuse proven engines, not hypothetical abstractions
 
-Tool apps
-Unit converter
-Password generator
-Text tools
-Random picker
+Shared modules should reflect concrete reuse. The current codebase is centered
+on:
 
----
+- `timer_engine`
+- `habit_engine`
+- `discipline_engine`
 
-## Design philosophy
+Additional engine families should only be added when real apps require them.
 
-Minimal
-Clean
-Card-based layout
-Single accent color
-Large whitespace
-One primary action per screen
+## Monetization Principles
 
-UI should look professional but simple.
+The default monetization model is:
 
----
+- free core flow
+- light ads for free usage where appropriate
+- premium for advanced guidance, advanced plans or modes, and ad removal
 
-## Monetization
+The repo should preserve a usable free path and avoid making core utility
+behavior dependent on premium state.
 
-Free users:
-ads enabled
-limited usage
-basic features
+## Non-Goals
 
-Premium users:
-remove ads
-unlimited usage
-advanced features
+This platform is not currently optimized for:
 
----
+- backend-heavy collaboration features
+- login-first products
+- real-time synchronized multi-user workflows
+- one giant flagship app with all features in a single codebase
 
-## Local-first
+It also does not claim that every speculative package in older planning notes
+already exists as active implementation.
 
-All apps must function offline.
+## Decision Rules
 
-Allowed storage:
-Isar database
-SharedPreferences
+Something belongs in `packages/` when:
 
-No login required.
+- more than one app needs it now, or likely will soon
+- it is infrastructure rather than product framing
+- keeping it app-local would create duplication or divergence
 
----
+Something stays app-local when:
 
-## Phase roadmap
+- it is product-specific
+- it is mostly copy, plans, or pacing rules
+- there is no real reuse signal yet
 
-Phase 1
-monorepo scaffold
-app_core
-ui_kit
-demo app
+## Current Scope
 
-Phase 2
-storage
-notifications
-monetization
-export
+The current active scope is a reusable utility-app platform with two working
+products:
 
-Phase 3
-timer_engine
-form_engine
-tool_engine
+- `pomodoro_app`
+- `fasting_app`
 
-Phase 4
-build first real apps
+Future scaffolded app folders are part of the pipeline, not proof of active
+support.
 
----
+## Future Expansion Criteria
 
-## Coding rules
+A new shared engine or package family should be added only when:
 
-Flutter
-Riverpod
-go_router
-clean modular architecture
-shared UI components
-no duplicated logic across apps
+1. an active or near-active app needs it
+2. the boundary is clear
+3. the abstraction removes real duplication
+4. the implementation can be tested and documented without guesswork

@@ -1,17 +1,56 @@
-# fasting_app
+# Fasting App
 
-A new Flutter project.
+## Purpose
 
-## Getting Started
+`fasting_app` is a fasting timer and tracker built on the same shared platform
+as `pomodoro_app`. It is one of the two active workspace apps and demonstrates
+how the shared stack adapts to a different timer and coaching model.
 
-This project is a starting point for a Flutter application.
+## Current Features
 
-A few resources to get you started if this is your first Flutter project:
+- fasting plans including `12:12`, `16:8`, `18:6`, and `20:4`
+- persisted timer snapshots for safe restore
+- local completion notifications
+- habit tracking and streaks
+- weekly summary and fasting-specific coaching
+- premium paywall, entitlement gating, and banner ads
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Shared Packages Used
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app currently depends on:
+
+- `app_core`
+- `analytics`
+- `discipline_engine`
+- `habit_engine`
+- `monetization`
+- `notifications`
+- `storage`
+- `timer_engine`
+- `ui_kit`
+
+## Premium Gates
+
+Premium currently unlocks:
+
+- advanced plans
+- deeper coaching and weekly review
+- ad removal
+
+The core fasting flow remains usable without premium state.
+
+## Test Coverage
+
+Current tests cover:
+
+- fasting coaching logic
+- core integration flow such as launch, start, pause, reset, plan switching,
+  safe restore, drawer navigation, and paywall access
+
+## Current Limitations
+
+- the app is documented as an active utility app, not as a complete production
+  health product
+- shared infrastructure still needs broader package-level testing over time
+- future fasting-specific features should keep reusing the shared timer and
+  tracking layers where possible

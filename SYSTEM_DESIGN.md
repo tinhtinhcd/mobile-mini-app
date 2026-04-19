@@ -2,384 +2,253 @@
 
 ## Purpose
 
-This repository is a reusable mobile app platform implemented as a Flutter monorepo. It is designed to support rapid development of multiple focused mobile apps from one shared foundation, rather than treating each app as an isolated project.
+This repository is a reusable Flutter platform for building multiple focused
+utility apps from one shared monorepo.
 
-The core architectural idea is:
+The core design choice is simple:
 
-- keep product-specific code thin and local to each app
-- centralize repeatable capabilities into shared packages
-- add new apps by composing existing platform modules instead of rebuilding them
+- keep app-specific code thin
+- centralize reusable behavior in packages
+- add new apps by composing existing platform pieces instead of rebuilding
+  infrastructure
 
-That makes the monorepo suitable for a portfolio of timer, tracker, utility, and habit-oriented apps that share common UX, infrastructure, and runtime behavior.
+That approach is a good fit for local-first timer, tracker, and other compact
+utility apps that share the same shell, visual language, and runtime services.
 
-## Architectural Shape
+## Repository Shape
 
-At a high level, the repository is split into three zones:
+At a high level the repository is split into three main zones:
 
 ```text
 mobile-mini-app/
-  apps/         -> product-specific applications
-  packages/     -> reusable platform modules
-  tools/        -> shared developer tooling
+  apps/
+  packages/
+  tools/
 ```
 
-Within that structure, dependencies flow inward:
+- `apps/` contains product-specific Flutter applications.
+- `packages/` contains reusable platform modules and domain engines.
+- `tools/` contains shared tooling such as Widgetbook.
+
+Dependency direction is intentionally one-way:
 
 - apps depend on packages
 - higher-level packages depend on lower-level packages
-- shared packages should not depend on app code
+- packages do not depend on app code
 
-This keeps the monorepo platform-oriented. Apps are delivery units. Packages are the reusable system.
+## Shared Package Boundaries
 
-## Package Boundaries
-
-The platform is organized into clear layers with narrow responsibilities.
-
-### 1. Foundation and Shell
+### Foundation and Shell
 
 `packages/app_core`
 
 Responsibility:
 
 - defines the shared app contract through `AppDefinition`
-- creates the shared router via `createAppRouter`
-- provides the common application shell through `FactoryApp` and `FactoryScaffold`
-- standardizes navigation, drawer behavior, startup structure, and theme wiring
+- creates the router through `createAppRouter`
+- provides `FactoryApp`, `FactoryScaffold`, drawer/menu destinations, and app
+  shell behavior
+- centralizes shared theme wiring and startup timing helpers
 
 Boundary:
 
-- app-specific screens and routes are passed in from each app
-- `app_core` owns the shell, not the product logic
+- owns shell and navigation patterns
+- does not own app-specific business rules or screen logic
 
-Why it matters:
-
-- every new app starts from the same entry model instead of inventing its own bootstrapping pattern
-
-### 2. Design Language
+### Visual Language
 
 `packages/design_system`
 
 Responsibility:
 
-- owns reusable design tokens such as colors, spacing, typography, radii, elevations, icon sizing, and layout primitives
-- provides shared theme construction
+- colors, spacing, typography, radii, shell metrics, and layout primitives
+- shared theme construction
 
 Boundary:
 
-- contains style rules and layout primitives, not feature widgets or business logic
+- stable tokens and layouts only
+- no app-specific widgets
 
 `packages/ui_kit`
 
 Responsibility:
 
-- builds reusable widgets on top of `design_system`
-- includes cards, buttons, stat tiles, settings rows, empty states, selection controls, timer display widgets, and premium UI surfaces
+- reusable widgets built on top of the design system
+- buttons, cards, compact stats, selection pills, timer display cards,
+  premium callouts, and fixed utility-screen layouts
 
 Boundary:
 
-- contains composable UI building blocks, not app-specific screens
+- feature widgets and reusable surfaces
+- no app-specific screens
 
-Why the split matters:
-
-- `design_system` keeps visual decisions consistent
-- `ui_kit` turns those rules into reusable components
-- apps reuse both without copying styling or rebuilding common widgets
-
-### 3. Cross-Cutting Platform Services
-
-`packages/localization`
-
-- shared localization delegates and generated translations
-
-`packages/analytics`
-
-- shared analytics contracts and event logging abstractions
-
-`packages/notifications`
-
-- local notification scheduling and notification channel concerns
-
-`packages/monetization`
-
-- ad integration, entitlement logic, subscription modeling, and paywall foundations
+### Cross-Cutting Platform Services
 
 `packages/storage`
 
-- local persistence abstractions and concrete storage helpers
-- currently includes timer snapshot persistence and reusable JSON object storage helpers
+- timer snapshot persistence
+- JSON-backed object persistence for local app state
 
-Boundary for this layer:
+`packages/notifications`
 
-- these packages encapsulate platform concerns that almost every app may need
-- apps configure and consume them, but should not reimplement them
+- local notification initialization
+- timezone handling
+- scheduling, updating, canceling, and permission requests
 
-### 4. Reusable Domain Engines
+`packages/monetization`
+
+- entitlement state
+- paywall controller and paywall sheet
+- ad service interfaces and Google Mobile Ads integration
+- store purchase integration through `in_app_purchase`
+
+`packages/analytics`
+
+- analytics event contracts and service abstraction
+- debug logger implementation for development
+
+`packages/localization`
+
+- generated localization delegates and translations
+
+### Reusable Domain Engines
 
 `packages/timer_engine`
 
-- reusable timer lifecycle, state, session, snapshot, stats, and controller logic
+- timer lifecycle
+- timer snapshots and restoration
+- tracked session history
+- shared timer statistics
 
 `packages/habit_engine`
 
-- reusable habit tracking, summaries, streaks, coaching data, and persistence-facing services
+- session recording on top of local persistence
+- daily and weekly summaries
+- streak calculation
+- habit coaching report generation
 
 `packages/discipline_engine`
 
-- reusable rules for discipline status, pressure, goals, and recovery suggestions
+- rule-based goal pacing
+- "not started / on track / behind / completed" evaluation
+- recovery suggestion modeling
 
-Boundary:
+## Runtime Composition Model
 
-- these packages own domain mechanics that can power multiple products
-- apps may add presets, labels, and specialized rules, but should not duplicate the underlying engine
+Active apps use the same broad runtime pattern:
 
-This layered setup creates a useful pattern:
+1. create shared services and stores
+2. bootstrap the app through `FactoryApp`
+3. override Riverpod providers with app-specific service instances
+4. restore timer snapshots before normal interaction
+5. initialize analytics, notifications, monetization, and ads in deferred
+   stages
 
-- platform shell in `app_core`
-- visual consistency in `design_system` and `ui_kit`
-- shared services in cross-cutting packages
-- reusable behavior in domain engines
-- app-specific composition at the edge
+That pattern is visible in both active apps and is one of the main platform
+reusability points.
 
-## App Boundaries
+## Local-First Data Model
 
-The `apps/` directory contains full Flutter applications, but each app is intentionally thin.
+The active apps are designed to function without a backend:
 
-An app typically owns:
+- timer state can be restored from local snapshots
+- habit and streak history is persisted locally
+- notifications are scheduled on-device
+- monetization state can use cached owned product ids for fast local startup
+
+This keeps startup fast and avoids introducing distributed system complexity for
+small utility products.
+
+## App Composition Pattern
+
+Apps at the edge of the monorepo usually own:
 
 - branding and naming
-- app-specific route registration
-- app-specific copy and screen composition
-- presets, plans, or rules unique to that product
-- platform metadata and store-facing assets
+- app-specific copy
+- app-specific plans, presets, and pacing rules
+- app-specific presentation screens
+- store-facing configuration and assets
 
-An app should not own:
+Apps should not re-implement:
 
-- its own shell framework
-- its own design system
-- its own notification framework
-- its own monetization framework
-- duplicated timer, habit, or persistence infrastructure
+- app shell and navigation
+- shared design tokens
+- reusable UI primitives
+- timer lifecycle infrastructure
+- local snapshot storage
+- monetization and notification framework code
 
-The active apps in the workspace show this pattern:
+## Active App Examples
 
-- `apps/pomodoro_app` configures a Pomodoro-specific router, screen set, duration presets, and analytics events while reusing `timer_engine`, `storage`, `notifications`, `analytics`, `habit_engine`, `discipline_engine`, `monetization`, `app_core`, and `ui_kit`
-- `apps/fasting_app` reuses the same shared foundation but swaps in fasting plans, fasting-specific copy, and fasting-specific presentation
+### Pomodoro
 
-This is the platform model in practice: different products, same foundation.
+`apps/pomodoro_app`
 
-## Reuse Strategy
+Composition:
 
-Reuse in this monorepo is deliberate, not accidental. The architecture encourages teams to reuse at four levels.
+- `timer_engine` for focus and break sessions
+- `storage` for timer snapshot persistence
+- `habit_engine` for session history and streaks
+- `discipline_engine` for pacing and recovery messaging
+- `notifications` for completion alerts
+- `monetization` for premium coaching, preset gating, and ads
 
-### 1. Reuse the app shell
+### Fasting
 
-New apps do not build a new startup stack. They define an `AppDefinition` and run through `FactoryApp`.
+`apps/fasting_app`
 
-That provides:
+Composition:
 
-- shared theme wiring
-- shared localization integration
-- shared routing conventions
-- shared scaffold and drawer behavior
+- `timer_engine` for fasting plan timing
+- `storage` for timer snapshot persistence
+- `habit_engine` for completed fast history
+- `discipline_engine` for daily target and recovery messaging
+- `notifications` for fast completion alerts
+- `monetization` for advanced plan gating, coaching, and ads
 
-### 2. Reuse UI primitives instead of screens
+## Tooling
 
-Apps compose screens from `ui_kit` and `design_system` rather than copying fully custom screen implementations across products.
+`tools/widgetbook`
 
-This keeps reuse flexible:
+- playground for shared UI components
+- lets the repo validate and iterate on `ui_kit` surfaces outside full app runs
 
-- the same cards, buttons, stat strips, and layouts can appear in multiple apps
-- each app still has room for different screen flows and product framing
+`scripts/create_app.dart`
 
-### 3. Reuse domain engines
+- generates thin app scaffolds wired to `app_core` and `ui_kit`
+- supports the future-app pipeline without immediately expanding the active
+  workspace
 
-The real leverage comes from engine reuse.
+`scripts/generate_icons.dart`
 
-Examples:
+- regenerates launcher icons from shared branding configs under `branding/`
 
-- Pomodoro and fasting are different products, but both reuse `timer_engine`
-- habit-style progress tracking can sit above multiple app types through `habit_engine`
-- discipline and coaching logic can be layered without every app rewriting those rules
+## Current Limitations
 
-This is stronger than simple component reuse because it avoids duplicating core behavioral logic.
+The platform is real, but not every folder has the same maturity level:
 
-### 4. Reuse platform integrations
+- only `pomodoro_app` and `fasting_app` are active workspace apps
+- many app folders are placeholders or simple scaffolds
+- infrastructure test coverage exists, but is still narrower than the core app
+  flows
+- some older documents still describe future package families that are not part
+  of the active implementation
 
-Analytics, notifications, monetization, localization, and storage are treated as platform capabilities.
+## Scaling Guidance
 
-That means a new app can inherit:
+To keep the monorepo healthy as more apps are added:
 
-- proven notification scheduling patterns
-- shared monetization and entitlement foundations
-- consistent analytics logging abstractions
-- standard local persistence patterns
+1. keep package boundaries clear
+2. move shared behavior into packages only when reuse is real
+3. keep app folders thin and product-specific
+4. promote scaffolded apps into the active workspace only when they have real
+   implementation
+5. use the existing bootstrap pattern unless there is a concrete reason to
+   diverge
 
-The result is that new apps can focus on product behavior rather than infrastructure assembly.
+## Summary
 
-## How New Apps Are Generated Quickly
-
-This monorepo is optimized for fast app creation through scaffolding plus composition.
-
-### Scaffold path
-
-The repository includes `scripts/create_app.dart`, which generates a starter app under `apps/<app_name>`.
-
-The script creates:
-
-- `pubspec.yaml`
-- `lib/main.dart`
-- `lib/app_config.dart`
-- a placeholder presentation screen
-- a README describing the seeded app
-
-The generated app already uses:
-
-- `app_core` for app bootstrap and shell
-- `ui_kit` for initial UI composition
-
-So the starting point is not a blank Flutter project. It is a platform-compliant app seed.
-
-### Activation model
-
-Generated apps do not need to become active workspace members immediately.
-
-The script explicitly supports a staged workflow:
-
-- scaffold the app folder first
-- explore the concept in isolation
-- add the app to the root `workspace` only when it is ready to participate in shared analysis and builds
-
-This allows the repo to act as both:
-
-- a production workspace for active apps
-- a pipeline of future app ideas and placeholders
-
-### Why this is fast
-
-Speed comes from minimizing the amount of code that needs to be new.
-
-For a new app, the team usually only needs to define:
-
-- the product identity
-- the core screen flow
-- app-specific rules or presets
-- any additional domain logic not already represented in shared packages
-
-Everything else is inherited from the platform.
-
-## How the Architecture Avoids Duplication
-
-Avoiding duplication is one of the main reasons this repository exists.
-
-### Shared concerns live in packages, not apps
-
-If a concern is likely to appear in more than one app, it belongs in `packages/`.
-
-Examples:
-
-- shell and router setup -> `app_core`
-- visual tokens and layouts -> `design_system`
-- reusable widgets -> `ui_kit`
-- timer behavior -> `timer_engine`
-- persistence helpers -> `storage`
-- monetization -> `monetization`
-
-This keeps apps from becoming slightly different copies of the same implementation.
-
-### Apps specialize shared engines instead of cloning them
-
-Pomodoro and fasting controllers both extend shared timer behavior and then apply product-specific rules. That is the intended duplication-avoidance pattern:
-
-- reuse the engine
-- customize with presets, plans, and event mapping
-- keep app-specific logic near the app
-
-### The workspace catches divergence early
-
-The root `pubspec.yaml` defines a shared workspace and Melos scripts for:
-
-- `flutter analyze`
-- formatting
-- tests
-
-Because apps and packages live together, platform changes can be validated against real consuming apps immediately. That reduces the risk of silent divergence between shared modules and product implementations.
-
-### Placeholder apps reinforce platform discipline
-
-The repository includes seeded future apps such as `habit_timer_app`, `water_tracker_app`, and `mood_tracker_app`.
-
-That matters architecturally because it forces the platform to stay reusable. The repo is not optimized only for the currently active apps. It is structured to support repeated app creation.
-
-## Monorepo Advantages for This Platform
-
-For this repository, the monorepo model provides concrete benefits.
-
-### Shared evolution
-
-When a package changes, active apps can be updated and validated in the same codebase without publishing internal package versions across multiple repositories.
-
-### Faster platform feedback
-
-If a shared timer abstraction, shell pattern, or UI primitive is too narrow, the impact becomes visible across apps immediately. That helps the platform mature faster.
-
-### Lower setup cost for each new product
-
-A new app inherits:
-
-- the same dependency conventions
-- the same package graph
-- the same build and analysis workflow
-- the same architectural rules
-
-### Better portfolio thinking
-
-A monorepo encourages the team to build a family of apps from common capabilities instead of repeatedly building isolated one-off projects.
-
-## Monorepo Trade-Offs
-
-The monorepo has real costs and should be treated as a deliberate trade-off.
-
-### 1. Boundary discipline is mandatory
-
-Without strong package boundaries, shared packages can become a dumping ground for unrelated logic, which makes the platform harder to reason about.
-
-### 2. Shared changes have wider blast radius
-
-A breaking change in a common package can affect multiple apps at once. This is good for visibility, but it requires careful validation.
-
-### 3. Build and analysis scope grows over time
-
-As more apps become active workspace members, full analysis and testing become more expensive. The repo will eventually need more selective CI strategies.
-
-### 4. Not every app fits the platform equally well
-
-The architecture is strongest when products share utility-app patterns. If a future app has radically different behavior, the team must decide whether to extend the platform or isolate the exception.
-
-### 5. Shared abstractions can be over-engineered
-
-There is always a risk of generalizing too early. Shared packages should emerge from repeated needs, not hypothetical reuse.
-
-## Design Rules That Keep the Platform Scalable
-
-To keep this monorepo effective as more apps are added, the architecture should continue following these rules:
-
-1. Put reusable capabilities in packages only after they are proven or clearly cross-cutting.
-2. Keep app folders focused on composition, branding, and product-specific behavior.
-3. Prevent packages from depending on app code.
-4. Prefer extending shared engines over copying and modifying them.
-5. Keep UI primitives reusable and screen composition app-specific.
-6. Promote scaffolded apps into the active workspace only when they are ready.
-
-## Conclusion
-
-This monorepo is a reusable mobile app platform, not a single-app codebase with some shared folders.
-
-Its structure supports scalable development of multiple mobile apps by:
-
-- enforcing package boundaries around shell, UI, services, and domain engines
-- maximizing reuse through shared platform modules
-- generating new apps quickly from a platform-compliant scaffold
-- reducing duplication by centralizing repeated logic
-- accepting monorepo trade-offs in exchange for faster portfolio development
-
-The intended scaling model is simple: add more thin apps at the edge, evolve shared packages at the center, and keep the foundation reusable enough that the next app is materially faster to build than the last one.
+This monorepo already functions as a reusable platform for small timer and
+tracker style apps. The scaling model is to add more thin apps at the edge,
+evolve the shared engines at the center, and keep the documentation honest
+about what is active today versus what is still exploratory.

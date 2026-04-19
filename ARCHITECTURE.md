@@ -1,135 +1,47 @@
-# Monorepo Architecture
+# Architecture Summary
 
-Repo layout:
+This file is a short architecture summary. The detailed source of truth lives in
+`SYSTEM_DESIGN.md`.
 
-mobile_app_factory/
-packages/
-apps/
+## Stable Rules
 
----
+The monorepo follows a small set of stable structural rules:
 
-## Packages
+- apps depend on packages
+- packages do not depend on apps
+- reusable infrastructure belongs in shared packages
+- product-specific rules and presentation stay in app folders
 
-app_core
-foundation code used by every app
+## Current Active Architecture
 
-Includes:
-routing
-theme
-app config
-base scaffold
-logging
-error handling
+The active package graph is centered on:
 
----
+- `app_core`
+- `design_system`
+- `ui_kit`
+- `storage`
+- `notifications`
+- `monetization`
+- `analytics`
+- `localization`
+- `timer_engine`
+- `habit_engine`
+- `discipline_engine`
 
-ui_kit
+The active workspace apps are:
 
-Design system and reusable UI components.
+- `apps/pomodoro_app`
+- `apps/fasting_app`
 
-Includes:
-buttons
-cards
-inputs
-dialogs
-settings tiles
-stat widgets
-empty states
+## What This Repo Is Not
 
----
+This repository should not be described as if all future package families are
+already implemented. Older planning ideas such as form engines, tool engines,
+or export layers are future directions, not the active architecture center.
 
-monetization
+## Why This Summary Exists
 
-Shared monetization framework.
-
-Includes:
-ads manager
-subscription manager
-entitlement logic
-paywall UI
-
----
-
-storage
-
-Local data layer.
-
-Includes:
-Isar database
-SharedPreferences wrapper
-repository pattern
-
----
-
-notifications
-
-Local reminders.
-
-Includes:
-permission handling
-notification scheduling
-reminder helpers
-
----
-
-export
-
-Data export utilities.
-
-Includes:
-PDF export
-CSV export
-file sharing
-
----
-
-timer_engine
-
-Reusable logic for timer-based apps.
-
-Includes:
-timer controller
-session model
-timer history
-statistics
-
----
-
-form_engine
-
-Reusable logic for form-based apps.
-
-Includes:
-form models
-validation
-draft autosave
-export integration
-
----
-
-tool_engine
-
-Reusable logic for simple tools.
-
-Includes:
-input/output pattern
-history storage
-favorites
-
----
-
-## Apps
-
-Each app is a full Flutter project.
-
-Example:
-
-apps/pomodoro_app
-
-Contains:
-main.dart
-app_config.dart
-app specific screens
-icons and branding
-
-App imports shared packages.
+The repo had older planning documents that mixed current implementation with
+future possibilities. This file now exists only to provide a short, stable
+overview and to point readers to `SYSTEM_DESIGN.md` for the detailed current
+design.

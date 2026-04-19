@@ -1,115 +1,64 @@
-# Review lại lần nữa theo tài liệu (v3)
+# Review Against Current Documentation
 
-## Tài liệu đối chiếu
+## Scope
+
+This review checks whether the top-level documentation reflects the current
+state of the repository.
+
+## Documents Reviewed
+
+- `README.md`
+- `SYSTEM_DESIGN.md`
+- `BUILD_PLAN.md`
 - `MASTER_SPEC.md`
 - `ARCHITECTURE.md`
-- `BUILD_PLAN.md`
 
-## Phạm vi kiểm tra
-- `pubspec.yaml` (workspace root)
-- `packages/app_core/**`
-- `packages/ui_kit/**`
-- `apps/pomodoro_app/**`
+## What Matches the Codebase
 
-## Cách đọc kết quả
-- ✅: Đạt theo kỳ vọng hiện tại của roadmap.
-- ⚠️: Có một phần nhưng chưa đủ để scale.
-- ❌: Chưa có implementation.
+The updated documentation now matches the current implementation on the main
+points:
 
----
+- the repo is a Flutter monorepo for multiple utility apps
+- the active workspace apps are `pomodoro_app` and `fasting_app`
+- the shared package graph is centered on `app_core`, `design_system`,
+  `ui_kit`, `storage`, `notifications`, `monetization`, `analytics`,
+  `localization`, `timer_engine`, `habit_engine`, and `discipline_engine`
+- future app folders are treated as placeholders or scaffolds unless promoted
+  into the root workspace
+- future package families are treated as deferred directions, not active
+  implementation
 
-## 1) Executive summary
+## Remaining Gaps
 
-- Dự án hiện **đúng hướng cho Phase 1**: kiến trúc monorepo, app demo Pomodoro, shared core/UI đã hoạt động theo mô hình “app mỏng + package dùng chung”.
-- Dự án **chưa sẵn sàng cho mục tiêu app-factory 1–3 ngày/app** vì các engine và hạ tầng phase sau chưa có API/use-case thật.
-- Điểm nghẽn lớn nhất: **timer logic đang nằm trong app**, chưa được đóng gói thành `timer_engine` để tái sử dụng.
+Some repo areas still need cleanup even after the doc rewrite:
 
----
+- several placeholder app folders still have minimal or generated content
+- infrastructure test coverage is still narrower than the app-level flows
+- some secondary docs outside the core set may still need small wording updates
+  over time
 
-## 2) Review matrix theo requirement
+## Documentation Decisions
 
-### A. Monorepo & workspace
+The documentation set now has clear roles:
 
-| Requirement | Status | Nhận xét |
-|---|---|---|
-| Repo theo cấu trúc `packages/` + `apps/` | ✅ | Đúng với `MASTER_SPEC.md` |
-| Phase 1 có `app_core`, `ui_kit`, `pomodoro_app` trong workspace | ✅ | `pubspec.yaml` đã khai báo đúng 3 module active |
-| Module phase sau đã sẵn sàng tích hợp | ⚠️ | Có thư mục nhưng chưa vào workspace, chưa có package API thực tế |
+- `README.md`: entry point and current status
+- `SYSTEM_DESIGN.md`: detailed architecture source of truth
+- `BUILD_PLAN.md`: practical roadmap
+- `MASTER_SPEC.md`: platform goals and engineering principles
+- `ARCHITECTURE.md`: short summary only
 
-### B. app_core
+This avoids having multiple files compete to define the same thing.
 
-| Requirement | Status | Nhận xét |
-|---|---|---|
-| Routing/theme/scaffold dùng chung | ✅ | Có `FactoryApp`, `AppDefinition`, `createAppRouter`, `FactoryScaffold` |
-| Logging/error handling tập trung | ❌ | Chưa thấy abstraction logger hay global error hook |
+## Recommended Next Cleanup
 
-### C. ui_kit
+The next documentation pass should focus on:
 
-| Requirement | Status | Nhận xét |
-|---|---|---|
-| Shared components (buttons/cards/inputs/dialogs/tiles/stats/empty state) | ✅ | Có đủ nhóm component Phase 1 cần demo |
-| App demo dùng shared UI thay vì dựng riêng | ✅ | `pomodoro_screen.dart` đã dùng component từ `ui_kit` |
+1. keeping active app READMEs aligned as product behavior evolves
+2. documenting any newly promoted app only after it is active in the workspace
+3. extending tooling docs when Widgetbook or generation scripts change
 
-### D. pomodoro_app
+## Conclusion
 
-| Requirement | Status | Nhận xét |
-|---|---|---|
-| App độc lập, wiring mỏng | ✅ | `main.dart` boot qua `FactoryApp`, cấu hình tách `app_config.dart` |
-| Theo coding rules (Riverpod/go_router/modular) | ✅ | Controller dùng Riverpod, routing từ shared core |
-| Offline-first ở mức Phase 1 | ✅ | Không có phụ thuộc backend runtime |
-| Persistence local cho lịch sử phiên | ⚠️ | Chưa có storage integration (hợp roadmap: Phase 2) |
-
----
-
-## 3) Các vấn đề ưu tiên cao (theo impact)
-
-1. **High impact / High urgency** — Chưa tách `timer_engine`
-   - Ảnh hưởng: khó tái sử dụng cho fasting/countdown/workout timer.
-   - Rủi ro: duplicate logic + sai khác behavior giữa app.
-
-2. **High impact / Medium urgency** — Thiếu logging + error boundary ở `app_core`
-   - Ảnh hưởng: khó vận hành, khó trace lỗi khi thêm nhiều app.
-
-3. **Medium impact / Medium urgency** — Package phase 2 mới là placeholder
-   - Ảnh hưởng: chậm đạt mục tiêu monetization/local-data/notifications/export.
-
----
-
-## 4) Kế hoạch sửa cụ thể (đề xuất sau review)
-
-### Sprint A (ưu tiên ngay)
-- Khởi tạo `packages/timer_engine` bản tối thiểu:
-  - domain model: `TimerMode`, `TimerCycle`, `TimerMetrics`
-  - controller/service: start/pause/resume/reset/skip
-  - API đủ để `pomodoro_app` dùng trực tiếp, không giữ business logic ở app
-
-### Sprint B
-- Bổ sung `app_core`:
-  - logger interface (`debug/info/warn/error`)
-  - global error handling hook
-  - default implementation cho môi trường local
-
-### Sprint C
-- Kích hoạt tối thiểu 1 package Phase 2 có use-case thật:
-  - gợi ý bắt đầu với `storage` (vì liên quan trực tiếp history timer)
-  - thêm test cơ bản cho read/write + mapping model
-
----
-
-## 5) Re-score theo roadmap
-
-- Phase 1: ✅ **Đạt** (demo chạy trên shared packages).
-- Phase 2: ⚠️ **Chưa đạt** (hạ tầng chưa hoạt động thực tế).
-- Phase 3: ⚠️ **Chưa đạt** (engine chưa tách ra khỏi app).
-- Phase 4: ⚠️ **Chưa sẵn sàng** (chưa có nền tảng để build app mới trong vài ngày).
-
----
-
-## 6) Definition of Done cho lần review tiếp theo
-
-Checklist nên đạt tối thiểu:
-- [ ] `pomodoro_app` dùng `timer_engine` thay vì controller local.
-- [ ] `app_core` có logger + global error hook.
-- [ ] `storage` có API thực + unit test cơ bản.
-- [ ] Workspace phản ánh đúng tất cả module đang active.
-- [ ] CI có ít nhất analyze + test cho các package đã active.
+The main documentation set is now aligned with the current codebase. The repo
+should be described as a working utility-app platform with two active apps and
+a pipeline of future placeholders, not as an entirely speculative factory.
